@@ -16,6 +16,7 @@ CC=gcc
 
 CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64
 
+HOME=/home/bill/Desktop/source-code/csc552/LFS/src
 
 INCLUDES = -I${LFS}/include  -I../usr/include/linux
 
@@ -32,21 +33,25 @@ SRCS = hello.C flash.c
 OBJS = $(SRCS:.C=.o)
 
 $(MAIN):  $(OBJS)
+	 cd $(HOME)
 	 $(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(MAIN) $(LFLAGS)
 	 mv *.o $(BIN)
-.C.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
+#.C.o:
+#	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 
 clean:
+	cd $(HOME)
 	rm -f *.o *~ $(MAIN) $(MAKECLEANGARBAGE) $(BIN)/*
 
 backup:
 	mkdir bak
 	cp Makefile *.[Ch] bak
 
-# Grab the sources for a user who has only the makefile
+# install fuse
 setup:
-	/bin/cp -i $(MINIBASE)/src/*.[Ch] .
-	-/bin/cp -i $(MINIBASE)/src/README .
+	cd $(VPATH)
+	./configure
+	make -j8
+	sudo make install
 
 # DO NOT DELETE THIS LINE -- make depend needs it 

@@ -1,5 +1,5 @@
 # CSC 552 Makefile
-#  Author: xing yuan
+#  Author: xing yuan Kathryn Paige Williams
 #  Date: 10 Feb 2019
 #  LFS project architecture
 #  log layer :  

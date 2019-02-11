@@ -12,13 +12,20 @@ MAIN=LFS
 
 LFS=..
 
-CC=g++
+CC=gcc
 
-CFLAGS= -DUNIX -Wall -g
+CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64
 
-INCLUDES = -I${LFS}/include 
 
-LFLAGS= -L${LFS}LFS/lib
+INCLUDES = -I${LFS}/include  -I../usr/include/linux
+
+VPATH=/home/bill/Desktop/source-code/csc552/LFS/fuse-2.9.9
+
+LFLAGS= -L${LFS}LFS/lib  -lfuse
+
+BIN=../bin
+
+PKGFLAGS= pkg-config fuse --cflags --libs
 
 SRCS = hello.C flash.c
 
@@ -26,12 +33,12 @@ OBJS = $(SRCS:.C=.o)
 
 $(MAIN):  $(OBJS)
 	 $(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(MAIN) $(LFLAGS)
-
+	 mv *.o $(BIN)
 .C.o:
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 
 clean:
-	rm -f *.o *~ $(MAIN) $(MAKECLEANGARBAGE) 
+	rm -f *.o *~ $(MAIN) $(MAKECLEANGARBAGE) $(BIN)/*
 
 backup:
 	mkdir bak

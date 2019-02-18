@@ -24,7 +24,6 @@ static const char *link_path = "/link";
 static int hello_getattr(const char *path, struct stat *stbuf)
 {
     int res = 0;
-
     memset(stbuf, 0, sizeof(struct stat));
     if (strcmp(path, "/") == 0) {
         stbuf->st_mode = S_IFDIR | 0777;

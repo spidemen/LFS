@@ -18,7 +18,7 @@ CC=gcc
 
 CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
 
-HOME=/home/bill/Desktop/source-code/csc552/LFS/src
+HOME=${CURDIR}
 
 INCLUDES = -I${LFS}/include  -I../usr/include/linux
 
@@ -40,7 +40,7 @@ OBJLOG = log.o flash.o
 FILES=file.C flash.c 
 OBJFILE= file.o flash.o
 
-MKLFS=log.C flash.c
+MKLF=log.C flash.c
 OBJMKLFS= mklfs.o flash.o
 
 $(MAIN):  $(OBJS)
@@ -53,14 +53,10 @@ $(LOG):  $(OBJLOG)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(LOG) $(LFLAGS)
 	mv *.o $(BIN)
 
-$(MKLFS):  $(OBJLOG)
+$(MKLFS): $(OBJMKLFS)
 	cd $(HOME)
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(MKLFS) $(LFLAGS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJMKLFS) -o $(MKLFS) $(LFLAGS)
 	mv *.o $(BIN)
-#$(MKLFS): $(OBJMKLFS)
-#	cd $(HOME)
-#	$(CC) $(CFLAGS) $(INCLUDES) $(OBJMKLFS) -o $(MKLFS) $(LFLAGS)
-#	mv *.o $(BIN)
 
 $(FILE):  $(OBJFILE)
 	cd $(HOME)

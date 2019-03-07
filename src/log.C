@@ -50,13 +50,14 @@ void testRead(){
     		cout<<"Read Flash Error: canont read "<<buf<<" to flash  total block "<<1<<endl;
     	}else{
     		cout<<"Success Read  Flash   buf="<<endl;
+    		
     	}
     }
     Flash_Close(f);
 }
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &logAddress1){
-	 
+
 	return 1;
 }
 int main(int argc, char *argv[])

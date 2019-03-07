@@ -11,11 +11,12 @@
 MAIN=LFS
 LOG=log
 FILE=file
+MKLFS=mklfs
 LFS=..
 
 CC=gcc
 
-CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64
+CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
 
 HOME=/home/bill/Desktop/source-code/csc552/LFS/src
 
@@ -23,7 +24,7 @@ INCLUDES = -I${LFS}/include  -I../usr/include/linux
 
 VPATH=/home/bill/Desktop/source-code/csc552/LFS/fuse-2.9.9
 
-LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++
+LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++ 
 
 BIN=../bin
 
@@ -33,11 +34,14 @@ SRCS = hello.C flash.c
 
 OBJS = $(SRCS:.C=.o)
 
-LOGS=log.cpp flash.c
+LOGS=log.C flash.c
 OBJLOG = log.o flash.o
 
-FILES=file.C flash.c Log.C
-OBJFILE= file.o log.o
+FILES=file.C flash.c 
+OBJFILE= file.o flash.o
+
+MKLFS=log.C flash.c
+OBJMKLFS= mklfs.o flash.o
 
 $(MAIN):  $(OBJS)
 	 cd $(HOME)
@@ -48,6 +52,15 @@ $(LOG):  $(OBJLOG)
 	cd $(HOME)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(LOG) $(LFLAGS)
 	mv *.o $(BIN)
+
+$(MKLFS):  $(OBJLOG)
+	cd $(HOME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(MKLFS) $(LFLAGS)
+	mv *.o $(BIN)
+#$(MKLFS): $(OBJMKLFS)
+#	cd $(HOME)
+#	$(CC) $(CFLAGS) $(INCLUDES) $(OBJMKLFS) -o $(MKLFS) $(LFLAGS)
+#	mv *.o $(BIN)
 
 $(FILE):  $(OBJFILE)
 	cd $(HOME)

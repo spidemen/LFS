@@ -7,62 +7,7 @@
 #include <iostream>
 #include <flash.h>
 #include "log.h"
-static const char *hello_str = "Hello World!\n";
-static const char *hello_path = "/hello";
-static const char *link_path = "/link";
-
 using namespace std;
-
-// void createTest(){
-// 	 char *filename="test.txt";
-// 	 int wearlimit=500;
-// 	 int blocks=300;
-// 	 int flag=Flash_Create(filename, wearlimit,blocks);
-// 	 if(flag) {
-// 	 	cout<<"Error: create a flash   filename="<<filename<<endl;
-// 	 }else{
-// 	 	cout<<"Success: create flash  filename  "<<filename<<endl;
-// 	 }
-
-// }
-// void testWrite(char *buf){
-// 	char *filename="test.txt";
-// 	u_int blocks=100;
-//     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-//     if(f!=NULL){
-//     	cout<<"total block for this file "<<blocks<<" the len of buf ="<<strlen(buf)<<endl;
-//     	if(Flash_Write(f, 0, 1, (void*)buf)){
-//     		cout<<"Write Flash Error: canont write "<<buf<<" to flash  total block "<<1<<endl;
-//     	}else{
-//     		cout<<"Success Write Flash "<<endl;
-//     	}
-//     }
-//     Flash_Close(f);
-// }
-// void testRead(){
-// 	char *filename="test.txt";
-// 	u_int blocks=100;
-// 	char *buf;
-//     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-//     if(f!=NULL){
-//     	cout<<"total block for this file "<<blocks<<endl;
-//     	if(Flash_Read(f, 0, 1, (void*)buf)){
-//     		cout<<"Read Flash Error: canont read "<<buf<<" to flash  total block "<<1<<endl;
-//     	}else{
-//     		cout<<"Success Read  Flash   buf="<<endl;
-//     	}
-//     }
-//     Flash_Close(f);
-// }
-
-// struct metadata{
-//     int blocksize;
-//     int segmentsize;
-//     int segments;
-//     unordered_map<int,Segment> segmentTable;
-//     int checkpointStart;     // start block of checkpoint
-// };
-
 int createMklfs(char * filename,int blocksize=2,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);
@@ -87,6 +32,7 @@ int createMklfs(char * filename,int blocksize=2,int segmentsize=32,int wearlimit
                 cout<<"Success create mklfs. sizeof metadata "<<sizeof(p)<<endl;
                 return 0;
             }
+           Flash_Close(f); 
 
         }else{
             cout<<"Fail to open flash file "<<filename<<endl;
@@ -97,9 +43,44 @@ int createMklfs(char * filename,int blocksize=2,int segmentsize=32,int wearlimit
 }
 int main(int argc, char *argv[])
 {
-	 cout<<"hell World"<<endl;
- //  createTest();
-//	 testWrite("This is the first time to use flash libraray l\n");
-//	testRead();
-    return 1;
+    if(argc<2)
+	cout<<"create a mklfs: usage  mklfs  optional filename"<<endl;
+    int blocksize=2;
+    int segmentsize=32;
+    int wearlimit=1000;
+    int flashSizeInsegment=100;
+    for(int i=1;i<argc;i++){
+        if(argv[i]=="-b"){
+            if(i+2<=argc){
+                blocksize=stoi(argv[i+1]);
+            }else{
+                cout<<"Error usage: -b must follow a number  ex: -b 2"<<endl;
+            }
+        }
+        if(argv[i]=="-l"){
+            if(i+2<=argc){
+                segmentsize=stoi(argv[i+1]);
+            }else{
+                cout<<"Error usage: -l must follow a number ex: -l 32 "<<endl;
+            }
+        }
+        if(argv[i]=="-s"){
+            if(i+2<=argc){
+                flashSizeInsegment=stoi(argv[i+1]);
+            }else{
+                cout<<"Error usage: -s must follow a number: ex -s 100 "<<endl;
+            }
+        }
+        if(argv[i]=="-w"){
+            if(i+2<argc){
+                wearlimit=stoi(argv[i+1]);
+            } else{
+                cout<<"Error usage: -w must follow a number: ex -w 100 "<<endl;
+            }
+        }
+    }
+
+   int flag=createMklfs(argv[argc-1],blocksize,segmentsize,wearlimit,flashSizeInsegment);
+
+    return flag;
 }

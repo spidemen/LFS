@@ -49,7 +49,7 @@ void testRead(){
     	if(Flash_Read(f, 0, 1, (void*)buf)){
     		cout<<"Read Flash Error: canont read "<<buf<<" to flash  total block "<<1<<endl;
     	}else{
-    		cout<<"Success Read  Flash   buf="<<endl;
+    		cout<<"Success Read  Flash   buf="<<buf<<endl;
 
     	}
     }
@@ -57,20 +57,20 @@ void testRead(){
 }
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &logAddress1){
-	int len=MRC.size();
-	if(find(MRC.begin(),MRC.end(),num)==MRC.end()){
-		 if(len<N){
-		 	 Segment *s=new Segment;
-		 	 s->
-		 }
-	}
+	// int len=MRC.size();
+	// if(find(MRC.begin(),MRC.end(),num)==MRC.end()){
+	// 	 if(len<N){
+	// 	 	 Segment *s=new Segment;
+	// 	 	 s->
+	// 	 }
+	// }
 	return 1;
 }
 int main(int argc, char *argv[])
 {
 	 cout<<"hell World"<<endl;
- //  createTest();
-//	 testWrite("This is the first time to use flash libraray l\n");
+     createTest();
+	 testWrite("This is the first time to use flash libraray l\n");
 	testRead();
     return 1;
 }

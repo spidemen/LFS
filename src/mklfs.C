@@ -32,7 +32,9 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
                 cout<<"Success create mklfs. sizeof metadata "<<sizeof(p)<<endl;
                 return 0;
             }
+
            Flash_Close(f); 
+           delete p;
 
         }else{
             cout<<"Fail to open flash file "<<filename<<endl;
@@ -61,14 +63,13 @@ int main(int argc, char *argv[])
 {
     if(argc<2)
 	cout<<"create a mklfs: usage  mklfs  optional filename"<<endl;
+  // default vaule 
     int blocksize=2;
     int segmentsize=32;
     int wearlimit=1000;
     int flashSizeInsegment=100;
     for(int i=1;i<argc;i++){
-         cout<<"argv&"<<argv[i]<<"&"<<endl;
         if(strcmp(argv[i],"-b")==0){
-            cout<<"argv  "<<argv[i]<<"   "<<argv[i+1]<<endl;
             if(i+2<=argc){
                 blocksize=stoi(argv[i+1]);
             }else{

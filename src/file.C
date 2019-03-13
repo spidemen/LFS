@@ -34,7 +34,7 @@ int Write_To_Ifile(struct Inode *iptr) {
         printf("Error: couldn't create .ifile\n");
         exit(1);
     }
-    fprintf(fptr,"%d %x\n1234\n2345\n3456", iptr->inum, iptr);
+    fprintf(fptr,"%d %x", iptr->inum, iptr);
     fclose(fptr);
     return 0;
 }

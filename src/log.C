@@ -89,11 +89,11 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
       if(f!=NULL){
       	   int offset=logAddress1.blockNo*FLASH_SECTORS_PER_BLOCK;
       	   int blocks=length/FLASH_BLOCK_SIZE+1;
-      	   if(Flash_Read(f,offset,blocks,buf)){
+      	   if(Flash_Read(f,offset,blocks,buffer)){
       	   	   cout<<"Read Flash Error: canont read   segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
       	   	   return 1;
       	   }else{
-      	        cout<<"Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNO<<endl;
+      	        cout<<"Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNo<<endl;
       	        return 0;
       	   }
       }else{
@@ -109,10 +109,10 @@ int Log_free(logAddress logAddress1,u_int length){
       		int startblock=logAddress1.blockNo;
       		int blocks=length/FLASH_BLOCK_SIZE+1;
       		if(Flash_Erase(f,startblock,blocks)){
-      			cout<<"Error: Fail to erase blocks segmentNo ="<<logAddress.segmentNo<<" blcokNo ="<<logAddress.blockNo<<endl;
+      			cout<<"Error: Fail to erase blocks segmentNo ="<<logAddress1.segmentNo<<" blcokNo ="<<logAddress1.blockNo<<endl;
       			return 1;
       		}else{
-      			cout<<"Success earse blocks  "<<logAddress.segmentNo<<" blcokNo ="<<logAddress.blockNo<<endl;
+      			cout<<"Success earse blocks  "<<logAddress1.segmentNo<<" blcokNo ="<<logAddress1.blockNo<<endl;
       			return 0;
       		}
       }else{

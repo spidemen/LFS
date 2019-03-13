@@ -5,10 +5,23 @@
 #include <map>
 #include <unordered_map>
 #include <ctime> 
+#include <vector>
 using namespace std;
+
+#define  N 10 
+int generateSegmentNo=1;
+string filename;
 struct logAddress{
-	u_int block;
-	int segment;
+	u_int blockNo;
+	int segmentNo;
+};
+
+struct Block{
+	int blockNo;
+	bool aLive;
+	int  blockUse;
+	char  data[FLASH_BLOCK_SIZE];   // size in cache
+	int  offset=0; 
 };
 
 struct Segment{
@@ -16,8 +29,10 @@ struct Segment{
     bool  inUse=false;
     int   liveByte;
 	time_t   modifiedTime=time(NULL);
-    int  totalBlock;     
+    int  totalBlock; 
+    vector<Block> block;      
 };
+
 // use one segment to hold metadata for file system
 struct metadata{
 	int blocksize;
@@ -27,10 +42,6 @@ struct metadata{
 	int checkpointStart;     // start block of checkpoint
 };
 
-struct Block{
-	int blockNo;
-	bool aLive;
-	int  blockUse;
-};
 typedef int inum;
+vector<pair<inum, Segment> > MRC;   // implement N most access segment policy
 #endif

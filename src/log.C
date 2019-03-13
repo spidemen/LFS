@@ -56,15 +56,69 @@ void testRead(){
     Flash_Close(f);
 }
 
+// struct Segment{
+// 	int segmentNo;
+//     bool  inUse=false;
+//     int   liveByte;
+// 	time_t   modifiedTime=time(NULL);
+//     int  totalBlock; 
+//     vector<Block> block;      
+// };
+
 int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &logAddress1){
 	// int len=MRC.size();
 	// if(find(MRC.begin(),MRC.end(),num)==MRC.end()){
 	// 	 if(len<N){
 	// 	 	 Segment *s=new Segment;
-	// 	 	 s->
+	// 	 	 generateSegmentNo++;
+	// 	 	 s->segmentNo=generateSegmentNo;
+	// 	 	 s->inUse=true;
+	// 	 	 s->modifiedTime=time(NULL);
+	// 	 	 s->totalBlock=4;
+		 	 
+
 	// 	 }
+
 	// }
 	return 1;
+}
+int Log_read(logAddress logAddress1, u_int length, void * buffer){
+      char *filename="test.txt";
+      u_int blocks;
+      Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+      if(f!=NULL){
+      	   int offset=logAddress1.blockNo*FLASH_SECTORS_PER_BLOCK;
+      	   int blocks=length/FLASH_BLOCK_SIZE+1;
+      	   if(Flash_Read(f,offset,blocks,buf)){
+      	   	   cout<<"Read Flash Error: canont read   segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
+      	   	   return 1;
+      	   }else{
+      	        cout<<"Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNO<<endl;
+      	        return 0;
+      	   }
+      }else{
+      	 cout<<"Error: Fail to open log file  "<<filename<<endl;
+      	 return 1;
+      }
+}
+int Log_free(logAddress logAddress1,u_int length){
+	  char *filename="test.txt";
+      u_int blocks;
+      Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+      if(f!=NULL){
+      		int startblock=logAddress1.blockNo;
+      		int blocks=length/FLASH_BLOCK_SIZE+1;
+      		if(Flash_Erase(f,startblock,blocks)){
+      			cout<<"Error: Fail to erase blocks segmentNo ="<<logAddress.segmentNo<<" blcokNo ="<<logAddress.blockNo<<endl;
+      			return 1;
+      		}else{
+      			cout<<"Success earse blocks  "<<logAddress.segmentNo<<" blcokNo ="<<logAddress.blockNo<<endl;
+      			return 0;
+      		}
+      }else{
+      	 cout<<"Error: Fail to open log file  "<<filename<<endl;
+      	 return 1;
+      }
 }
 int main(int argc, char *argv[])
 {

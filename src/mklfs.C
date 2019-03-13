@@ -100,6 +100,7 @@ int main(int argc, char *argv[])
     }
 
    int flag=createMklfs(argv[argc-1],blocksize,segmentsize,wearlimit,flashSizeInsegment);
+     filename=argv[argc-1];
     readMklfs(argv[argc-1]);
     return flag;
 }

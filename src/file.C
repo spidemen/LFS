@@ -4,38 +4,35 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <iostream>
 #include <flash.h>
 #include "log.h"
 #include <time.h>
 #include "file.h"
 
-
-// static const char *hello_str = "Hello World!\n";
-// static const char *hello_path = "/hello";
-// static const char *link_path = "/link";
-//static const int BUFFER_LENGTH = 16; // dunno why I have 16
-
-int Create_Ifile() {
-    FILE *fptr;
-    fptr = fopen(".ifile", "w");
-    if (fptr == NULL) {
-        printf("Error: couldn't create .ifile\n");
-        exit(1);
-    }
-    fclose(fptr);
-
-    return 0;
-}
+static const int TYPE_F = 0;
+static const int TYPE_D = 1;
 
 int Write_To_Ifile(struct Inode *iptr) {
-    FILE *fptr;
-    fptr = fopen(".ifile", "w");
-    if (fptr == NULL) {
-        printf("Error: couldn't create .ifile\n");
+	char *filename = ".ifile";
+	u_int blocks=100;
+    Flash f = Flash_Open(filename, FLASH_ASYNC, &blocks);
+    
+    if (f == NULL) {
+        printf("Error: couldn't get Flash handle to .ifile\n");
         exit(1);
     }
-    fprintf(fptr,"%d %x\n1234\n2345\n3456", iptr->inum, iptr);
-    fclose(fptr);
+
+    char buf[200];
+    sprintf(buf, "%d|", iptr->inum);
+
+    if(Flash_Write(f, 0, 1, (void*)buf)){ //if returns 1, error //Xing params
+		printf("Write error: cannot write inode %d -- %s to flash \n", iptr->inum, iptr->filename);
+	}else{
+		printf("Successful Flash write. \n");
+	}
+    Flash_Close(f);
+
     return 0;
 }
 
@@ -90,36 +87,33 @@ unsigned long Get_Inode(int inum, struct Inode *ptr) { // all inodes are stored 
 }
 
 int Inode_Create(int inum, int type, struct Inode *iptr) {
+
+	printf("inum %d, type %d\n", inum, type);
     iptr->inum = inum;
     iptr->type = type; //
     iptr->in_use = 1;
-
     iptr->owner = "user";
     iptr->permissions = 0775 | 0664; //default for file (0) is 664, directory (1) is 775
-    iptr->offset = 0;
 
     struct tm * time_of_last_change;
     time_t rawtime;
     time ( &rawtime );
     iptr->time_of_last_change = localtime( &rawtime );
+    printf( "Inode %d created at: %s", inum, asctime( iptr->time_of_last_change));
     
-    printf( "Time created: %s", asctime( iptr->time_of_last_change));
-    
-    
+    iptr->Block1Ptr = NULL;
+    iptr->Block2Ptr = NULL;
+    iptr->Block3Ptr = NULL;
+    iptr->Block4Ptr = NULL;
+    iptr->OtherBlocksPtr = NULL;
+
+    Write_To_Ifile(iptr);
+    printf("Inode %s written to ifile\n", iptr->filename);
     return 0;
 }
 
-
-
-
 int Change_File_Permissions(int inum, int permissions) {
-    // Make inode
-    struct Inode this_inode;
-
-    // Retrieve inode
-    Get_Inode(inum, &this_inode);
-    //this_inode.permissions = permissions;
-    // set inode 
+    
     return 0;
 }
 
@@ -133,40 +127,36 @@ int Change_File_Group(int inum) {
     return 0;
 }
 
-
-
 int File_Create(int inum, int type) {
     // Need to create the inode for the file
-    int i=0;
-    char filename[10];
-    sprintf(filename, "file_%d", i); 
+    char *filename;
+    if (inum == 0) { //ifile
+    	filename = ".ifile";
+    } else {
+    	sprintf(filename, "file_%d", inum); 
+    }
+    
     int wearLimit = 100;
-    int blocks = 100;
-    u_int block = 1;
-    u_int length = 10;
-    void* buffer[10];
-    //logAddress logAddress1 = NULL;
-    // Need to create an empty file 
-    //Log_Write(i, block, length, buffer, NULL); //Xing
+	int blocks = 100;
+	u_int block = 1;
+	u_int length = 10;
+    
+    // Create the file in the Flash layer
+    Flash_Create(filename, wearLimit, blocks);
 
     // Make an Inode for the file
-    struct Inode *iptr = NULL;
+    printf("Make Inode for %s...\n", filename);
+    struct Inode *iptr = new Inode;
+    iptr->filename = filename;
     Inode_Create(inum, type, iptr);
-
-    FILE *fptr;
-    fptr = fopen(filename, "w");
-    if(fptr == NULL) {
-      printf("Error: couldn't create file.\n");   
-      exit(1);             
-    }
-    char* filecontents = "made my first file\n";
-
-    fprintf(fptr,"%s",filecontents);
-    fclose(fptr);
-
+    
+    // char *buffer;
+    // sprintf(buffer, "%d %x", iptr->inum, *iptr);
+    // logAddress *logAddress1;
+   	// Log_Write(inum, block, length, buffer, &logAddress1); //Xing
+    
     return 0;
 }
-
 
 int File_Write(int inum, int offset, int length, char* buffer) {
     printf("%s\n", buffer);
@@ -184,7 +174,7 @@ int File_Write(int inum, int offset, int length, char* buffer) {
     return 0;
 }
 
-int File_Read(int inum, int offset, int length, int buffer) {
+int File_Read(int inum, int offset, int length, char* buffer) {
 
     // Consult inode map to get disk address for inode inum
 
@@ -199,28 +189,21 @@ int File_Free(int inum) {
     return 0;
 }
 
+
 int main(int argc, char *argv[])
 {
-
 	printf("Begin file layer...\n");
-
-    Create_Ifile();
+	int inum = 0;
+    File_Create(inum, TYPE_F);
+    inum++;
   
-    struct Inode myInode;
-    struct Inode *iptr;
-    iptr = &myInode;
-
-    Inode_Create(0, 22, iptr);//&myInode);
-    printf("MyInode %s\n", iptr->time_of_last_change);
-    Write_To_Ifile(iptr);
-
-    printf("Inode address: %x\n", iptr);
-    
-    // struct Inode *iptr2 = NULL;
-    // unsigned long iptrAdd;
-    // iptrAdd = Get_Inode(0, iptr2); //issues 
-    // iptr2 = &iptrAdd;
-    // ("Should be able to get Inode info: %d\n", iptr2->inum);
+  	printf("\n\n Begin file tests...\n");
+    File_Create(inum, TYPE_F);
+    int offset = 0;
+    int length = 12;
+    char* buffer = "hello katy";
+    File_Write(inum, offset, length, buffer);
+    File_Read(inum, offset, length, buffer);
 
 
     //Change_File_Permissions(int inum, int permissions);
@@ -252,5 +235,6 @@ int main(int argc, char *argv[])
     
     File_Free(1);
     cout << "File freed. \n";*/
+
     return 1;
 }

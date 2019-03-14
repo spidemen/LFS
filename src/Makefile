@@ -70,7 +70,7 @@ $(FILE):  $(OBJFILE)
 
 clean:
 	cd $(HOME)
-	rm -f *.o *~ $(MAIN) $(LOG) $(MAKECLEANGARBAGE) $(BIN)/*
+	rm -f *.o *~ $(MAIN) $(LOG) $(FILE) $(MKLFS) $(MAKECLEANGARBAGE) $(BIN)/*
 
 backup:
 	mkdir bak

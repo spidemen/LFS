@@ -158,6 +158,7 @@ int File_Create(int inum, int type) {
     return 0;
 }
 
+
 int File_Write(int inum, int offset, int length, char* buffer) {
     printf("%s\n", buffer);
     // Retrieve inode
@@ -189,9 +190,9 @@ int File_Free(int inum) {
     return 0;
 }
 
-
 int main(int argc, char *argv[])
 {
+
 	printf("Begin file layer...\n");
 	int inum = 0;
     File_Create(inum, TYPE_F);
@@ -235,6 +236,5 @@ int main(int argc, char *argv[])
     
     File_Free(1);
     cout << "File freed. \n";*/
-
     return 1;
 }

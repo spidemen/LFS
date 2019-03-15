@@ -15,6 +15,7 @@
 // static const char *link_path = "/link";
 //static const int BUFFER_LENGTH = 16; // dunno why I have 16
 
+// use flash_create 
 int Create_Ifile() {
     FILE *fptr;
     fptr = fopen(".ifile", "w");

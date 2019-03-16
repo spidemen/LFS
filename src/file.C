@@ -159,7 +159,8 @@ int File_Create(int inum, int type) {
     // char *buffer;
     // sprintf(buffer, "%d %x", iptr->inum, *iptr);
     // logAddress *logAddress1;
-   	// Log_Write(inum, block, length, buffer, &logAddress1); //Xing
+   	// Log_Write(inum, block, length, buffer, &logAddress1); //Xing -- write Inode
+
    	char *flashname = "myflash";
    	u_int blocks = 100;
    	Flash f = Flash_Open(flashname, FLASH_ASYNC, &blocks);
@@ -258,14 +259,17 @@ int File_Free(int inum) {
 }
 
 /***
-before submission, a code review is necessary. Please first make your code no any compile bug, can pass basic tests, after that we
-will do code review. Focuse on style , format , readable. I will optimize my code after I finish my part
+before submission, a code review is necessary. 
+Please first make your code no any compile bug, can pass basic tests, after that we
+will do code review. Focuse on style , format , readable. 
+I will optimize my code after I finish my part
 */
 int main(int argc, char *argv[])
 {
 
 	// For Katy, when use log layer, fist make mklfs then can call
-	 init("FuseFileSystem");   // this use to init block size and segment , fuse file system
+	 init("FuseFileSystem");   
+	 // this use to init block size and segment , fuse file system
     // When you want to use function from log Layer, comment main funcion of log.C
 
 	printf("Begin file layer...\n");

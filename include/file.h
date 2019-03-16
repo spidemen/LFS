@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <time.h>
 
-typedef struct Inode {
+struct Inode {
     int inum;           // in spec
     char* filename;     // in spec
     int type;           // in spec -- 0 for file, 1 for directory
@@ -20,7 +20,13 @@ typedef struct Inode {
     char* owner;
     int permissions;
     u_int offset;
-}Inode;
+
+    struct logAddress *Block1Ptr;
+    struct logAddress *Block2Ptr;
+    struct logAddress *Block3Ptr;
+    struct logAddress *Block4Ptr;
+    struct logAddress *OtherBlocksPtr;
+};
 
 
 #endif /* file_h */

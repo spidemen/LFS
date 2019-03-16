@@ -7,9 +7,12 @@
 #include <stdio.h>
 #include <time.h>
 #include  "log.h"
+
+//static const int FNAME_LEN = 50;
+
 struct Inode {
     int inum;           // in spec
-    char* filename;     // in spec
+    char *filename;     // in spec
     int type;           // in spec -- 0 for file, 1 for directory
     u_int size;         // in spec
     u_int block_number; // in spec -- flash addresses of file's blocks

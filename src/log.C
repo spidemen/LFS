@@ -326,7 +326,8 @@ int Log_free(logAddress logAddress1,u_int length){
       u_int blocks;
       Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
       if(f!=NULL){
-      		int startblock=logAddress1.blockNo;
+      	    int  StartSector=(logAddress1.segmentNo-1+segmentCache->summary->totalBlock*2)*blocksize;
+      		int startblock=StartSector/FLASH_SECTORS_PER_BLOCK;
       		int blocks=length/FLASH_BLOCK_SIZE+1;
       		if(Flash_Erase(f,startblock,blocks)){
       			cout<<"Error: Fail to erase blocks segmentNo ="<<logAddress1.segmentNo<<" blcokNo ="<<logAddress1.blockNo<<endl;

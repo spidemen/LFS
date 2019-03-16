@@ -6,7 +6,7 @@
 #define file_h
 #include <stdio.h>
 #include <time.h>
-
+#include  "log.h"
 struct Inode {
     int inum;           // in spec
     char* filename;     // in spec
@@ -27,6 +27,8 @@ struct Inode {
     struct logAddress *Block4Ptr;
     struct logAddress *OtherBlocksPtr;
 };
+
+
 
 
 #endif /* file_h */

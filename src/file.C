@@ -9,13 +9,20 @@
 #include "log.h"
 #include <time.h>
 #include "file.h"
-
 int GLOBAL_INUM = 0;
 static const int IFILE_INUM = 0;
 static const int TYPE_F = 0;
 static const int TYPE_D = 1;
-
-
+/*
+Notice: Katy
+Possibley, you need to rewrite your code, please implement log_write and Log_read. 
+rewrite file :  1st write "hello word "  2nd write "katy, morining" offerset is 4, then return string should hello katy, morining. 
+Implement this, first need to get string hello world using log_read and then concat these two string "hello, katy morining" , write
+to this flash using log_write. 
+Noramally, read and write should be fine. Notice, rewrite , concat , offset...
+Notice: every  write should do update inode as well as file data, which means need to call log_write twice 
+you can use one point to metadat, another to data, another to precious block data , another to logaddress, last to file data
+*/
 int Write_To_Ifile(struct Inode *iptr) {
 	char *filename = (*iptr).filename;
     char* buffer = "writing ifile";
@@ -250,9 +257,17 @@ int File_Free(int inum) {
     return 0;
 }
 
-
+/***
+before submission, a code review is necessary. Please first make your code no any compile bug, can pass basic tests, after that we
+will do code review. Focuse on style , format , readable. I will optimize my code after I finish my part
+*/
 int main(int argc, char *argv[])
 {
+
+	// For Katy, when use log layer, fist make mklfs then can call
+	 init("FuseFileSystem");   // this use to init block size and segment , fuse file system
+    // When you want to use function from log Layer, comment main funcion of log.C
+
 	printf("Begin file layer...\n");
 	char *flashname = "myflash";
 	u_int wearLimit = 100;
@@ -281,7 +296,7 @@ int main(int argc, char *argv[])
 	//File_Write(thisFile, offset, length, wbuf);
 	//printf("File_Write completed. Inode %d was writen. \n", thisFile);
 
-	File_Free(IFILE_INUM); //Xing
+	// File_Free(IFILE_INUM); //Xing
 
     //Change_File_Permissions(int inum, int permissions);
     //Change_File_Owner(int inum);

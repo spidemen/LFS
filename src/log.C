@@ -8,24 +8,27 @@
 #include <algorithm>
 #include <flash.h>
 #include "log.h"
-static const char *hello_str = "Hello World!\n";
-static const char *hello_path = "/hello";
-static const char *link_path = "/link";
+// static const char *hello_str = "Hello World!\n";
+// static const char *hello_path = "/hello";
+// static const char *link_path = "/link";
 
 using namespace std;
-
+char *filename="FuseFileSystem";
 Segment *segmentCache=new Segment;
 int startsector;
 vector< pair<int, Segment > > MRC;   // implement N most access segment policy
+int generateBlockNo=0;
+// vector< pair<int, Segment > > MRCTest;
+ metadata *pmetadata=new metadata;
 
-vector< pair<int, Segment > > MRCTest;
-metadata *pmetadata=new metadata;
+ int blocksize=2;
 
 void testWrite(char *buf,int start){
 //	char *filename="test.txt";
 	u_int blocks=100;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
     if(f!=NULL){
+
     	cout<<"total block for this file "<<blocks<<" the len of buf ="<<strlen(buf)<<endl;
     	 segmentCache->summary->segmentNo++; 
     	 SegmentSummary *summary=new SegmentSummary;
@@ -100,11 +103,11 @@ bool DoesFileExist (char *filename) {
 }
 
 int init(char *fileSystemName){
-	 if(!DoesFileExist(fileSystemName)){
+//	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
 	 	 string cmd="";
 	 	 cmd=cmd+"./mklfs -b 4 -l 4 "+fileSystemName;
 	 	 system(cmd.c_str()); 
-    }
+ //   }										// commnet for testing file layer
 	u_int blocks;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
     if(f!=NULL){
@@ -326,7 +329,8 @@ int Log_free(logAddress logAddress1,u_int length){
       u_int blocks;
       Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
       if(f!=NULL){
-      		int startblock=logAddress1.blockNo;
+      	    int  StartSector=(logAddress1.segmentNo-1+segmentCache->summary->totalBlock*2)*blocksize;
+      		int startblock=StartSector/FLASH_SECTORS_PER_BLOCK;
       		int blocks=length/FLASH_BLOCK_SIZE+1;
       		if(Flash_Erase(f,startblock,blocks)){
       			cout<<"Error: Fail to erase blocks segmentNo ="<<logAddress1.segmentNo<<" blcokNo ="<<logAddress1.blockNo<<endl;
@@ -367,16 +371,17 @@ void TestLogWrite(){
 	 flag=Log_read(address, 50, (void*)readbuf);
 	 cout<<"2nd read from flash. segmentNo="<<address.segmentNo<<"  "<<readbuf<<endl;
 }
-int main(int argc, char *argv[])
-{
-	 cout<<"hell World"<<endl;
-     init("FuseFileSystem");
-   //  testWrite("This is the first time to use flash libraray 1 l\n",2);
-   //  testWrite("This is the first time to use flash libraray 2 l\n",2);
- //    testWrite("This is the first time to use flash libraray 3 l\n",4);
- //    testWrite("This is the first time to use flash libraray 4 l\n",6);
- //    testRead(0);
-      TestLogWrite();
-	//  delete segmentCache;
-    return 1;
-}
+
+// int main(int argc, char *argv[])
+// {
+// 	 cout<<"hell World"<<endl;
+//      init("FuseFileSystem");
+//    //  testWrite("This is the first time to use flash libraray 1 l\n",2);
+//    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
+//  //    testWrite("This is the first time to use flash libraray 3 l\n",4);
+//  //    testWrite("This is the first time to use flash libraray 4 l\n",6);
+//  //    testRead(0);
+//       TestLogWrite();
+// 	//  delete segmentCache;
+//     return 1;
+// }

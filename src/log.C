@@ -19,20 +19,8 @@ int startsector;
 vector< pair<int, Segment > > MRC;   // implement N most access segment policy
 
 vector< pair<int, Segment > > MRCTest;
-void createTest(){
-	 int wearlimit=500;
-	 int blocks=300;
-	 int flag=Flash_Create(filename, wearlimit,blocks);
-	 if(flag) {
-	 	cout<<"Error: create a flash   filename="<<filename<<endl;
-	 }else{
-	 	cout<<"Success: create flash  filename  "<<filename<<endl;
-	 }
+metadata *pmetadata=new metadata;
 
-	 startsector=segmentCache->summary->totalBlock*2*blocksize;
-	// startsector=0;
-
-}
 void testWrite(char *buf,int start){
 //	char *filename="test.txt";
 	u_int blocks=100;
@@ -102,6 +90,44 @@ void testRead(int start){
     Flash_Close(f);
 }
 
+bool DoesFileExist (char *filename) {
+    if (FILE *file = fopen(filename, "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
+}
+
+int init(char *fileSystemName){
+	 if(!DoesFileExist(fileSystemName)){
+	 	 string cmd="";
+	 	 cmd=cmd+"./mklfs -b 4 -l 4 "+fileSystemName;
+	 	 system(cmd.c_str()); 
+    }
+	u_int blocks;
+    Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+    if(f!=NULL){
+        char buf[SUPERBLOCK*FLASH_SECTOR_SIZE];
+        if(Flash_Read(f,0,SUPERBLOCK,buf)){
+            cout<<"Init Error Cannot read first two sector of file system"<<endl;
+        }else{
+          //  pmetadata= (metadata *)buf;
+            memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
+            segmentCache->summary->totalBlock=pmetadata->segmentsize;
+            blocksize=pmetadata->blocksize;
+      //      startsector=segmentCache->summary->totalBlock*2*blocksize;  // first segment hold metafile system, second segment hold ifile data
+            startsector=pmetadata->currentsector;
+            #define BLOCK_SIZE (FLASH_SECTOR_SIZE*blocksize)
+            cout<<"  metadata  segment size in unit blocks "<<pmetadata->segmentsize<<endl;
+            // cout<<"metadata   total  segments  "<<p->segments<<endl;
+            // cout<<"metadata   wearlimit ="<<p->limit<<endl;
+        }
+    }
+	 return 1;
+	// startsector=0;
+
+}
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &logAddress1){
 		u_int blocks;
@@ -141,6 +167,18 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 			   					cout<<"log write remove front segment "<<endl;
 			   				}
 			   		      	MRC.push_back(pair<int,Segment>(segmentCache->summary->segmentNo,p1));
+			   		 //      	// write segment summay into metadata
+			   		 //    	Flash_Close(f);
+			   		 //      	Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
+			   		 //      	SegmentSummary psummary;
+			   		 // //     	memcpy(&psummary,summary,sizeof(SegmentSummary));
+			   		 //      	pmetadata->currentsector=startsector;
+			   		 //     // pmetadata->segmentUsageTable.insert(pair<int,SegmentSummary>(segmentCache->summary->segmentNo,psummary));
+			   		 //      	if(Flash_Write(f, 0, 2, (void*)pmetadata)){
+				     //            cout<<"Error: cannot write metadata to the flash "<<endl;
+				     //            return 1;
+				     //        }
+				     //        Flash_Close(f);
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   	            segmentCache->data.clear();
@@ -179,7 +217,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 				Block B;
 				B.blockNo=generateBlockNo;
 				memcpy(B.data,buffer,BLOCK_SIZE);
-				cout<<"write data. "<<B.data<<endl;
+				cout<<"write data. "<<B.data<<"  "<<BLOCK_SIZE<<endl;
 				tmp=tmp-BLOCK_SIZE;
 			//	segmentCache->data.insert(pair<int,Block>(generateBlockNo,B));
 				segmentCache->pdata->data.insert(pair<int,Block>(generateBlockNo,B));
@@ -258,7 +296,9 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
 		      					memcpy(buffer,it->second.data,BLOCK_SIZE);
 		      		 		 }
 	      		 	    }else{
-	      		 	    	cout<<"Error: segment No= "<<logAddress1.segmentNo<<" do not have blockNo "<<logAddress1.blockNo<<endl;
+	      		 	    	cout<<"Error read from disk: segment No= "<<logAddress1.segmentNo<<" do not have blockNo "<<logAddress1.blockNo<<endl;
+	      		 	    	cout<<"LogRead Segment startsector ="<<StartSector<<"  total sector "<<TotalSector
+	      	   	 	        <<"  segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
 	      		 	    	return 1;
 	      		 	    }
 	      		 		Segment p;
@@ -283,7 +323,6 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
 	  return 0;
 }
 int Log_free(logAddress logAddress1,u_int length){
-	  char *filename="test.txt";
       u_int blocks;
       Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
       if(f!=NULL){
@@ -316,7 +355,7 @@ void TestLogWrite(){
 		 	cout<<"Success write a log   segmentNo="<<address.segmentNo<<" blockNO=. "<<address.blockNo<<endl;
 		 }
 	}
-//	testRead(2);
+//	 testRead(2);
 	 char readbuf[50];
 	 address.segmentNo=1;
 	 address.blockNo=3;
@@ -331,12 +370,12 @@ void TestLogWrite(){
 int main(int argc, char *argv[])
 {
 	 cout<<"hell World"<<endl;
-     createTest();
-   //  testWrite("This is the first time to use flash libraray 1 l\n",0);
-    // testWrite("This is the first time to use flash libraray 2 l\n",6);
+     init("FuseFileSystem");
+   //  testWrite("This is the first time to use flash libraray 1 l\n",2);
+   //  testWrite("This is the first time to use flash libraray 2 l\n",2);
  //    testWrite("This is the first time to use flash libraray 3 l\n",4);
  //    testWrite("This is the first time to use flash libraray 4 l\n",6);
-//	  testRead(0);
+ //    testRead(0);
       TestLogWrite();
 	//  delete segmentCache;
     return 1;

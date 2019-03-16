@@ -259,14 +259,17 @@ int File_Free(int inum) {
 }
 
 /***
-before submission, a code review is necessary. Please first make your code no any compile bug, can pass basic tests, after that we
-will do code review. Focuse on style , format , readable. I will optimize my code after I finish my part
+before submission, a code review is necessary. 
+Please first make your code no any compile bug, can pass basic tests, after that we
+will do code review. Focuse on style , format , readable. 
+I will optimize my code after I finish my part
 */
 int main(int argc, char *argv[])
 {
 
 	// For Katy, when use log layer, fist make mklfs then can call
-	 init("FuseFileSystem");   // this use to init block size and segment , fuse file system
+	 init("FuseFileSystem");   
+	 // this use to init block size and segment , fuse file system
     // When you want to use function from log Layer, comment main funcion of log.C
 
 	printf("Begin file layer...\n");

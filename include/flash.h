@@ -213,7 +213,7 @@ int	Flash_Erase(Flash flash, u_int block, u_int count);
  *
  * Parameters:
  *
- *  	Flash 		flash	-- flash to write
+ *  Flash 		flash	-- flash to write
  *	u_int		block -- starting offset, in blocks
  * 	u_int		*wear -- block's wear level
  *

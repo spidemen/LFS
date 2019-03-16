@@ -30,17 +30,17 @@ BIN=../bin
 
 PKGFLAGS= pkg-config fuse --cflags --libs
 
-SRCS = hello.C flash.c
+SRCS = hello.C flash.C 
 
-OBJS = $(SRCS:.C=.o)
+OBJS = $(FILES:.C=.o)
 
-LOGS=log.C flash.c
+LOGS=log.C flash.C
 OBJLOG = log.o flash.o
 
-FILES=file.C flash.c 
-OBJFILE= file.o flash.o
+FILES=file.C flash.C log.C
+OBJFILE= file.o flash.o log.o
 
-MKLF=log.C flash.c
+MKLF=log.C flash.C
 OBJMKLFS= mklfs.o flash.o
 
 $(MAIN):  $(OBJS)
@@ -67,6 +67,9 @@ $(FILE):  $(OBJFILE)
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
+
+depend: $(FILES)
+	makedepend $(INCLUDES) $^
 
 clean:
 	cd $(HOME)

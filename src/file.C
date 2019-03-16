@@ -152,7 +152,8 @@ int File_Create(int inum, int type) {
     // char *buffer;
     // sprintf(buffer, "%d %x", iptr->inum, *iptr);
     // logAddress *logAddress1;
-   	// Log_Write(inum, block, length, buffer, &logAddress1); //Xing
+   	// Log_Write(inum, block, length, buffer, &logAddress1); //Xing -- write Inode
+
    	char *flashname = "myflash";
    	u_int blocks = 100;
    	Flash f = Flash_Open(flashname, FLASH_ASYNC, &blocks);

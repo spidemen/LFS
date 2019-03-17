@@ -230,7 +230,6 @@ int File_Write(int inum, int offset, int length, char* buffer) {
         printf("Success, wrote to log\n");
     }
 
-
     flag = Log_Write(IFILE_INUM, ifileoffset, length, (void *)buffer, ladd); //Xing -- replace with Inode // WRite the inode
     if (flag) {
         printf("Error: Failed to write inode properly\n");

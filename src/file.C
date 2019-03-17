@@ -6,13 +6,20 @@
 #include <stdlib.h>
 #include <iostream>
 #include <flash.h>
+#include <vector>
 #include "log.h"
 #include <time.h>
 #include "file.h"
+
 int GLOBAL_INUM = 0;
 static const int IFILE_INUM = 0;
 static const int TYPE_F = 0;
 static const int TYPE_D = 1;
+
+Ifile *ifile = new Ifile;
+
+
+// return 0 if things are fine, 1 if error
 /*
 Notice: Katy
 Possibley, you need to rewrite your code, please implement log_write and Log_read. 
@@ -23,68 +30,35 @@ Noramally, read and write should be fine. Notice, rewrite , concat , offset...
 Notice: every  write should do update inode as well as file data, which means need to call log_write twice 
 you can use one point to metadat, another to data, another to precious block data , another to logaddress, last to file data
 */
-// int Write_To_Ifile(struct Inode *iptr) {
-// 	char *filename = (*iptr).filename;
-//     char* buffer = "hello world";
-//     int inum = (*iptr).inum;
-//     u_int blocks = 100;
-//     Flash f = Flash_Open(filename, FLASH_ASYNC, &blocks);
+
+#define INODE_SIZE 144;
+int Get_Inode(int inum, struct Inode *iptr) { // all inodes are stored in ifile (file at root directory (like testdir))
+   	
+    printf("Getting Inode data (bad way)...\n");
+    *iptr = ifile->data.at(inum);
+    int flag; 
+    int offset = inum * INODE_SIZE; //Xing
+    int length = INODE_SIZE;
+
+
+    //Get most recent ifile address
+    logAddress ladd = ifile->addresses.back();
+    printf("ifile address %d %d\n", ladd.segmentNo, ladd.blockNo);
+    // ladd.segmentNo = ifileLoc.mostRecentSeg;
+    // ladd.blockNo = ifileLoc.mostRecentBlock;
+
+    // char rbuf[BLOCK_SIZE];
+    // flag = Log_read(ladd, BLOCK_SIZE, rbuf);
+    // if (flag) {
+    //     printf("Error: File_Read\n");
+    // }
+    // Inode *iread = (Inode *)rbuf;
+    //printf("Read inode %d of type %d owned by %d from flash @ time %s \n", iread->inum, iread->type, iread->permissions, asctime( iread->time_of_last_change));
     
-//     if (f == NULL) {
-//         printf("----Error: couldn't get Flash handle to .ifile\n");
-//         exit(1);
-//     }
-
-//     char buf[200];
-//     sprintf(buf, "%d|%s", inum, filename);
-
-//     if(Flash_Write(f, 0, 1, (void*)buf)){ //if returns 1, error //Xing params
-// 		printf("----Write error: cannot write inode %d -- %s to flash \n", iptr->inum, iptr->filename);
-// 	}else{
-// 		printf("--Successful Flash write. \n");
-// 	}
-//     Flash_Close(f);
-//     return 0;
-// }
-
-// int Get_Inode(int inum, struct Inode *iptr) { // all inodes are stored in ifile (file at root directory (like testdir))
-//    	u_int blocks = 100;
-//     // Call down into memory to get inode with inum
-//     Flash f = Flash_Open("./.ifile", FLASH_ASYNC, &blocks);
-//     if (f == NULL) {
-//         printf("----Error: couldn't get Flash handle to .ifile\n");
-//         exit(1);
-//     }
-//     printf("--Trying to get contents of ifile\n");
-//     char *buf;
-//     u_int sector = 0; // starting offset, in sectors
-//     u_int count = 1; // # of sectors to read
-//     if(Flash_Read(f, 0, 1, (void*)buf)){ //if returns 1, error //Xing params
-// 		printf("----Read error: cannot read inode %d -- %s to flash \n", iptr->inum, iptr->filename);
-// 	}else{
-// 		printf("--Successful Flash read. \n");
-// 	}
-//     Flash_Close(f);
-
-//     printf("--Buffer contents: %s", buf);
-
-
-
-//     // while (fgets(line, sizeof line, fptr) != NULL) {
-//     //     if (count == inum) {
-//     //         printf("File line: %s", line);
-//     //         sscanf(line, "%lx", &ul);
-//     //         printf("--The ul %x and the pointer %x\n", &ul, ptr);
-//     //         ptr = (struct Inode *) &ul;
-//     //         printf("--The ul %x and the pointer %x\n", &ul, ptr);
-//     //         printf("Ptr's stuff %d\n", (*ptr).inum); //Xing
-//     //     } 
-//     //     count++;
-//     // }
+    printf("Read inode %d of type %d permissions %d from flash @ time %s \n", iptr->inum, iptr->type, iptr->permissions, asctime( iptr->time_of_last_change));
     
-//     // fclose(fptr);
-//     return 0;
-// }
+    return 0;
+}
 
 int Inode_Create(int inum, int type, struct Inode *iptr) {
 
@@ -92,9 +66,13 @@ int Inode_Create(int inum, int type, struct Inode *iptr) {
     iptr->inum = inum;
     iptr->type = type; 
     iptr->in_use = 1;
-    iptr->owner = "user";
-    iptr->permissions = 0775 | 0664; //default for file (0) is 664, directory (1) is 775
 
+    if (type == 0) { //then file so Unix default is 664
+        iptr->permissions = 664; //default for file (0) is 664, directory (1) is 775
+    } else {
+        iptr->permissions = 775; //default for file (0) is 664, directory (1) is 775
+    }
+    
     struct tm * time_of_last_change;
     time_t rawtime;
     time ( &rawtime );
@@ -107,24 +85,24 @@ int Inode_Create(int inum, int type, struct Inode *iptr) {
     iptr->Block4Ptr = NULL;
     iptr->OtherBlocksPtr = NULL;
 
-    GLOBAL_INUM++;
+    GLOBAL_INUM++; //Katy Bug: when crashes, resets to 0, this is bad
+    ifile->data.push_back(*iptr);
+
+    //ifile->addresses.push_back() //update ifile address
 
     printf( "Inode %d created at: %s", inum, asctime( iptr->time_of_last_change));
     return 0;
 }
 
 int Change_File_Permissions(int inum, int permissions) {
-    
     return 0;
 }
 
 int Change_File_Owner(int inum) {
-    
     return 0;
 }
 
 int Change_File_Group(int inum) {
-    
     return 0;
 }
 
@@ -132,48 +110,120 @@ int Change_File_Group(int inum) {
 
 int File_Create(int inum, int type) {
     // Need to create the inode for the file
-    char *filename;
+    string filename;
     printf("((Entered File_Create( %d, %d)\n", inum, type);
     if (inum == 0) { //ifile
     	filename = ".ifile";
-    } else {
-    	printf("-- make a diff finode entry\n", inum, type);
-    	sprintf(filename, "file_%d", inum); 
     }
 
     // Make an Inode for the file
-    printf("Make Inode for %s...\n", filename);
-    struct Inode *iptr = new Inode;
-    iptr->filename = filename;
+    struct Inode *inode = new Inode;
+    inode->filename = filename;
     //creates and writes Inode
-    Inode_Create(inum, type, iptr); 
+    Inode_Create(inum, type, inode); 
 
-    string buffer = "hello world - Test File_Create";
-    const char * bufwrite = buffer.c_str();
     //sprintf(buffer, "inode_%d %x", iptr->inum, &iptr); //Xing - works when buffer is initialized
     // e.g. if I do char *buffer = "my contents";  things are fine
     
-
     logAddress logAddress1;
     int flag;
-   	flag = Log_Write(1, 2, 50, (void *)bufwrite, logAddress1); //Xing -- replace with Inode
+    u_int length = 50;
+    u_int block = 1;
+    void *buf = (void *) inode;
+
+
+   	flag = Log_Write(inum, 2, 50, (void *)buf, logAddress1); //Xing -- replace with Inode
+    if (inum == IFILE_INUM) {
+        ifile->addresses.push_back(logAddress1);
+    }
+
     if (flag) {
         printf("Error: Failed Log_Write test\n");
     } else {
-        printf("Success, wrote to log\n");
+        printf("Success, wrote to log at logAddress: block %d, segment %d\n", logAddress1.blockNo, logAddress1.segmentNo);
     }
+    
+    printf("Confirming that what File_Create wrote...\n");
+    logAddress ladd;
+    ladd.segmentNo = 1;
+    ladd.blockNo = 3;
+    
+    
+    char rbuf[BLOCK_SIZE];
+    flag = Log_read(ladd, BLOCK_SIZE, rbuf);
+    if (flag) {
+        printf("Error: File_Read\n");
+    }
+    Inode *iread = (Inode *)buf;
+    printf("Read inode %d from flash @ time %s \n", iread->inum, asctime( iread->time_of_last_change));
+    
+    return 0;
+}
+
+
+
+/* File_Read
+Reads the contents of the blocks that the Inode "inum" points to
+*/
+int File_Read(int inum, int offset, int length, char* buffer) {
+
+    // Consult inode map to get disk address for inode inum
+    printf("File_Read: inum %d is type %d\n", ifile->data.at(inum).inum, ifile->data.at(inum).type);
+    // Read inode into memory (if not already in buffer cache)
+    // and find appropriate data pointer
+
+    // Read the data block that is referenced by the data pointer
+    // logAddress ladd;
+    // ladd.segmentNo = 1;
+    // ladd.blockNo = 3;
+    // int flag;
+
+    //     char buf[length];
+    //     if (length > BLOCK_SIZE) {
+    //         Call Log_read enoguh times 
+
+
+    //         return a buffer with a pointer in it
+
+
+    //         use memcpy 
+    //         memcopy(buffer, pointer, i)
+    //     }
+    // flag = Log_read(ladd, length, buffer);
+    // if (flag) {
+    //     printf("Error: File_Read\n");
+    // }
+    // printf("Read from flash: %s\n", buffer);
+
+
 
     return 0;
 }
 
+
 /* File_Write
 Assigns the block pointers of the Inode with inum "inum"
-*/
-int File_Write(int inum, int offset, int length, const char* buffer) {
+inum: the inum of the inode of the file to be accessed
+offset: the starting offset of the I/O in bytes
+length: length of the I/O in bytes
+buffer: the I/O, what we're writing
+// */
+int File_Write(int inum, int offset, int length, char* buffer) {
 
     logAddress ladd;
     int flag;
-    flag = Log_Write(inum, offset, length, (void *)buffer, ladd); //Xing -- replace with Inode
+    int ifileoffset = offset * inum;
+
+    // Retrieve file
+    Inode *fileinode = new Inode;
+    Get_Inode(inum, fileinode);
+
+    //Update Inode information
+    if (length > fileinode->size) fileinode->size = length;
+    printf("FILE WRITE SIZE OF INODE %d\n", sizeof(fileinode));
+
+
+    flag = Log_Write(inum, offset, length, (void *)buffer, ladd); //Xing -- replace with Inode //WRite the contents
     if (flag) {
         printf("Error: Failed File_Write test\n");
     } else {
@@ -181,9 +231,15 @@ int File_Write(int inum, int offset, int length, const char* buffer) {
     }
 
 
-    // Retrieve inode
+    flag = Log_Write(IFILE_INUM, ifileoffset, length, (void *)buffer, ladd); //Xing -- replace with Inode // WRite the inode
+    if (flag) {
+        printf("Error: Failed to write inode properly\n");
+    } else {
+        printf("Success, wrote inodes to ifile\n");
+    }
 
-    // Retrieve file
+
+    
 
     // Modify file at it's offset
 
@@ -192,34 +248,15 @@ int File_Write(int inum, int offset, int length, const char* buffer) {
     // time ( &rawtime );
     // this_inode.time_of_last_change = localtime( &rawtime );
 
-    return 0;
-}
-
-/* File_Read
-Reads the contents of the blocks that the Inode "inum" points to
-*/
-int File_Read(int inum, int offset, int length, char* buffer) {
-
-    // Consult inode map to get disk address for inode inum
-
-    // Read inode into memory (if not already in buffer cache)
-    // and find appropriate data pointer
-
-    // Read the data block that is referenced by the data pointer
-    logAddress ladd;
-    ladd.segmentNo = 1;
-    ladd.blockNo = 3;
-    int flag;
-    
-    flag = Log_read(ladd, length, buffer);
-    if (flag) {
-        printf("Error: File_Read\n");
-    }
-    printf("Read from flash: %s\n", buffer);
-
+    //Check what was written
+    char* rbuf;
+    File_Read(inum, 0, 20, rbuf);
+    char* ibuf;
+    File_Read(IFILE_INUM, 0, 20, rbuf);
 
     return 0;
 }
+
 
 // int File_Free(int inum) {
 
@@ -227,28 +264,34 @@ int File_Read(int inum, int offset, int length, char* buffer) {
 //     return 0;
 // }
 
-int Test_File_Read() {
+// int Test_File_Read() {
     
-    int inum = GLOBAL_INUM;
-    int offset = 3;
-    int length = 50;
-    char rbuffer[50];
+//     int inum = GLOBAL_INUM;
+//     int offset = 3;
+//     int length = 50;
+//     char rbuffer[50];
     
-    if (File_Read(inum, offset, length, rbuffer) == 0) {
-        printf("SUCCESS -- File_Read worked\n");
-    } else {
-        printf("TEST FAILED -- Test_File_Write\n");
-    }
+//     if (File_Read(inum, offset, length, rbuffer) == 0) {
+//         printf("SUCCESS -- File_Read worked\n");
+//     } else {
+//         printf("TEST FAILED -- Test_File_Write\n");
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 int Test_File_Write() {
+
     int inum = GLOBAL_INUM;
-    int offset = 4;
-    int length = 20;
-    string sbuffer = "katy morning";
-    const char *buffer = sbuffer.c_str();
+    int type = TYPE_F;
+    int offset = 1;
+    int length = INODE_SIZE;
+    Inode *inode = new Inode;
+    char* buffer = "henlo world";
+
+    printf("Now creating new inum %d\n", inum);
+    File_Create(inum, type);
+
     if (File_Write(inum, offset, length, buffer) == 0) {
         printf("SUCCESS -- File_Write worked\n");
     } else {
@@ -258,16 +301,21 @@ int Test_File_Write() {
 }
 
 
-// Test_File_Create makes an Inode but writes "hello world - Test_File_Create" to log
+//Test_File_Create makes an Inode but writes "hello world - Test_File_Create" to log
 int Test_File_Create() { 
-    int inum = GLOBAL_INUM;
-    int type = 0;
+    int inum = IFILE_INUM;
+    int type = TYPE_D;
     if (File_Create(inum, type) == 0) {
         printf("SUCCESS -- File_Create worked\n");
     } else {
         printf("TEST FAILED -- Test_File_Create\n");
     }
-    return 0;
+
+    int offset = 0;
+    int length = 50;
+    char *rbuf;
+    File_Read(inum, offset, length, rbuf);
+    return 1;
 }
 
 /***
@@ -285,11 +333,22 @@ int main(int argc, char *argv[])
     // When you want to use function from log Layer, comment main funcion of log.C
 
 	printf("Begin file layer...\n");
+    struct Inode i;
+    printf("Size of inode %d\n", sizeof(i));
 
 	// Create the ifile
 	Test_File_Create(); 
+
+    
+    // Update ifile information
     Test_File_Write();
-    Test_File_Read();
+
+    // Inode *iptr;
+    // struct IfileLocation *ifileLoc;
+    // Get_Inode(0, iptr, ifileLoc);
+    // printf("Got inode %d\n", iptr->inum, ifileLoc->mostRecentSeg, ifileLoc->mostRecentBlock);
+    //Test_File_Write();
+    //Test_File_Read();
 
 
 	// // Check that the ifile was created properly (inode made and written in self)

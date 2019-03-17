@@ -8,6 +8,7 @@
 #include <flash.h>
 #include "log.h"
 using namespace std;
+char *filename="FuseFileSystem";
  int totalsectors=2;
 int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;

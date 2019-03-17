@@ -9,15 +9,16 @@
 #include <stdlib.h>
 #include <iostream>
 #include <algorithm>
+#include <vector>
 #include <flash.h>
 #include  "log.h"
 #include  "file.h"
 
 #define IFILE 0
 
-typedef string FileName
+typedef string FileName;
 
-vector<pair<FileName,inum> > tables;
+vector<pair<FileName,inum>> tables;
 
 int inodeSize=144;   // default vaule
 

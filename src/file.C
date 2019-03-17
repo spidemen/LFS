@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
 {
 
 	// For Katy, when use log layer, fist make mklfs then can call
-	//init("FuseFileSystem");   
+	 init("FuseFileSystem");   
 	 // this use to init block size and segment , fuse file system
     // When you want to use function from log Layer, comment main funcion of log.C
 

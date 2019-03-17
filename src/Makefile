@@ -12,6 +12,8 @@ MAIN=LFS
 LOG=log
 FILE=file
 MKLFS=mklfs
+DIRECTORY=directory
+TEST=test
 LFS=..
 
 CC=gcc
@@ -43,6 +45,12 @@ OBJFILE= file.o flash.o log.o
 MKLF=log.C flash.C
 OBJMKLFS= mklfs.o flash.o
 
+DIRECTORYS=directory.C file.C log.C
+OBJDIRECTORY=directory.o file.o log.o 
+
+TESTS=testCase.C  log.C flash.C
+OBJTEST=testCase.o  log.o flash.o 
+
 $(MAIN):  $(OBJS)
 	 cd $(HOME)
 	 $(CC) $(CFLAGS) $(INCLUDES) $(OBJS) -o $(MAIN) $(LFLAGS)
@@ -61,6 +69,16 @@ $(MKLFS): $(OBJMKLFS)
 $(FILE):  $(OBJFILE)
 	cd $(HOME)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJFILE) -o $(FILE) $(LFLAGS)
+	mv *.o $(BIN)
+
+$(DIRECTORY): $(OBJDIRECTORY)
+	cd $(HOME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJDIRECTORY) -o $(DIRECTORY) $(LFLAGS)
+	mv *.o $(BIN)
+
+$(TEST): $(OBJTEST)
+	cd $(HOME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJTEST) -o $(TEST) $(LFLAGS)
 	mv *.o $(BIN)
 
 .C.o:

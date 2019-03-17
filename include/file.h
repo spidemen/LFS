@@ -10,7 +10,7 @@
 #include  "log.h"
 
 
-
+#define INODE_SIZE 144
 // struct IfileAddress {
 //     vector<logAddress> addresses; 
 // };
@@ -23,8 +23,8 @@
 
 
 struct Inode {
-    int inum = 0;           // in spec
-    string filename = "";     // in spec
+    int inum;           // in spec
+    string filename;     // in spec
     int type = 0;           // in spec -- 0 for file, 1 for directory
     u_int size = 0;         // in spec
     u_int block_number = 0; // in spec -- flash addresses of file's blocks
@@ -48,6 +48,7 @@ struct Ifile {
     int inum = 0;
     vector<Inode> data; //location of Inode == inum, should be vector<Inode>
     vector<logAddress> addresses; 
+    int size = 0; //data.size() * INODE_SIZE; //Xing: how to do something like this?
 };
 
 

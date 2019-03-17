@@ -93,10 +93,8 @@ int Inode_Create(int inum, int type, struct Inode *iptr) {
     iptr->OtherBlocksPtr = NULL;
 
     GLOBAL_INUM++; //Katy Bug: when crashes, resets to 0, this is bad
-    if (inum == IFILE_INUM) { 
-        ifile->data.push_back(*iptr);
-    }
-
+    ifile->data.push_back(*iptr);
+    ifile->size = ifile->data.size();
     //ifile->addresses.push_back() //update ifile address
 
     // printf( "Inode %d created at: %s", inum, asctime( iptr->time_of_last_change));
@@ -117,66 +115,6 @@ int Change_File_Group(int inum) {
     return 0;
 }
 
- // Creates an Inode and records it
-int File_Create(int inum, int type) {
-
-    // Make an Inode for the file
-    struct Inode *inode = new Inode;
-    Inode_Create(inum, type, inode); 
-
-    // Add the Inode to the ifile data structure
-    ifile->data.push_back(*inode);
-
-
-    logAddress logAdd;
-    int flag;
-    u_int block = 0;
-    u_int length = INODE_SIZE;
-    void *buf = (void *) inode;
-
-
-    // Write the ifile to disk
-    if (inum == IFILE_INUM) {
-        ifile->addresses.push_back(logAdd);
-        void * buf = (void *) ifile;
-        flag = Log_Write(IFILE_INUM, block, length, (void *)buf, logAdd); //Xing -- replace with Inode
-        if (flag) {
-            printf("Error: Failed to write ifile. \n");
-        } else {
-            printf("Initialized ifile at: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
-        }
-    } 
-
-    else {
-        flag = Log_Write(inum, block, length, (void *)buf, logAdd); //Xing -- replace with Inode
-   
-    }
-
-
-    // if (flag) {
-    //     printf("Error: Failed Log_Write test\n");
-    // } else {
-    //     printf("Success, wrote to log at logAddress: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
-    // }
-    
-    // printf("Confirming that what File_Create wrote...\n");
-    // logAddress ladd;
-    // ladd.segmentNo = ifile->data.at(inum)
-    // ladd.blockNo = 3;
-    
-    
-    // char rbuf[BLOCK_SIZE];
-    // flag = Log_read(ladd, BLOCK_SIZE, rbuf);
-    // if (flag) {
-    //     printf("Error: File_Read\n");
-    // }
-    // Inode *iread = (Inode *)buf;
-    // printf("Read inode %d from flash @ time %s \n", iread->inum, asctime( iread->time_of_last_change));
-    
-    return 0;
-}
-
-
 
 /* File_Read
 Reads the contents of the blocks that the Inode "inum" points to
@@ -184,7 +122,12 @@ Reads the contents of the blocks that the Inode "inum" points to
 int File_Read(int inum, int offset, int length, char* buffer) {
 
     // Consult inode map to get disk address for inode inum
-    printf("File_Read: inum %d is type %d\n", ifile->data.at(inum).inum, ifile->data.at(inum).type);
+    printf("File_Read from ifileDS: inum %d is type %d\n", ifile->data.at(inum).inum, ifile->data.at(inum).type);
+    
+    Inode *iptr = new Inode;
+    Get_Inode(inum, iptr);
+
+
     // Read inode into memory (if not already in buffer cache)
     // and find appropriate data pointer
 
@@ -216,6 +159,82 @@ int File_Read(int inum, int offset, int length, char* buffer) {
     return 0;
 }
 
+ // Creates an Inode and records it
+int File_Create(int inum, int type) {
+
+    // Make an Inode for the file and add it to the ifile datastructure
+    struct Inode *inode = new Inode;
+    Inode_Create(inum, type, inode); 
+    printf("-- Sanity check: in ifileDS there are %d inodes \n", ifile->data.size());
+    
+
+    int flag;
+    u_int block = 0;
+    u_int length = INODE_SIZE;
+    void *buf = (void *) inode;
+
+    // Write the inode to disk
+    logAddress logDisk; 
+    void * nbuf = (void *) inode;
+    flag = Log_Write(inum, block, length, (void *)nbuf, logDisk); //Xing -- replace with Inode
+    if (flag) {
+        printf("Error: Failed to write inode %d. \n", inum);
+    } else {
+        printf("Initialized inode %d at: block %d, segment %d\n", inode->inum, logDisk.blockNo, logDisk.segmentNo);
+    }
+
+
+
+    // Write the ifile to disk    
+    logAddress logAdd;
+    void * fbuf = (void *) ifile;
+    flag = Log_Write(IFILE_INUM, block, length, (void *)fbuf, logAdd); //Xing -- replace with Inode
+    ifile->addresses.push_back(logAdd);
+    if (flag) {
+        printf("Error: Failed to write ifile. \n");
+    } else {
+        printf("Ifile updated at: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
+    }
+    
+
+
+    // Test if ifile was written properly to disk
+    logAddress ladd = ifile->addresses.back();
+    void *rbuf;
+    flag = Log_read(ladd, ifile->size, (void *) rbuf);
+    if (flag) {
+        printf("Error: File_Read\n");
+    }
+    // Ifile iread = (Ifile) rbuf;
+    // printf("Read ifile (inum %d) at block %d, segment %d with size %d (contains %d inodes)\n", iread->inum, ladd.blockNo, ladd.segmentNo, iread->size, iread->data.size());
+    // int offset = inum;
+    // length = INODE_SIZE;
+    // char *frbuf; 
+    // File_Read(IFILE_INUM, offset, length, frbuf);
+
+
+    // if (flag) {
+    //     printf("Error: Failed Log_Write test\n");
+    // } else {
+    //     printf("Success, wrote to log at logAddress: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
+    // }
+    
+    // printf("Confirming that what File_Create wrote...\n");
+    // logAddress ladd;
+    // ladd.segmentNo = ifile->data.at(inum)
+    // ladd.blockNo = 3;
+    
+    
+    // char rbuf[BLOCK_SIZE];
+    // flag = Log_read(ladd, BLOCK_SIZE, rbuf);
+    // if (flag) {
+    //     printf("Error: File_Read\n");
+    // }
+    // Inode *iread = (Inode *)buf;
+    // printf("Read inode %d from flash @ time %s \n", iread->inum, asctime( iread->time_of_last_change));
+    
+    return 0;
+}
 
 /* File_Write
 Assigns the block pointers of the Inode with inum "inum"
@@ -360,8 +379,7 @@ int Ifile_Create() {
 
     // Add the Inode to the ifile data structure
     printf("Ifile inode write contents: \n\t %d %d %s %d %s\n", inode->inum, inode->permissions, inode->owner, inode->size, inode->filename);
-    ifile->data.push_back(*inode);
-    ifile->size = INODE_SIZE;
+
 
     int flag;
     u_int block = 1;
@@ -382,6 +400,8 @@ int Ifile_Create() {
 
     }
 
+    printf("-- Sanity check: in ifileDS there are %d inodes \n", ifile->data.size());
+
     logAddress ladd = ifile->addresses.back();
     char rbuf[INODE_SIZE];
     flag = Log_read(ladd, INODE_SIZE, rbuf);
@@ -389,10 +409,11 @@ int Ifile_Create() {
         printf("Error: File_Read\n");
     }
     Ifile *iread = (Ifile *)buf;
-    printf("Read ifile (inum %d) with size %d \n", iread->inum, iread->size);
+    printf("Read ifile (inum %d) with vector size %d \n", iread->inum, iread->size);
     Inode ifileInode = iread->data.front();
     printf("Ifile inode read contents: \n\t %d %d %s %d %s\n", ifileInode.inum, ifileInode.permissions, ifileInode.owner, ifileInode.size, ifileInode.filename);
     // Xing bug: the filename looked find when it was char*, now that it's string, it looks weird?
+
 }
 
 /*Xing said:
@@ -403,7 +424,8 @@ Then initialize the log layer by calling the log layer function "init()"
 int initFile() {
     //init("FuseFileSystem"); //Xing
 
-    // Create empty ifile
+    // Create ifile inode, add it to the ifile data structure,
+    // and write the ifile data structure fo disk
     Ifile_Create();
 
 }
@@ -425,6 +447,9 @@ int main(int argc, char *argv[])
 
 	printf("Begin file layer...\n");
     initFile();
+    printf("Try to init second file, inode %d\n", GLOBAL_INUM);
+    int type = TYPE_F;
+    File_Create(GLOBAL_INUM, TYPE_F);
 
 	// Create the ifile
 	//Test_File_Create(); 

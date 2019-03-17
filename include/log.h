@@ -8,6 +8,16 @@
 #include <unordered_map>
 #include <ctime> 
 #include <vector>
+#include <string.h>
+#include <fuse.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <iostream>
+#include <algorithm>
+#include <flash.h>
 using namespace std;
 
 #define  N 4
@@ -18,7 +28,7 @@ typedef int segmentNo;
 #define FLASH_SECTOR_SIZE 512
 #define FLASH_SECTORS_PER_BLOCK 16
 
-#define BLOCK_SIZE (FLASH_SECTOR_SIZE*2)
+#define BLOCK_SIZE (FLASH_SECTOR_SIZE*4)
 
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
@@ -41,6 +51,7 @@ struct logAddress{
 // 	int currentsector;
 // 	int currentSegment;
 // };
+
 
 struct Block{
 	int blockNo;

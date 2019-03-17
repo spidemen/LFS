@@ -17,6 +17,7 @@ static const int TYPE_F = 0;
 static const int TYPE_D = 1;
 
 Ifile *ifile = new Ifile;
+int startblock;
 
 
 // return 0 if things are fine, 1 if error
@@ -64,6 +65,11 @@ int Get_Inode(int inum, struct Inode *iptr) { // all inodes are stored in ifile 
 int Inode_Create(int inum, int type, struct Inode *iptr) {
 
 	printf("Creating inum %d of type %d\n", inum, type);
+    if (inum == IFILE_INUM) {
+        iptr->filename = "/.ifile";
+    } else {
+        iptr->filename = "";
+    }
     iptr->inum = inum;
     iptr->type = type; 
     iptr->in_use = 1;
@@ -93,7 +99,9 @@ int Inode_Create(int inum, int type, struct Inode *iptr) {
 
     //ifile->addresses.push_back() //update ifile address
 
-    printf( "Inode %d created at: %s", inum, asctime( iptr->time_of_last_change));
+    // printf( "Inode %d created at: %s", inum, asctime( iptr->time_of_last_change));
+    // printf("Ifile inode write contents: \n\t %d %d %s %d %s\n", iptr->inum, iptr->permissions, iptr->owner, iptr->size, iptr->filename);
+    
     return 0;
 }
 
@@ -110,51 +118,50 @@ int Change_File_Group(int inum) {
 }
 
  // Creates an Inode and records it
-
 int File_Create(int inum, int type) {
-    // Need to create the inode for the file
-    string filename;
-    if (inum == 0) { //ifile
-    	filename = ".ifile";
-    }
 
     // Make an Inode for the file
     struct Inode *inode = new Inode;
-    inode->filename = filename;
-    //creates and writes Inode
     Inode_Create(inum, type, inode); 
 
-    //sprintf(buffer, "inode_%d %x", iptr->inum, &iptr); //Xing - works when buffer is initialized
-    // e.g. if I do char *buffer = "my contents";  things are fine
-    
-    logAddress logAddress1;
+    // Add the Inode to the ifile data structure
+    ifile->data.push_back(*inode);
+
+
+    logAddress logAdd;
     int flag;
-    u_int block = 1;
+    u_int block = 0;
     u_int length = INODE_SIZE;
     void *buf = (void *) inode;
 
+
+    // Write the ifile to disk
     if (inum == IFILE_INUM) {
-        ifile->data.push_back(*inode);
-        ifile->addresses.push_back(logAddress1);
+        ifile->addresses.push_back(logAdd);
         void * buf = (void *) ifile;
-        flag = Log_Write(IFILE_INUM, block, length, (void *)buf, logAddress1); //Xing -- replace with Inode
+        flag = Log_Write(IFILE_INUM, block, length, (void *)buf, logAdd); //Xing -- replace with Inode
+        if (flag) {
+            printf("Error: Failed to write ifile. \n");
+        } else {
+            printf("Initialized ifile at: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
+        }
     } 
 
-    // else {
-    //     flag = Log_Write(inum, block, length, (void *)buf, logAddress1); //Xing -- replace with Inode
+    else {
+        flag = Log_Write(inum, block, length, (void *)buf, logAdd); //Xing -- replace with Inode
    
-    // }
-
-
-    if (flag) {
-        printf("Error: Failed Log_Write test\n");
-    } else {
-        printf("Success, wrote to log at logAddress: block %d, segment %d\n", logAddress1.blockNo, logAddress1.segmentNo);
     }
+
+
+    // if (flag) {
+    //     printf("Error: Failed Log_Write test\n");
+    // } else {
+    //     printf("Success, wrote to log at logAddress: block %d, segment %d\n", logAdd.blockNo, logAdd.segmentNo);
+    // }
     
     // printf("Confirming that what File_Create wrote...\n");
     // logAddress ladd;
-    // ladd.segmentNo = 1;
+    // ladd.segmentNo = ifile->data.at(inum)
     // ladd.blockNo = 3;
     
     
@@ -343,17 +350,61 @@ int Test_File_Create() {
     return 1;
 }
 
+
+int Ifile_Create() {
+    // Make an Inode for the file
+    int inum = IFILE_INUM;
+    int type = TYPE_F;
+    struct Inode *inode = new Inode;
+    Inode_Create(inum, type, inode); 
+
+    // Add the Inode to the ifile data structure
+    printf("Ifile inode write contents: \n\t %d %d %s %d %s\n", inode->inum, inode->permissions, inode->owner, inode->size, inode->filename);
+    ifile->data.push_back(*inode);
+    ifile->size = INODE_SIZE;
+
+    int flag;
+    u_int block = 1;
+    u_int length = ifile->size;
+
+    // Write the ifile to disk
+    logAddress logAdd;
+    logAdd.segmentNo = 1; //Xing - change if this gets in the way of the metadata
+    logAdd.blockNo = 1; // Xing - same here
+    ifile->addresses.push_back(logAdd);
+
+    void * buf = (void *) ifile;
+    flag = Log_Write(IFILE_INUM, block, length, (void *)buf, logAdd); //Xing -- replace with Inode
+    if (flag) {
+        printf("Error: Failed to write ifile. \n");
+    } else {
+        printf("Initialized %s at: block %d, segment %d\n", inode->filename, logAdd.blockNo, logAdd.segmentNo);
+
+    }
+
+    logAddress ladd = ifile->addresses.back();
+    char rbuf[INODE_SIZE];
+    flag = Log_read(ladd, INODE_SIZE, rbuf);
+    if (flag) {
+        printf("Error: File_Read\n");
+    }
+    Ifile *iread = (Ifile *)buf;
+    printf("Read ifile (inum %d) with size %d \n", iread->inum, iread->size);
+    Inode ifileInode = iread->data.front();
+    printf("Ifile inode read contents: \n\t %d %d %s %d %s\n", ifileInode.inum, ifileInode.permissions, ifileInode.owner, ifileInode.size, ifileInode.filename);
+    // Xing bug: the filename looked find when it was char*, now that it's string, it looks weird?
+}
+
 /*Xing said:
 Write a function called "initFile()".
 In it, create the empty ifile 
 Then initialize the log layer by calling the log layer function "init()"
 */
 int initFile() {
+    //init("FuseFileSystem"); //Xing
+
     // Create empty ifile
-    File_Create(IFILE_INUM, TYPE_F);
-
-    init("FuseFileSystem"); //Xing
-
+    Ifile_Create();
 
 }
 

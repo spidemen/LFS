@@ -1,18 +1,8 @@
-#include <fuse.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <iostream>
-#include <algorithm>
-#include <flash.h>
+
 #include "log.h"
-// static const char *hello_str = "Hello World!\n";
-// static const char *hello_path = "/hello";
-// static const char *link_path = "/link";
 
 using namespace std;
+
 char *filename="FuseFileSystem";
 Segment *segmentCache=new Segment;
 int startsector;
@@ -115,8 +105,8 @@ int init(char *fileSystemName){
         if(Flash_Read(f,0,SUPERBLOCK,buf)){
             cout<<"Init Error Cannot read first two sector of file system"<<endl;
         }else{
-          //  pmetadata= (metadata *)buf;
-            memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
+            pmetadata= (metadata *)buf;
+          //  memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
             segmentCache->summary->totalBlock=pmetadata->segmentsize;
             blocksize=pmetadata->blocksize;
       //      startsector=segmentCache->summary->totalBlock*2*blocksize;  // first segment hold metafile system, second segment hold ifile data
@@ -148,7 +138,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 			   			return 1;
 			   		}else{
 
-			   			cout<<"Segment Summart: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
+			   		//	cout<<"Segment Summart: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
 			   		    startsector=startsector+totalSector;
 			   	//	    Data *pdata=new Data;
 			   			pdata->data.insert(segmentCache->pdata->data.begin(),segmentCache->pdata->data.end());
@@ -160,7 +150,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 			   				return 1;	
 			   		    }else{
 
-			   		    	cout<<"Segment Data: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
+			   		  //  	cout<<"Segment Data: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
 			   		  		startsector=startsector+totalSector; 
 			   		    	Segment  p1;
 			   				p1.data=segmentCache->data;
@@ -170,43 +160,17 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 			   					cout<<"log write remove front segment "<<endl;
 			   				}
 			   		      	MRC.push_back(pair<int,Segment>(segmentCache->summary->segmentNo,p1));
-			   		 //      	// write segment summay into metadata
-			   		 //    	Flash_Close(f);
-			   		 //      	Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
-			   		 //      	SegmentSummary psummary;
-			   		 // //     	memcpy(&psummary,summary,sizeof(SegmentSummary));
-			   		 //      	pmetadata->currentsector=startsector;
-			   		 //     // pmetadata->segmentUsageTable.insert(pair<int,SegmentSummary>(segmentCache->summary->segmentNo,psummary));
-			   		 //      	if(Flash_Write(f, 0, 2, (void*)pmetadata)){
-				     //            cout<<"Error: cannot write metadata to the flash "<<endl;
-				     //            return 1;
-				     //        }
-				     //        Flash_Close(f);
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   	            segmentCache->data.clear();
 			   		        segmentCache->pdata->data.clear();
 			   		        segmentCache->summary->tables.clear();
-			   		     //     char buf1[3072];
-			   		    	// if(!Flash_Read(f,tmp,totalSector,buf1)){
-			   		    	//     Data *pdata1=(Data *)buf1;
-			   		    	//     map<int,Block> sData=pdata1->data;
-				      	  //  	    auto it2=sData.begin();
-				      	  //  	    int i=0;
-				      	  //  	    while(it2!=sData.end()&&i<10){
-				      	  //  	    	cout<<"block number "<<it2->first<<" block No "<<it2->second.blockNo<<endl;
-				      	  //  	    	it2++; i++;
-				      	  //  	    }
-				      	  //  	     auto it=sData.find(5);
-				      	  //  	     if(it!=sData.end())
-				      	  //  	     cout<<"Success find 2 Flash   blockNo="<<it->second.blockNo<<endl;
-			   		    	// }else{
-			   		    	// 	cout<<"cannot do log read test "<<endl;
-			   		    	// }
 			   		        //  delete pdata,summary;
 			   		    }
 			   		}
 			   	//	delete summary;
+			   	  Flash_Close(f);
+
 			   }else{
 			   	 cout<<"Error: Fail to open log file  "<<filename<<endl;
       	 		 return 1;	
@@ -219,8 +183,9 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 				generateBlockNo++;
 				Block B;
 				B.blockNo=generateBlockNo;
+			//	cout<<"write data buf "<<(char*)buffer<<endl;
 				memcpy(B.data,buffer,BLOCK_SIZE);
-				cout<<"write data. "<<B.data<<"  "<<BLOCK_SIZE<<endl;
+			//	cout<<"write data. "<<B.data<<"  "<<BLOCK_SIZE<<endl;
 				tmp=tmp-BLOCK_SIZE;
 			//	segmentCache->data.insert(pair<int,Block>(generateBlockNo,B));
 				segmentCache->pdata->data.insert(pair<int,Block>(generateBlockNo,B));
@@ -228,7 +193,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 		}
 		logAddress1.segmentNo=segmentCache->summary->segmentNo;
 		logAddress1.blockNo=generateBlockNo;
-		Flash_Close(f);
+		
  //		delete pdata,summary;
 		return 0;
 
@@ -237,11 +202,12 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 int Log_read(logAddress logAddress1, u_int length, void * buffer){
     
       if(segmentCache->summary->segmentNo==logAddress1.segmentNo){    // check current segment cache
+         	auto block=segmentCache->pdata->data.find(logAddress1.blockNo);
       		if(length<=BLOCK_SIZE){
-      		 	memcpy(buffer,segmentCache->data[logAddress1.blockNo].data,length);
-      		 //	cout<<"segment cache  "<<(char*)buffer<<endl;
+      		 	memcpy(buffer,block->second.data,length);
+      		//   	cout<<"segment cache  "<<(char*)buffer<<"   "<<BLOCK_SIZE<<"  "<<length<<endl;
       		 }else{
-      		 	memcpy(buffer,segmentCache->data[logAddress1.blockNo].data,BLOCK_SIZE);
+      		 	memcpy(buffer,block->second.data,BLOCK_SIZE);
       		 }
       	    return 0;
       }
@@ -252,19 +218,19 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
       	 it++;
       }
       if(it!=MRC.end()){
-      		 Segment p=it->second;
-      		 if(length<=BLOCK_SIZE){
+      		    Segment p=it->second;
       		 	auto block=p.pdata->data.find(logAddress1.blockNo);
       		 	if(block!=p.pdata->data.end()){
       		 	//	cout<<"find  segment "<<logAddress1.segmentNo<<" in the queue "<<endl;
-      		 		memcpy(buffer,block->second.data,length);
+      		 		if(length<=BLOCK_SIZE){
+      		 			  memcpy(buffer,block->second.data,length);
+      		 		} else{
+      		 			 memcpy(buffer,block->second.data,BLOCK_SIZE);
+      		 		}
       		 	}else{
       		 		cout<<"Error: segment No= "<<logAddress1.segmentNo<<" do not have blockNo "<<logAddress1.blockNo<<endl;
       		 		return 1;
       		 	}
-      		 }else{
-      		 	memcpy(buffer,p.data[logAddress1.blockNo].data,BLOCK_SIZE);
-      		 }
       		 MRC.erase(it);
       		 MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));
 
@@ -311,7 +277,7 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
 				   			MRC.erase(MRC.begin());
 				   		}
 		      	   		MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));
-		      	        cout<<"Log: Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNo<<endl;
+		      	   //     cout<<"Log: Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNo<<endl;
 		      	    //    delete summary,pSegment;
 		      	        return 0;
 		      	    }

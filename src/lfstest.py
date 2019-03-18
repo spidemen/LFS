@@ -28,6 +28,7 @@ class TestBase(unittest.TestCase):
         if not os.path.exists(flash):
             raise Exception("mklfs did not create flash device correctly")
 
+
     def _lfs(self, flash, mount, interval = 10, cache = 10):
         subprocess.Popen(['./lfs', '-i', str(interval), '-c', str(cache), flash, mount])
         time.sleep(1)
@@ -37,7 +38,6 @@ class TestBase(unittest.TestCase):
         self._nuke()
         self._mklfs(options.flash)
         os.mkdir(options.mount)
-        print "Made directory"
         self._lfs(options.flash, options.mount)
 
     def _nuke(self):

@@ -21,7 +21,6 @@
 //     u_int mostRecentBlock;
 // };
 
-
 struct Inode {
     int inum;           // in spec
     string filename;     // in spec
@@ -52,13 +51,10 @@ struct Ifile {
 };
 
 
-// struct IndirectBlock {
-//     struct logAddress Block1Ptr;
-//     struct logAddress Block2Ptr;
-//     struct logAddress Block3Ptr;
-//     struct logAddress Block4Ptr;
-// }
 
+int File_Create(int inum, int type);
+int File_Write(int inum, int offset, int length, char* buffer);
+int File_Read(int inum, int offset, int length, char* buffer);
 
 
 #endif /* file_h */

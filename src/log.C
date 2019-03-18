@@ -325,7 +325,6 @@ void TestLogWrite(){
 		 	cout<<"Success write a log   segmentNo="<<address.segmentNo<<" blockNO=. "<<address.blockNo<<endl;
 		 }
 	}
-//	 testRead(2);
 	 char readbuf[50];
 	 address.segmentNo=1;
 	 address.blockNo=3;

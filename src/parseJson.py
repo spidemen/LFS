@@ -1,7 +1,6 @@
 """
 Parse a JSON file and check for irregularities.
 """
-
 import json
 """{
     ".ifile": {
@@ -34,15 +33,19 @@ def Check_InUseInodes_Without_DirEntries():
 
 
 
-def parseJSON(myjson):
 
-	Check_InUseInodes_Without_DirEntries()
-	Check_DirEntries_ReferTo_UnusedInodes()
+def parseJsonFile(a,b):
+	myjsonfile = "memory.json"
+	f = open(myjsonfile, 'r')
 
-	return
+	myjson = f.read()
 
-def add(a, b):
-	return a+b
+	# myjson = json.loads(myjson)
+	# print myjson
+	# Check_InUseInodes_Without_DirEntries()
+	# Check_DirEntries_ReferTo_UnusedInodes()
+
+	return myjson
 
 # def main():
 # 	json.JSONDecoder();

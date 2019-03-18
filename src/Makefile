@@ -14,6 +14,7 @@ FILE=file
 MKLFS=mklfs
 DIRECTORY=directory
 TEST=test
+LFSCK=lfsck
 TLFSS=lfs
 LFS=..
 
@@ -23,12 +24,11 @@ CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
 
 HOME=${CURDIR}
 
-INCLUDES = -I${LFS}/include  -I../usr/include/linux
+INCLUDES = -I${LFS}/include  -I../usr/include/linux -I/usr/include/python2.7
 
 VPATH=/home/bill/Desktop/source-code/csc552/LFS/fuse-2.9.9
 
-LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++ 
-
+LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++ -lpython2.7
 BIN=../bin
 
 PKGFLAGS= pkg-config fuse --cflags --libs
@@ -51,6 +51,9 @@ OBJDIRECTORY=directory.o file.o log.o
 
 TESTS=testCase.C log.C flash.C
 OBJTEST=testCase.o  log.o flash.o 
+
+LFSCKS=lfsck.C log.C flash.C
+OBJLFSCK= lfsck.o log.o flash.o
 
 TLFS=lfs.C log.C file.C flash.C
 OBJFLS=lfs.o log.o file.o flash.o
@@ -83,6 +86,11 @@ $(DIRECTORY): $(OBJDIRECTORY)
 $(TEST): $(OBJTEST)
 	cd $(HOME)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJTEST) -o $(TEST) $(LFLAGS)
+	mv *.o $(BIN)
+
+$(LFSCK): $(OBJLFSCK)
+	cd $(HOME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLFSCK) -o $(LFSCK) $(LFLAGS)
 	mv *.o $(BIN)
 
 $(TLFSS): $(OBJFLS)

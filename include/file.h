@@ -36,7 +36,6 @@ struct Inode {
     int permissions = 0;
     u_int offset = 0;
 
-
     struct logAddress Block1Ptr;
     struct logAddress Block2Ptr;
     struct logAddress Block3Ptr;
@@ -53,6 +52,12 @@ struct Ifile {
 };
 
 
+// struct IndirectBlock {
+//     struct logAddress Block1Ptr;
+//     struct logAddress Block2Ptr;
+//     struct logAddress Block3Ptr;
+//     struct logAddress Block4Ptr;
+// }
 
 
 

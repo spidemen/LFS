@@ -48,7 +48,7 @@ OBJMKLFS= mklfs.o flash.o
 DIRECTORYS=directory.C file.C log.C
 OBJDIRECTORY=directory.o file.o log.o 
 
-TESTS=testCase.C  log.C flash.C
+TESTS=testCase.C log.C flash.C
 OBJTEST=testCase.o  log.o flash.o 
 
 $(MAIN):  $(OBJS)

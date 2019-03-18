@@ -21,6 +21,7 @@
 //     u_int mostRecentBlock;
 // };
 
+
 struct Inode {
     int inum;           // in spec
     string filename;     // in spec
@@ -50,6 +51,7 @@ struct Ifile {
     int size = 0; //data.size() * INODE_SIZE; //Xing: how to do something like this?
 };
 
+vector<logAddress> ifileAddress; 
 
 
 int File_Create(int inum, int type);

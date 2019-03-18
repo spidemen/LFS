@@ -8,12 +8,13 @@
 
 .PHONY: depend clean backup setup
 
-MAIN=lfs
+MAIN=fuse
 LOG=log
 FILE=file
 MKLFS=mklfs
 DIRECTORY=directory
 TEST=test
+TLFSS=lfs
 LFS=..
 
 CC=gcc
@@ -48,8 +49,11 @@ OBJMKLFS= mklfs.o flash.o
 DIRECTORYS=directory.C file.C log.C
 OBJDIRECTORY=directory.o file.o log.o 
 
-TESTS=testCase.C  log.C flash.C
+TESTS=testCase.C log.C flash.C
 OBJTEST=testCase.o  log.o flash.o 
+
+TLFS=lfs.C log.C file.C flash.C
+OBJFLS=lfs.o log.o file.o flash.o
 
 $(MAIN):  $(OBJS)
 	 cd $(HOME)
@@ -79,6 +83,11 @@ $(DIRECTORY): $(OBJDIRECTORY)
 $(TEST): $(OBJTEST)
 	cd $(HOME)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJTEST) -o $(TEST) $(LFLAGS)
+	mv *.o $(BIN)
+
+$(TLFSS): $(OBJFLS)
+	cd $(HOME)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJFLS) -o $(TLFSS) $(LFLAGS)
 	mv *.o $(BIN)
 
 .C.o:

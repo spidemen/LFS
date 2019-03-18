@@ -33,8 +33,8 @@ typedef int segmentNo;
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 struct logAddress{
-	u_int blockNo;
-	int segmentNo;
+	u_int blockNo=0;
+	int segmentNo=0;
 };
 
 

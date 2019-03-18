@@ -17,6 +17,11 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+#include "log.h"
+#include "file.h"
+#include  "directory.h"
+#include "flash.h"
+
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 static const char *link_path = "/link";

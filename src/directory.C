@@ -20,10 +20,10 @@ int directoryCreate(char *filename, char *path){
 			tables.push_back(pair<FileName,inum>(filecreate, currentinum));
 		}
 }
-int main(int argc, char *argv[])
-{
-	 cout<<"hell World"<<endl;
+// int main(int argc, char *argv[])
+// {
+// 	 cout<<"hell World"<<endl;
    	
-	//  delete segmentCache;
-    return 1;
-}
+// 	//  delete segmentCache;
+//     return 1;
+// }

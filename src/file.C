@@ -1,14 +1,4 @@
-#include <fuse.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <iostream>
-#include <flash.h>
-#include <vector>
-#include "log.h"
-#include <time.h>
+
 #include "file.h"
 
 int GLOBAL_INUM = 0;
@@ -129,7 +119,7 @@ int Change_File_Group(int inum) {
 /* File_Read
 Reads the contents of the blocks that the Inode "inum" points to
 */
-int File_Read(int inum, int offset, int length, char* buffer) {
+int File_Read(int inum, int offset, int length, void * buffer) {
 
     // Consult inode map to get disk address for inode inum
     printf("File_Read from ifileDS: inum %d is type %d\n", ifile->data.at(inum-1).inum, ifile->data.at(inum-1).type);
@@ -159,10 +149,14 @@ int File_Read(int inum, int offset, int length, char* buffer) {
     //     use memcpy 
     //     memcopy(buffer, pointer, i)
     // }
-    
-    flag = Log_read(ladd, length, buffer); 
+    char content[BLOCK_SIZE];
+    flag = Log_read(ladd, length, (void*)content); 
     if (flag) {
         printf("Error: File_Read\n");
+    } else{
+        char *writebuf=content;
+        writebuf+=offset;
+        memcpy(buffer,writebuf,length);
     }
     
     return 0;
@@ -276,7 +270,7 @@ offset: the starting offset of the I/O in bytes
 length: length of the I/O in bytes
 buffer: the I/O, what we're writing
 // */
-int File_Write(int inum, int offset, int length, char* buffer) {
+int File_Write(int inum, int offset, int length, void *buffer) {
     
     int flag;
 
@@ -305,15 +299,15 @@ int File_Write(int inum, int offset, int length, char* buffer) {
           if(!Log_read(pRead, BLOCK_SIZE, rbuf)){
                 if(offset+length<BLOCK_SIZE){
                     char *rPoint=rbuf;
-                    memcpy(writebuf,rbuf,offset);  // from start to offset
+                   memcpy(writebuf,rbuf,offset);  // from start to offset
                     writebuf+=offset;
-                //    cout<<content<<"1st   "<<rbuf<<". writebuf="<<*writebuf<<" offset ="<<offset<<endl;
+               //     cout<<content<<"1st   "<<rbuf<<". writebuf="<<*writebuf<<" offset ="<<offset<<endl;
                     memcpy(writebuf,buffer,length);  // from offset to length
-                 //   cout<<content<<"2nd   "<<buffer<<". writebuf="<<*writebuf<<endl;
+               //     cout<<content<<"2nd   "<<buffer<<". writebuf="<<*writebuf<<endl;
                     writebuf+=length-1;                   
                     rPoint=rPoint+offset+length-1; 
                     memcpy(writebuf,rPoint,BLOCK_SIZE-offset-length); // copy the ending to writebuf
-              //     cout<<"writebuf ="<<*writebuf<<"rpoint ="<<*rPoint<<" rbuf="<<rbuf<<" content ="<<content<<". length="<<length<<endl;
+               //   cout<<"writebuf ="<<*writebuf<<"rpoint ="<<*rPoint<<" rbuf="<<rbuf<<" content ="<<content<<". length="<<length<<endl;
                     if(!Log_Write(inum, 1, length, (void *) content, dataAdd)){
                          ifile->data[inum-1].Block1Ptr=dataAdd;  // update inode
                     }
@@ -514,7 +508,7 @@ int Test_File_Write(int inum) {
     }
 
     // Katy: Isse when appending to file
-    offset = 5;
+    offset = 10;
     length = 5;
     buffer = "yuan";
 

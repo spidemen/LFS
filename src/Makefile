@@ -50,10 +50,10 @@ DIRECTORYS=directory.C file.C log.C
 OBJDIRECTORY=directory.o file.o log.o 
 
 TESTS=testCase.C log.C flash.C
-OBJTEST=testCase.o  log.o flash.o 
+OBJTEST=testCase.o  file.o log.o flash.o 
 
 TLFS=lfs.C log.C file.C flash.C
-OBJFLS=lfs.o log.o file.o flash.o
+OBJFLS=lfs.o log.o flash.o
 
 $(MAIN):  $(OBJS)
 	 cd $(HOME)

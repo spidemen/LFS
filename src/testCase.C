@@ -1,12 +1,12 @@
 #include <log.h>
-
+#include <file.h>
 void test1(){
 	cout<<"*******************Log layer test 1 simple small write and read ******************************"<<endl;
 	char *buf="Hello LFS, welcome to CSC 545 OS class";
 	inum num=1;
 	logAddress address;
 	if(!Log_Write(num, 1, 40,(void*)buf,address)){
-		char bufR[10];
+		char bufR[40];
 		if(!Log_read(address, 40,(void *)bufR)){
 			if(strcmp(buf,bufR)!=0){
 				cout<<"Fail:  write string "<<buf<<" does not match read string "<<bufR<<endl;
@@ -73,9 +73,9 @@ void test4(){
 	cout<<"*******************File layer test 4 simple small write and read ******************************"<<endl;
 	char *buf="Hello LFS, welcome to CSC 545 OS class";
 	inum num=1;
-	if(!File_Write(num, 0, 40, buf)){
-	    char bufR[10];
-	    if(!File_Read(num, 0, 40, bufR)){
+	if(!File_Write(num, 0, 40, (void*)buf)){
+	    char bufR[40];
+	    if(!File_Read(num, 0, 40, (void*)bufR)){
 	    	if(strcmp(buf,bufR)!=0){
 				cout<<"Fail:  write string "<<buf<<" does not match read string "<<bufR<<endl;
 			}else{
@@ -86,15 +86,15 @@ void test4(){
 }
 void test5(){
 	cout<<"*******************File layer test 5 simple big write and read ******************************"<<endl;
-	int size=2048;   
+	int size=300;   
 	char buf[size];
 	for(int i=0;i<size;i++){
 		buf[i]='a'+i%26;
 	}
 	inum num=1;
-	if(!File_Write(num, 0, size, buf)){
+	if(!File_Write(num, 0, size, (void*)buf)){
 	    char bufR[size];
-	    if(!File_Read(num, 0, size, bufR)){
+	    if(!File_Read(num, 0, size, (void*)bufR)){
 	    	if(strcmp(buf,bufR)!=0){
 				cout<<"Fail:  write string "<<buf<<" does not match read string "<<bufR<<endl;
 			}else{
@@ -105,15 +105,15 @@ void test5(){
 }
 void test6(){
 	cout<<"*******************File layer test 6 overwrite  ******************************"<<endl;
-	char *buf="Hello LFS, welcome to CSC 545 OS class";
+	char *buf="Hello LFS, welcome to CSC 545 OS class..";
 	inum num=1;
-	if(!File_Write(num, 0, 40, buf)){
+	if(!File_Write(num, 0, 40, (void*)buf)){
 		char *bufchange="Hello LFS, rewrite string.......";
-		File_Write(num, 0, 40, bufchange);
-	    char bufR[size];
-	    if(!File_Read(num, 0, 40, bufR)){
+		File_Write(num, 0, 40, (void*)bufchange);
+	    char bufR[40];
+	    if(!File_Read(num, 0, 40, (void*)bufR)){
 	    	if(strcmp(bufchange,bufR)!=0){
-				cout<<"Fail:  write string "<<buf<<" does not match read string "<<bufR<<endl;
+				cout<<"Fail test 6:  write string "<<buf<<" does not match read string "<<bufR<<endl;
 			}else{
 				cout<<"**************Success    test 6  pass*******************************"<<endl;
 			}
@@ -122,19 +122,40 @@ void test6(){
 
 }
 void test7(){
-	cout<<"*******************File layer test 6 concat   ******************************"<<endl;
-	char *buf="Hello LFS, welcome to CSC 545 OS class";
-	inum num=1;
-	if(!File_Write(num, 0, 40, buf)){
-		char *bufchange="concat string, welcome to LFS project";
-		File_Write(num, 40, 40, bufchange);
-	    char bufR[80];
-	    char *expect="Hello LFS, welcome to CSC 545 OS class concat string, welcome to LFS project"
-	    if(!File_Read(num, 0, 80, bufR)){
+	cout<<"*******************File layer test 7 concat string  ******************************"<<endl;
+	char *buf="hello";  // 4+1 chararcter
+	inum num=2;
+	Test_File_Create(num);
+	if(!File_Write(num, 0, 5, (void*)buf)){
+		char *bufchange="world";
+		if(File_Write(num, 6, 6, (void*)bufchange)){
+			cout<<"test 7 write error "<<endl;
+		}
+	    char bufR[50];
+	    char *expect="hello0world";
+	    if(!File_Read(num, 0, 11, (void*)bufR)){ // total 11 character
 	    	if(strcmp(expect,bufR)!=0){
-				cout<<"Fail:  write string "<<buf<<" does not match read string "<<bufR<<endl;
+				cout<<"Fail test 7:  write string >>"<<expect<<"<<does not match read string >>"<<bufR<<"<<"<<endl;
 			}else{
 				cout<<"**************Success    test 7  pass*******************************"<<endl;
+			}
+	    }
+	}
+}
+void test8(){
+	cout<<"*******************File layer test 8 offset read  ******************************"<<endl;
+	char *buf="hello world";
+	inum num=3;
+	Test_File_Create(num);
+	if(!File_Write(num, 0, 12, (void*)buf)){
+		
+	    char bufR[50];
+	    char *expect="world";
+	    if(!File_Read(num, 6, 12, (void*)bufR)){
+	    	if(strcmp(expect,bufR)!=0){
+				cout<<"Fail test 7:  write string >>"<<expect<<"<<does not match read string >>"<<bufR<<"<<"<<endl;
+			}else{
+				cout<<"**************Success    test 8  pass*******************************"<<endl;
 			}
 	    }
 	}
@@ -145,7 +166,14 @@ int main(int argc, char *argv[]){
 	test1();
 	test2();
 	test3();
-	// file layer test case
 
+	// file layer test case
+	initFile();
+	Test_File_Create(1);
+	test4();
+	//test5();  // 
+	test6();
+	test7();
+	test8();
 	return 1;
 }

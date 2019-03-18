@@ -122,8 +122,8 @@ void test6(){
 
 }
 void test7(){
-	cout<<"*******************File layer test 7 concat   ******************************"<<endl;
-	char *buf="hello";
+	cout<<"*******************File layer test 7 concat string  ******************************"<<endl;
+	char *buf="hello";  // 4+1 chararcter
 	inum num=2;
 	Test_File_Create(num);
 	if(!File_Write(num, 0, 5, (void*)buf)){
@@ -133,11 +133,29 @@ void test7(){
 		}
 	    char bufR[50];
 	    char *expect="hello0world";
-	    if(!File_Read(num, 0, 11, (void*)bufR)){
+	    if(!File_Read(num, 0, 11, (void*)bufR)){ // total 11 character
 	    	if(strcmp(expect,bufR)!=0){
 				cout<<"Fail test 7:  write string >>"<<expect<<"<<does not match read string >>"<<bufR<<"<<"<<endl;
 			}else{
 				cout<<"**************Success    test 7  pass*******************************"<<endl;
+			}
+	    }
+	}
+}
+void test8(){
+	cout<<"*******************File layer test 8 offset read  ******************************"<<endl;
+	char *buf="hello world";
+	inum num=3;
+	Test_File_Create(num);
+	if(!File_Write(num, 0, 12, (void*)buf)){
+		
+	    char bufR[50];
+	    char *expect="world";
+	    if(!File_Read(num, 6, 12, (void*)bufR)){
+	    	if(strcmp(expect,bufR)!=0){
+				cout<<"Fail test 7:  write string >>"<<expect<<"<<does not match read string >>"<<bufR<<"<<"<<endl;
+			}else{
+				cout<<"**************Success    test 8  pass*******************************"<<endl;
 			}
 	    }
 	}
@@ -156,5 +174,6 @@ int main(int argc, char *argv[]){
 	//test5();  // 
 	test6();
 	test7();
+	test8();
 	return 1;
 }

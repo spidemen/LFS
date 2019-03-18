@@ -154,8 +154,10 @@ int File_Read(int inum, int offset, int length, void * buffer) {
     if (flag) {
         printf("Error: File_Read\n");
     } else{
+      //  cout<<"file read ="<<content<<endl;
         char *writebuf=content;
-        writebuf+=offset;
+         writebuf+=offset;
+       //  cout<<"file read ="<<content<<"writebuf ="<<*writebuf<<endl;
         memcpy(buffer,writebuf,length);
     }
     

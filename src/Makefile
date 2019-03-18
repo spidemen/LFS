@@ -8,7 +8,7 @@
 
 .PHONY: depend clean backup setup
 
-MAIN=LFS
+MAIN=lfs
 LOG=log
 FILE=file
 MKLFS=mklfs
@@ -88,10 +88,10 @@ $(TEST): $(OBJTEST)
 
 depend: $(FILES)
 	makedepend $(INCLUDES) $^
-
+#Don't remove MLKFS, used in lfstest.py
 clean:
 	cd $(HOME)
-	rm -f *.o *~ $(MAIN) $(LOG) $(FILE) $(MKLFS) $(MAKECLEANGARBAGE) $(BIN)/*
+	rm -f *.o *~ $(MAIN) $(LOG) $(FILE) $(MAKECLEANGARBAGE) $(BIN)/*
 
 backup:
 	mkdir bak

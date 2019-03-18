@@ -32,9 +32,9 @@ BIN=../bin
 
 PKGFLAGS= pkg-config fuse --cflags --libs
 
-SRCS = hello.C flash.C 
+SRCS = hello.C flash.C log.C
 
-OBJS = $(FILES:.C=.o)
+OBJS = $(SRCS:.C=.o)
 
 LOGS=log.C flash.C
 OBJLOG = log.o flash.o

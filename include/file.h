@@ -21,7 +21,6 @@
 //     u_int mostRecentBlock;
 // };
 
-
 struct Inode {
     int inum;           // in spec
     string filename;     // in spec
@@ -52,7 +51,9 @@ struct Ifile {
 };
 
 
-
+int File_Create(int inum, int type);
+int File_Write(int inum, int offset, int length, char* buffer);
+int File_Read(int inum, int offset, int length, char* buffer);
 
 
 #endif /* file_h */

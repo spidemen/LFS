@@ -19,6 +19,9 @@ static const int TYPE_D = 1;
 Ifile *ifile = new Ifile;
 
 
+vector<logAddress> ifileAddress; 
+
+
 // return 0 if things are fine, 1 if error
 /*
 Notice: Katy
@@ -281,7 +284,7 @@ int File_Write(int inum, int offset, int length, char* buffer) {
     // First convert offset to blocks
     int block = offset/BLOCK_SIZE;  //integer division. Can't get partial blocks?
     printf("Writing at block %d...\n", block);
-
+/********************Author: XING********************Just for phase 1, later no need consider more block write***************************************************************/
      // // Retrieve file
       Inode *fileinode;
     // Get_Inode(inum, fileinode);
@@ -309,7 +312,6 @@ int File_Write(int inum, int offset, int length, char* buffer) {
                  //   cout<<content<<"2nd   "<<buffer<<". writebuf="<<*writebuf<<endl;
                     writebuf+=length-1;                   
                     rPoint=rPoint+offset+length-1; 
-                //   memset(writebuf,'0x00',BLOCK_SIZE-offset-length);
                     memcpy(writebuf,rPoint,BLOCK_SIZE-offset-length); // copy the ending to writebuf
               //     cout<<"writebuf ="<<*writebuf<<"rpoint ="<<*rPoint<<" rbuf="<<rbuf<<" content ="<<content<<". length="<<length<<endl;
                     if(!Log_Write(inum, 1, length, (void *) content, dataAdd)){
@@ -334,8 +336,10 @@ int File_Write(int inum, int offset, int length, char* buffer) {
                 }
             }
       }
+/************************XING***********************************************************************************************/
+
      
-      cout<<"Finish a file write  segment "<<dataAdd.segmentNo<<"  BlockNo "<<dataAdd.blockNo<<endl;
+//      cout<<"Finish a file write  segment "<<dataAdd.segmentNo<<"  BlockNo "<<dataAdd.blockNo<<endl;
 
     //  if (offset + length < BLOCK_SIZE) { //we can write everything into one block;
     //     logAddress dataAdd;
@@ -609,7 +613,7 @@ int initFile() {
 
     // Create ifile inode, add it to the ifile data structure,
     // and write the ifile data structure fo disk
-
+    init("FuseFileSystem");   
     Ifile_Create();
 
 
@@ -621,39 +625,39 @@ before submission, a code review is necessary.
 Please first make your code no any compile bug, can pass basic tests, after that we
 will do code review. Focuse on style , format , readable. 
 I will optimize my code after I finish my part
-*/
-int main(int argc, char *argv[])
-{
+// */
+// int main(int argc, char *argv[])
+// {
 
-	// For Katy, when use log layer, fist make mklfs then can call
-	 init("FuseFileSystem");   
-	 // this use to init block size and segment , fuse file system
-    // When you want to use function from log Layer, comment main funcion of log.C
+// 	// For Katy, when use log layer, fist make mklfs then can call
+	
+// 	 // this use to init block size and segment , fuse file system
+//     // When you want to use function from log Layer, comment main funcion of log.C
 
-	printf("Begin file layer, creating ifile (and its inode)...\n");
-    initFile();
+// 	printf("Begin file layer, creating ifile (and its inode)...\n");
+//     initFile();
 
-    int test_inum = 1;
+//     int test_inum = 1;
 
-    printf("\nTEST: Try to create file, inode %d\n", test_inum);
-    Test_File_Create(test_inum);
+//     printf("\nTEST: Try to create file, inode %d\n", test_inum);
+//     Test_File_Create(test_inum);
 
-    // int offset = 0;
-    // int length = sizeof(*ifile);
-    // char* buffer;
-    // File_Read(IFILE_INUM, offset, length, buffer);
-    // Write to our newly created inode/file
-    printf("\nTEST Try to write to file, inode %d\n", test_inum);
-    Test_File_Write(test_inum);
-
-
-    Test_File_Read(test_inum);
-
-	//Test_File_Free(test_inum);
+//     // int offset = 0;
+//     // int length = sizeof(*ifile);
+//     // char* buffer;
+//     // File_Read(IFILE_INUM, offset, length, buffer);
+//     // Write to our newly created inode/file
+//     printf("\nTEST Try to write to file, inode %d\n", test_inum);
+//     Test_File_Write(test_inum);
 
 
+//     Test_File_Read(test_inum);
+
+// 	//Test_File_Free(test_inum);
 
 
 
-    return 1;
-}
+
+
+//     return 1;
+// }

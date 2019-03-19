@@ -74,7 +74,7 @@ int Change_File_Group(int inum) {
 /* File_Read
 Reads the contents of the blocks that the Inode "inum" points to
 */
-int File_Read(int inum, int offset, int length, char* buffer) {
+int File_Read(int inum, int offset, int length, void* buffer) {
 
     // Consult inode map to get disk address for inode inum
     printf("File_Read from ifileDS: inum %d is type %d\n", ifile->data.at(inum-1).inum, ifile->data.at(inum-1).type);
@@ -174,7 +174,7 @@ offset: the starting offset of the I/O in bytes
 length: length of the I/O in bytes
 buffer: the I/O, what we're writing
 // */
-int File_Write(int inum, int offset, int length, char *buffer) {
+int File_Write(int inum, int offset, int length, void *buffer) {
     
     int flag;
 

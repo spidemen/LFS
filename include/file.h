@@ -11,23 +11,14 @@
 
 
 #define INODE_SIZE 144
-// struct IfileAddress {
-//     vector<logAddress> addresses; 
-// };
-
-
-// struct IfileLocation {
-//     u_int mostRecentSeg;
-//     u_int mostRecentBlock;
-// };
 
 
 struct Inode {
-    int inum;           // in spec
-    string filename;     // in spec
-    int type = 0;           // in spec -- 0 for file, 1 for directory
-    u_int size = 0;         // in spec
-    u_int block_number = 0; // in spec -- flash addresses of file's blocks
+    int inum;           
+    string filename;     
+    int type = 0;           // 0 for file, 1 for directory
+    u_int size = 0;        
+    u_int block_number = 0; 
     
     int in_use = 0; 	// true 1, false 0
     //time_t time_of_last_change;
@@ -57,6 +48,7 @@ vector<logAddress> ifileAddress;
 int File_Create(int inum, int type);
 int File_Write(int inum, int offset, int length, char* buffer);
 int File_Read(int inum, int offset, int length, char* buffer);
+
 
 
 #endif /* file_h */

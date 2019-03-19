@@ -35,28 +35,17 @@ def Check_InUseInodes_Without_DirEntries():
 
 
 def parseJsonFile(a,b):
-	myjsonfile = "memory.json"
-	f = open(myjsonfile, 'r')
+	filename = "memory.json"
+	f = open(filename, 'r')
 
-	myjson = f.read()
+	myjsonString = f.read()
 
-	# myjson = json.loads(myjson)
-	# print myjson
-	# Check_InUseInodes_Without_DirEntries()
-	# Check_DirEntries_ReferTo_UnusedInodes()
+	#myjson = json.loads(myjsonString) #error
+	
+	Check_InUseInodes_Without_DirEntries()
+	Check_DirEntries_ReferTo_UnusedInodes()
 
 	return myjson
 
-# def main():
-# 	json.JSONDecoder();
-	
-# 	myjsonfile = "demo.json"
-# 	f = open(myjsonfile, 'r')
-# 	myjson = f.read()
 
-# 	myjson = json.loads(myjson)
-# 	parseJSON(myjson)
-
-# if __name__ == '__main__':
-# 	main()
 

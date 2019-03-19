@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
                      "print 'Today is',ctime(time())\n");
  	PyRun_SimpleString("import sys");
  	PyRun_SimpleString("import os");
+ 	PyRun_SimpleString("import json");
  	PyRun_SimpleString("sys.path.append(os.getcwd())");
 
  	// Import the JsonParser as Python module
@@ -100,7 +101,7 @@ int main(int argc, char *argv[])
         }
         else 
         {
-        	printf("Blocks: %d, BLOCK_SIZE is %d\n", blocks, BLOCK_SIZE);
+        	// printf("Blocks: %d, BLOCK_SIZE is %d\n", blocks, BLOCK_SIZE);
         	// printf("FLASH_SECTORS_PER_BLOCK %d\n", FLASH_SECTORS_PER_BLOCK);
         	// printf("FLASH_SECTOR_SIZE %d\n", FLASH_SECTOR_SIZE);
         	// printf("So FLASH_BLOCK_SIZE is %d\n", FLASH_BLOCK_SIZE);
@@ -125,13 +126,6 @@ int main(int argc, char *argv[])
 	            else 
 	            {
 	            	
-	            	//cout <<"Buffer contents"<<buffer<<endl;
-	            	SegmentSummary *summary = (SegmentSummary *)buf;
-	            	if (summary->segmentNo != 0) {
-	            		cout <<"SegmentSummary segmentNo = "<< summary->segmentNo<<endl;
-	            		cout <<"SegmentSummary inUse = "<<summary->inUse<<endl;
-	            		cout <<" modifiedTime = "<<summary->modifiedTime<<endl;
-	            	}
 	    			Block *d = (Block *)buf;
 	    			cout << "Block no"<<d->blockNo << "| " <<d->aLive<< "| " << d->blockUse << "| "<<d->offset <<endl;
 	            	convertToJSON( d , jsonfile);

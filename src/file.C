@@ -174,7 +174,7 @@ offset: the starting offset of the I/O in bytes
 length: length of the I/O in bytes
 buffer: the I/O, what we're writing
 // */
-int File_Write(int inum, int offset, int length, void *buffer) {
+int File_Write(int inum, int offset, int length, void* buffer) {
     
     int flag;
 

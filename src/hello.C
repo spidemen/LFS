@@ -26,6 +26,10 @@ static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 static const char *link_path = "/link";
 
+// Bug with mount
+// cannot call open and write function here, will fixed this bug after phase 1
+
+
 static int hello_getattr(const char *path, struct stat *stbuf)
 {
     int res = 0;

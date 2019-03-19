@@ -41,9 +41,6 @@ int init(char *fileSystemName){
       //      startsector=segmentCache->summary->totalBlock*2*blocksize;  // first segment hold metafile system, second segment hold ifile data
             startsector=pmetadata->currentsector;
             #define BLOCK_SIZE (FLASH_SECTOR_SIZE*blocksize)
-            cout<<"  metadata  segment size in unit blocks "<<pmetadata->segmentsize<<endl;
-            // cout<<"metadata   total  segments  "<<p->segments<<endl;
-            // cout<<"metadata   wearlimit ="<<p->limit<<endl;
         }
     }
 	 return 1;
@@ -138,13 +135,12 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
       		 }
       	    return 0;
       }
-      vector<pair<int,Segment> >::iterator it=MRC.begin();
-  //  find(MRC.begin(),MRC.end(),logAddress1.SegmentNo);
+      vector<pair<int,Segment> >::iterator it=MRC.begin();  // find function does not work , so use while loop, will fixed later on
       while(it!=MRC.end()){				// check Segment queue
       	 if(it->first==logAddress1.segmentNo) break;
       	 it++;
       }
-      if(it!=MRC.end()){
+      if(it!=MRC.end()){  // in the queue, read from memory
       		    Segment p=it->second;
       		 	auto block=p.pdata->data.find(logAddress1.blockNo);
       		 	if(block!=p.pdata->data.end()){
@@ -159,9 +155,9 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
       		 		return 1;
       		 	}
       		 MRC.erase(it);
-      		 MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));
+      		 MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p)); // put it on the tail 
 
-      } else{
+      } else{	// read from flash 
       		int  StartSector=(logAddress1.segmentNo-1+segmentCache->summary->totalBlock*2)*blocksize;
       	//	int  StartSector=(logAddress1.segmentNo-1)*blocksize;
             int  TotalSector=(segmentCache->summary->totalBlock-1)*blocksize;
@@ -200,10 +196,10 @@ int Log_read(logAddress logAddress1, u_int length, void * buffer){
 	      		 		Segment p;
 	      		 		p.summary=summary;
 	      		 		p.pdata=pdata;
-		      	   		while(MRC.size()>=N){
+		      	   		while(MRC.size()>=N){ 	// maintain the queue size
 				   			MRC.erase(MRC.begin());
 				   		}
-		      	   		MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));
+		      	   		MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));    // put on the tail 
 		      	   //     cout<<"Log: Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNo<<endl;
 		      	    //    delete summary,pSegment;
 		      	        return 0;

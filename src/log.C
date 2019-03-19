@@ -8,80 +8,9 @@ Segment *segmentCache=new Segment;
 int startsector;
 vector< pair<int, Segment > > MRC;   // implement N most access segment policy
 int generateBlockNo=0;
-// vector< pair<int, Segment > > MRCTest;
- metadata *pmetadata=new metadata;
+metadata *pmetadata=new metadata;
 
- int blocksize=2;
-
-void testWrite(char *buf,int start){
-//	char *filename="test.txt";
-	u_int blocks=100;
-    Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-    if(f!=NULL){
-
-    	cout<<"total block for this file "<<blocks<<" the len of buf ="<<strlen(buf)<<endl;
-    	 segmentCache->summary->segmentNo++; 
-    	 SegmentSummary *summary=new SegmentSummary;
-    	 memcpy(summary,segmentCache->summary,sizeof(SegmentSummary));
-    	 	Block B;
-			B.blockNo=5;
-			char *buffer="tstssgagaga";
-			memcpy(B.data,buffer,BLOCK_SIZE);
-		//	cout<<"write data. "<<B.data<<endl;
-	//			tmp=tmp-BLOCK_SIZE;
-		 Data *pdata=new Data;
-
-		 // segmentCache->data.clear();
-		 // segmentCache->data.insert(pair<int,Block>(5,B));
-		 // segmentCache->data.insert(pair<int,Block>(6,B));
-		 // segmentCache->data.insert(pair<int,Block>(7,B));
-		 // segmentCache->data.insert(pair<int,Block>(8,B));
-		  segmentCache->pdata->data.clear();
-		 segmentCache->pdata->data.insert(pair<int,Block>(5,B));
-		 segmentCache->pdata->data.insert(pair<int,Block>(6,B));
-		 segmentCache->pdata->data.insert(pair<int,Block>(7,B));
-		 segmentCache->pdata->data.insert(pair<int,Block>(8,B));
-		 pdata->data=segmentCache->pdata->data;
-	//	 memcpy(pdata,segmentCache->pdata,sizeof(segmentCache->pdata));
-    	  void *buf=(void *)&segmentCache->data;
-    	if(Flash_Write(f, start, 6, (void*)pdata)){
-    		cout<<"Write Flash Error: canont write "<<buf<<" to flash  total block "<<1<<endl;
-    	}else{
-    		cout<<"Success Write Flash "<<endl;
-    	}
-    	  delete summary;
-    	  Flash_Close(f);
-    	
-    }
-  
-}
-void testRead(int start){
-//	char *filename="test.txt";
-	u_int blocks=100;
-	char buf[3072];
-    Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-    if(f!=NULL){
-    	cout<<"total block for this file "<<blocks<<endl;
-    	if(Flash_Read(f, start, 6, (void*)buf)){
-    		cout<<"Read Flash Error: canont read startsector "<<start<<" to flash  total block "<<1<<endl;
-    	}else{
-    	    Data *pdata=(Data*)buf;
-    		map<int,Block> p=pdata->data;
-    	//	memcpy(&p,buf,1024);
-    		//(map<int,Block> *)buf;
-    		auto it=p.find(8);
-    	//	cout<<"Success Read  Flash   buf="<<buf<<endl;
-    		cout<<"Success Read  Flash   SegmentNo="<<it->second.blockNo<<endl;
- 			 auto it2=p.begin();
-			 int i=0;
-			 while(it2!=p.end()&&i<10){
-		        cout<<"block number "<<it2->first<<" block No "<<it2->second.blockNo<<endl;
-				it2++; i++;
-			 }
-    	}
-    }
-    Flash_Close(f);
-}
+int blocksize=2;
 
 bool DoesFileExist (char *filename) {
     if (FILE *file = fopen(filename, "r")) {
@@ -143,7 +72,6 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 			   	//	    Data *pdata=new Data;
 			   			pdata->data.insert(segmentCache->pdata->data.begin(),segmentCache->pdata->data.end());
 			   		    void *buf=(void *)pdata;
-			   		  //  void *buf=(void *)&segmentCache->data;
 			   		    totalSector=(segmentCache->summary->totalBlock-1)*blocksize;
 			   		    if(Flash_Write(f, startsector,totalSector, (void*)buf)) {     // write segment data into disk
 			   		    	cout<<"LogWrite  Error: segment data  inum="<<num<<"   fileblock "<<block<<endl;
@@ -183,7 +111,6 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &log
 				generateBlockNo++;
 				Block B;
 				B.blockNo=generateBlockNo;
-			//	cout<<"write data buf "<<(char*)buffer<<endl;
 				memcpy(B.data,buffer,BLOCK_SIZE);
 			//	cout<<"write data. "<<B.data<<"  "<<BLOCK_SIZE<<endl;
 				tmp=tmp-BLOCK_SIZE;
@@ -309,32 +236,6 @@ int Log_free(logAddress logAddress1,u_int length){
       		 cout<<"Error: Fail to open log file  "<<filename<<endl;
       		 return 1;
       }
-}
-
-void TestLogWrite(){
-	 string buf="test log write and read: hello LFS";
-	 logAddress address;
-	  int  flag;
-	 for(int i=0;i<21;i++){
-	 	 buf="test log write and read: hello LFS th "+to_string(i)+"ith write";
-	 	 const char *bufwrite=buf.c_str();
-		  flag=Log_Write(1, 2, 50, (void*)bufwrite, address);
-		 if(flag) {
-		 	cout<<"Error: Fail Pass log write test"<<endl;
-		 }else{
-		 	cout<<"Success write a log   segmentNo="<<address.segmentNo<<" blockNO=. "<<address.blockNo<<endl;
-		 }
-	}
-	 char readbuf[50];
-	 address.segmentNo=1;
-	 address.blockNo=3;
-	 flag=Log_read(address, 50, (void*)readbuf);
-	 if(flag){
-	 	cout<<"Error: Fail pass log read test "<<endl;
-	 }
-	 cout<<"read from flash. segmentNo="<<address.segmentNo<<"  "<<readbuf<<endl;
-	 flag=Log_read(address, 50, (void*)readbuf);
-	 cout<<"2nd read from flash. segmentNo="<<address.segmentNo<<"  "<<readbuf<<endl;
 }
 
 // int main(int argc, char *argv[])

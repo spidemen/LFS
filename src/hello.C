@@ -32,6 +32,8 @@ static const char *link_path = "/link";
 
 static int hello_getattr(const char *path, struct stat *stbuf)
 {
+    cout<<"getattr function "<<endl;
+    printf("getattr function \n");
     int res = 0;
 
     memset(stbuf, 0, sizeof(struct stat));
@@ -74,6 +76,10 @@ static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int hello_open(const char *path, struct fuse_file_info *fi)
 {
+
+    cout<<"open file function called "<<endl;     
+    printf("open file function called  \n");
+
     if (strcmp(path, hello_path) != 0)
         return -ENOENT;
 
@@ -82,6 +88,36 @@ static int hello_open(const char *path, struct fuse_file_info *fi)
 
     return 0;
 }
+
+
+static int hello_create(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+
+    cout<<"create function called"<<endl;     
+    printf("create function called  \n");
+    if (strcmp(path, hello_path) != 0)
+        return -ENOENT;
+
+    if ((fi->flags & 3) != O_RDONLY)
+        return -EACCES;
+
+    return 0;
+}
+
+static int hello_init(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+
+    cout<<"init function called"<<endl;     
+    printf("init function called  \n");
+    if (strcmp(path, hello_path) != 0)
+        return -ENOENT;
+
+    if ((fi->flags & 3) != O_RDONLY)
+        return -EACCES;
+
+    return 0;
+}
+
 
 static int hello_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
@@ -119,6 +155,8 @@ static struct fuse_operations hello_oper = {
     .open	= hello_open,
     .read	= hello_read,
     .readlink   = hello_readlink,
+    .create=hello_create,
+    .init=hello_init,
 };
 
 int main(int argc, char *argv[])

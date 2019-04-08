@@ -127,7 +127,7 @@ int File_Write(int inum, int offset, int length, char* buffer) {
 	struct Ifile ifile = Get_Ifile();
 	printf(" -- IFile info: size %d\n", ifile.size);
 
-	struct logAddress pRead = fileinode.Block1Ptr;
+	struct logAddress pRead = ifile.data[inum].Block1Ptr;
 	char rbuf[BLOCK_SIZE];
 	char content[BLOCK_SIZE];
 	memset(content, '0x00', BLOCK_SIZE);
@@ -196,10 +196,13 @@ int File_Read(int inum, int offset, int length, char* buffer) {
 	struct logAddress ladd;
 	ladd.blockNo = iptr.Block1Ptr.blockNo;
 	ladd.segmentNo = iptr.Block1Ptr.segmentNo;
+	ladd.segmentNo=1;
+	ladd.blockNo=2;
 	printf("file debug segmentNo=%d  block number=%d \n",ladd.segmentNo,ladd.blockNo);
 
 	char content[length];
 	if (!Log_read(ladd, length, content)) {
+		printf(" file read %s\n", content);
 		memcpy(buffer, content, length);
 	} else {
 		printf("File_Read: error with Log_Read of file %d\n", inum);

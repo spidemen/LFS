@@ -2,12 +2,12 @@
 #define _LOG_H
 
 
-#include <iostream>
+
 #include <time.h>
-#include <map>
-#include <unordered_map>
-#include <ctime> 
-#include <vector>
+//#include <map>
+//#include <unordered_map>
+//#include <ctime> 
+//#include <vector>
 #include <string.h>
 #include <fuse.h>
 #include <stdio.h>
@@ -15,10 +15,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <iostream>
-#include <algorithm>
+//#include <iostream>
+//#include <algorithm>
 #include <flash.h>
-using namespace std;
+#include <stdbool.h>
+//using namespace std;
 
 #define  N 4
 typedef int inum;
@@ -30,12 +31,16 @@ typedef int segmentNo;
 
 #define BLOCK_SIZE (FLASH_SECTOR_SIZE*4)
 
+
+#define BLOCK_NUMBER  4
+#define TOTALBLOCK  6
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 struct logAddress{
-	u_int blockNo=0;
-	int segmentNo=0;
+	u_int blockNo;
+	int segmentNo;
 };
+
 
 
 // class LOG {
@@ -58,24 +63,36 @@ struct Block{
 	bool aLive;
 	int  blockUse;
 	char  data[BLOCK_SIZE];   // size in cache
-	int  offset=0; 
+	int  offset; 
 };
 
 struct SegmentSummary{
-	int segmentNo=1;
-    bool  inUse=false;
+	int segmentNo;
+    bool  inUse;
     int   liveByte;
-	time_t   modifiedTime=time(NULL);
-    int  totalBlock=4; 
-    map<inum,int> tables;   // inum associated with block No
+	time_t   modifiedTime;
+    int  totalBlock; 
+    int  INUM[BLOCK_NUMBER];
+    int  BlockNumber[BLOCK_NUMBER];
+  //  map<inum,int> tables;   // inum associated with block No
 };
-struct Data{
-	map<int,Block> data;
+// struct Data{
+// 	map<int,Block> data;
+// };
+
+struct lData{
+	int blockNo;
+   struct Block B;
+	struct lData *next;
 };
 struct Segment{
-	SegmentSummary *summary=new SegmentSummary;
-	map<int,Block> data ;   // pair block number and Block structure
-	Data *pdata=new Data;
+	struct SegmentSummary *summary;
+//	map<int,Block> data ;   // pair block number and Block structure
+//	Data *pdata=new Data;
+	struct lData *head;
+	bool used;
+	int currenIndex;
+	struct Block  dataB[BLOCK_NUMBER];
 };
 
 // use one segment to hold metadata for file system
@@ -85,13 +102,16 @@ struct metadata{
 	int segments;
 	int limit;
 	int currentsector;
-	map<segmentNo,SegmentSummary> segmentUsageTable;
+//	map<segmentNo,SegmentSummary> segmentUsageTable;
 	int checkpointStart;     // start block of checkpoint
 };
 
 // for now, just put all the function here, later on will put all of them into a class
 int init(char *fileSystemName);
-int Log_Write(inum num, u_int block, u_int length, void *buffer, logAddress &logAddress1);
-int Log_read(logAddress logAddress1, u_int length, void * buffer);
-int Log_free(logAddress logAddress1,u_int length);
+int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
+int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
+int Log_free(struct logAddress logAddress1,u_int length);
+
+
+
 #endif

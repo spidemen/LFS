@@ -39,7 +39,7 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
             }
 
            Flash_Close(f); 
-           delete p;
+        //   delete p;
 
         }else{
             cout<<"Fail to open flash file "<<filename<<endl;
@@ -52,7 +52,8 @@ int readMklfs(char *filename){
     u_int blocks;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
     if(f!=NULL){
-        void *buf;
+      //  void *buf;
+        char buf[totalsectors*512];
         if(Flash_Read(f, 0,totalsectors,buf)){
             cout<<"Read Flash Error: canont read "<<buf<<" to flash  total block "<<1<<endl;
         }else{

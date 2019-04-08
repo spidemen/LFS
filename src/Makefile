@@ -46,8 +46,8 @@ OBJS=lfs.o flash.o log.o
 LOGS=log.C flash.C
 OBJLOG = log.o flash.o
 
-FILES=file.C flash.C log.C
-OBJFILE= file.o flash.o log.o
+FILES=cfile.c flash.C log.c
+OBJFILE= cfile.o flash.o log.o
 
 MKLF=log.C flash.C
 OBJMKLFS= mklfs.o flash.o

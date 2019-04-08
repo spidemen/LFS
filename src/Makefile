@@ -20,22 +20,28 @@ LFS=..
 
 CC=gcc
 
-CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
+#CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
+CFLAGS=  -DUNIX  -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11 `pkg-config fuse --cflags --libs`
 
 HOME=${CURDIR}
 
-INCLUDES = -I${LFS}/include  -I../usr/include/linux -I/usr/include/python2.7
+#INCLUDES = -I${LFS}/include  -I../usr/include/linux -I/usr/include/python2.7
+INCLUDES = -I${LFS}/include
 
 VPATH=/home/bill/Desktop/source-code/csc552/LFS/fuse-2.9.9
 
-LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++ -lpython2.7
+LFLAGS= -lfuse -lstdc++
+
+#LFLAGS= -L${LFS}LFS/lib  -lfuse -lstdc++ -lpython2.7
+
 BIN=../bin
 
 PKGFLAGS= pkg-config fuse --cflags --libs
 
-SRCS = hello.C flash.C log.C
+SRCS = hello.C
 
-OBJS = $(SRCS:.C=.o)
+#OBJS = $(SRCS:.C=.o)
+OBJS=lfs.o flash.o log.o
 
 LOGS=log.C flash.C
 OBJLOG = log.o flash.o
@@ -101,6 +107,8 @@ $(TLFSS): $(OBJFLS)
 .C.o:
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 .c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
+.cpp.o:
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 
 depend: $(FILES)

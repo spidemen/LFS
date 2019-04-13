@@ -21,7 +21,6 @@
 // // #include "file.h"
 // // #include  "directory.h"
 // #include "flash.h"
-//#include <iostream>
 
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
@@ -162,27 +161,9 @@ static struct fuse_operations lfs_oper = {
     .readlink   = lfs_readlink,
     .create= lfs_create,
     .init= lfs_init,
-
-     //  getattr : hello_getattr,
-     // readdir : hello_readdir,
-     // open    : hello_open,
-     // read    : hello_read,
-     // readlink   : hello_readlink,
-     // create   : hello_create,
-     // init     :   hello_init,
+     
 };
 
-// static struct lfs_operations : fuse_operations {
-//        fms_operations() {
-//          getattr  = lfs_getattr,
-//          readdir    = lfs_readdir,
-//          open   = lfs_open,
-//          read   = lfs_read,
-//          readlink   = lfs_readlink,
-//         create= lfs_create,
-//          init= lfs_init,
-//        }
-// } lfs_oper_init;
 
 int main(int argc, char *argv[])
 {
@@ -193,7 +174,7 @@ int main(int argc, char *argv[])
 #define NARGS 3
 
     nargc = argc + NARGS;
-
+    
     nargv = (char **) malloc(nargc * sizeof(char*));
     nargv[0] = argv[0];
     nargv[1] = "-f";

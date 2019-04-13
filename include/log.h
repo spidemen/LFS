@@ -31,11 +31,18 @@ typedef int segmentNo;
 
 #define BLOCK_SIZE (FLASH_SECTOR_SIZE*4)
 
+#define FILENAMESIZE 50
 
 #define BLOCK_NUMBER  4
 #define TOTALBLOCK  6
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
+
+char *filename="FuseFileSystem";
+int blocksize=4;
+int generateBlockNo=0;
+int startsector;
+
 struct logAddress{
 	u_int blockNo;
 	int segmentNo;
@@ -62,7 +69,8 @@ struct Block{
 	int blockNo;
 	bool aLive;
 	int  blockUse;
-	char  data[BLOCK_SIZE];   // size in cache
+//	char  data[BLOCK_SIZE];   // size in cache
+	char  *data;   
 	int  offset; 
 };
 
@@ -76,9 +84,7 @@ struct SegmentSummary{
     int  BlockNumber[BLOCK_NUMBER];
   //  map<inum,int> tables;   // inum associated with block No
 };
-// struct Data{
-// 	map<int,Block> data;
-// };
+
 
 struct lData{
 	int blockNo;
@@ -92,7 +98,8 @@ struct Segment{
 	struct lData *head;
 	bool used;
 	int currenIndex;
-	struct Block  dataB[BLOCK_NUMBER];
+//	struct Block  dataB[BLOCK_NUMBER];
+	struct Block *dataB;
 };
 
 // use one segment to hold metadata for file system
@@ -102,6 +109,7 @@ struct metadata{
 	int segments;
 	int limit;
 	int currentsector;
+	char filename[FILENAMESIZE];
 //	map<segmentNo,SegmentSummary> segmentUsageTable;
 	int checkpointStart;     // start block of checkpoint
 };

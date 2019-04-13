@@ -2,6 +2,7 @@
 #include "log.h"
 
 
+
 struct Segment *segmentCache=NULL;
 struct Segment MRA[N];
 struct metadata *pmetadata=NULL;
@@ -68,9 +69,12 @@ int init(char *fileSystemName){
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1){
 		u_int blocks;
+		
 	    Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
 	    struct SegmentSummary *summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
+
 		if(segmentCache->currenIndex>0&&segmentCache->currenIndex%BLOCK_NUMBER==0){  // segment full, write the disk 
+			  
 			   if(f!=NULL){
 			   	    int totalSector=blocksize;
     				 memcpy(summary,segmentCache->summary,sizeof(struct SegmentSummary));
@@ -87,20 +91,17 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   		    totalSector=(segmentCache->summary->totalBlock-1)*blocksize;
 			   		
 			   		    if(Flash_Write(f, startsector,totalSector, (void*)tmp)) {     // write segment data into disk
-			   		    //	cout<<"LogWrite  Error: segment data  inum="<<num<<"   fileblock "<<block<<endl;
 			   		    	printf("LogWrite  Error: canont segment summary inum= %d  fileblock  =%d \n",num,block);
 			   				return 1;	
 			   		    }else{
 
 			   		  		startsector=startsector+totalSector; 
 			   		    	struct Segment  p1;
-			   			//	p1.dataB=segmentCache->dataB;
 			   		    	p1.dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
 
 			   				memcpy(p1.dataB,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
 			   				p1.summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
 			   				memcpy(p1.summary,segmentCache->summary,sizeof(struct SegmentSummary));
-			   			//	p1.summary=segmentCache->summary;
 			   				p1.used=true;
 			   				if(MRA[N-1].used){
 			   					 for(int i=1;i<N;i++){
@@ -114,18 +115,16 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   						break;
 			   					}
 			   				}
-			   		 
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   		        memset(segmentCache->dataB,0,sizeof(struct Block)*BLOCK_NUMBER);
 	
 			   		    }
 			   		}
-			   	//	delete summary;
 			   	  Flash_Close(f);
 
 			   }else{
-			
+			  // 	 cout<<"Error: Fail to open log file  "<<filename<<endl;
 			   	 printf("Error: Fail to open log file  =%s \n",filename);
       	 		 return 1;	
 			   }
@@ -141,15 +140,20 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
       		    if(i<=N-1){
       		    	memcpy(segmentCache->dataB[i].data,buffer,BLOCK_SIZE);
       		    }else{
-	      		  
+	      		    generateBlockNo++;
+				    struct	Block B;
+					B.blockNo=generateBlockNo;
+			
 				//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
+
+		    // 		segmentCache->dataB[blockIndex]=B;
 					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
 					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
 					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
 			//	    printf("blockNumber=%d  index=%d  currentindex=%d\n", segmentCache->dataB[blockIndex].blockNo,blockIndex,segmentCache->currenIndex);
 					segmentCache->currenIndex++;
-      		   }
+      		    }
 			  
 
 		}
@@ -329,7 +333,7 @@ void test2(int b){
 	}
 	struct logAddress address;
 	address.segmentNo=1;
-	address.blockNo=3;
+	address.blockNo=1;
 	char *buf="Hello LFS, welcome to CSC 545 OS classc";
 	char bufR[40];
 	if(!Log_read(address, 40,(void *)bufR)){

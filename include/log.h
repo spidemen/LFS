@@ -38,11 +38,6 @@ typedef int segmentNo;
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 
-char *filename="FuseFileSystem";
-int blocksize=4;
-int generateBlockNo=0;
-int startsector;
-
 struct logAddress{
 	u_int blockNo;
 	int segmentNo;
@@ -91,6 +86,7 @@ struct lData{
    struct Block B;
 	struct lData *next;
 };
+
 struct Segment{
 	struct SegmentSummary *summary;
 //	map<int,Block> data ;   // pair block number and Block structure
@@ -111,7 +107,9 @@ struct metadata{
 	int currentsector;
 	char filename[FILENAMESIZE];
 //	map<segmentNo,SegmentSummary> segmentUsageTable;
+   
 	int checkpointStart;     // start block of checkpoint
+	int checkpointEnd;
 };
 
 // for now, just put all the function here, later on will put all of them into a class

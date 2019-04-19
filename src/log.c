@@ -3,6 +3,11 @@
 
 
 
+char *filename="FuseFileSystem";
+int blocksize=4;
+int generateBlockNo=0;
+int startsector;
+
 struct Segment *segmentCache=NULL;
 struct Segment MRA[N];
 struct metadata *pmetadata=NULL;
@@ -345,6 +350,23 @@ void test2(int b){
 			}
 	}
 }
+
+void test3(){
+	char *buf="test write super block ";
+	int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
+	int blocks;
+	Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+	Flash_Write(f, startsector, 4, (void*)buf);
+	char *buf2="test write update super block";
+	if(Flash_Erase(f,startblock,1)){ printf("cannot erase block\n"); }
+	if(Flash_Write(f, startsector,4, (void*)buf2)){
+		printf("Fail write super blcok  startblcok= %d   FLASH_BLOCK sectors =%d\n",startblock,FLASH_SECTORS_PER_BLOCK);
+	}
+	char bufRead[2048];
+	Flash_Read(f, startsector, 4, bufRead);
+	printf("read super block %s\n",bufRead);
+}
+
 // void testWrite(char *buf,int start){
 // //	char *filename="test.txt";
 // 	u_int blocks=100;
@@ -410,6 +432,8 @@ void test2(int b){
 //     }
   
 // }
+
+
 // void testRead(int start){
 // //	char *filename="test.txt";
 // 	u_int blocks=100;
@@ -445,18 +469,20 @@ void test2(int b){
 // }
 
 
-int main(int argc, char *argv[])
-{
+// int main(int argc, char *argv[])
+// {
 	
-	 printf(" hello log layer \n");
-     init("FuseFileSystem");
-     test2(2*N+1);
-  //   testWrite("This is the first time to use flash libraray 1 l\n",4);
-   //  testWrite("This is the first time to use flash libraray 2 l\n",2);
- //    testWrite("This is the first time to use flash libraray 3 l\n",4);
- //    testWrite("This is the first time to use flash libraray 4 l\n",6);
-   //     testRead(4);
-  //    TestLogWrite();
-	//  delete segmentCache;
-    return 1;
-}
+// 	 printf(" hello log layer \n");
+//      init("FuseFileSystem");
+// //	 test1("test hello world");
+// 	  test3();
+//  //    test2(2*N+1);
+//   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
+//    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
+//  //    testWrite("This is the first time to use flash libraray 3 l\n",4);
+//  //    testWrite("This is the first time to use flash libraray 4 l\n",6);
+//    //     testRead(4);
+//   //    TestLogWrite();
+// 	//  delete segmentCache;
+//     return 1;
+// }

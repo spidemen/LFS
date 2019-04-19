@@ -20,6 +20,8 @@ LFS=..
 
 CC=gcc
 
+CC1=g++
+
 #CFLAGS= -DUNIX -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11
 CFLAGS=  -DUNIX  -Wall -g -D_FILE_OFFSET_BITS=64 -std=c++11 `pkg-config fuse --cflags --libs`
 
@@ -42,6 +44,7 @@ SRCS = hello.C
 
 #OBJS = $(SRCS:.C=.o)
 OBJS=lfs.o flash.o log.o
+OBJC=log.o
 
 LOGS=log.C flash.C
 OBJLOG = log.o flash.o
@@ -71,7 +74,7 @@ $(MAIN):  $(OBJS)
 
 $(LOG):  $(OBJLOG)
 	cd $(HOME)
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(LOG) $(LFLAGS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(OBJLOG) -o $(LOG) $(LFLAGS)
 	mv *.o $(BIN)
 
 $(MKLFS): $(OBJMKLFS)
@@ -105,11 +108,11 @@ $(TLFSS): $(OBJFLS)
 	mv *.o $(BIN)
 
 .C.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
+	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 .c.o:
 	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 .cpp.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
+	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
 
 depend: $(FILES)
 	makedepend $(INCLUDES) $^

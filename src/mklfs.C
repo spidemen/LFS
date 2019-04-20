@@ -9,22 +9,9 @@
 #include <map>
 #include "log.cpp"
 using namespace std;
-// struct metadata{
-//   int blocksize;
-//   int segmentsize;
-//   int segments;
-//   int limit;
-//   int currentsector;
-//   char filename[FILENAMESIZE];
-//   map<segmentNo,SegmentSummary> segmentUsageTable;
- 
-//   int checkpointStart;     // start block of checkpoint
-//   int checkpointEnd;
-// };
-
 
 //char *filename="FuseFileSystem";
-int totalsectors=2;
+int totalsectors=4;
 int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);
@@ -43,7 +30,7 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
             p->segments=flashSizeInsegment;
             p->checkpointStart=1;
             p->limit=wearlimit;
-            p->currentsector=segmentsize*2*blocksize;
+            p->currentsector=segmentsize*blocksize;
          //   totalsectors=blocksize*segmentsize;
             if(Flash_Write(f, 0, totalsectors, (void*)p)){
                 cout<<"Error: cannot write metadat to the flash "<<endl;

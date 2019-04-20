@@ -11,10 +11,9 @@ using namespace std;
 
 struct SegmentSummary{
 	int segmentNo;
-    bool  inUse;
-    int   liveByte;
-  	time_t   modifiedTime;
-	int  *blockUsed;
+    bool  alive=true;
+    int   deadblock;
+  	time_t  modifiedTime;
     int  totalBlock; 
     // int  INUM[BLOCK_NUMBER];
     // int  BlockNumber[BLOCK_NUMBER];
@@ -30,9 +29,8 @@ struct metadata{
 	int currentsector;
 	char filename[FILENAMESIZE];
 	map<segmentNo,SegmentSummary> segmentUsageTable;
- 
-	int checkpointStart;     // start block of checkpoint
-	int checkpointEnd;
+	map<int, bool> blocksStatus;  // state of each block alive or dead
+	struct logAddress *checkPointRegion;
 };
 
 
@@ -157,6 +155,8 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   		        memset(segmentCache->dataB,0,sizeof(struct Block)*BLOCK_NUMBER);
+			   		        segmentCache->summary->tables.clear();
+			   		      //  segmentCache->summary->blockList.clear();
 	
 			   		    }
 			   		}
@@ -172,28 +172,16 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		// write data to memory
 		int tmp=length;
 		 if(tmp>0){
-		 	 int i=0;
-		 	 for(i=0;i<N;i++){
-      	 	   if(segmentCache->dataB[i].blockNo==block) break;
-      		 }
-      		    if(i<=N-1){
-      		    	memcpy(segmentCache->dataB[i].data,buffer,BLOCK_SIZE);
-      		    }else{
 	      		    generateBlockNo++;
-				    struct	Block B;
-					B.blockNo=generateBlockNo;
+
 				//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
-					
-		    // 		segmentCache->dataB[blockIndex]=B;
 					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
 					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
 					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
 			//	    printf("blockNumber=%d  index=%d  currentindex=%d\n", segmentCache->dataB[blockIndex].blockNo,blockIndex,segmentCache->currenIndex);
 					segmentCache->currenIndex++;
-      		    }
-			  
-
+      		    
 		}
 		logAddress1->segmentNo=segmentCache->summary->segmentNo;
 		logAddress1->blockNo=generateBlockNo;
@@ -212,7 +200,6 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       	    	 if(segmentCache->dataB[i].blockNo==logAddress1.blockNo) break;
       	    }
       		if(length<=BLOCK_SIZE){
-      	
       		 	memcpy(buffer,segmentCache->dataB[i].data,length);
       		 	printf("i= %d  content =%s \n", i,segmentCache->dataB[i].data);
       		
@@ -371,7 +358,7 @@ void test2(int b){
 	}
 	struct logAddress address;
 	address.segmentNo=1;
-	address.blockNo=1;
+	address.blockNo=3;
 	char *buf="Hello LFS, welcome to CSC 545 OS classc";
 	char bufR[40];
 	if(!Log_read(address, 40,(void *)bufR)){
@@ -508,8 +495,8 @@ void test3(){
 // 	 printf(" hello log layer \n");
 //      init("FuseFileSystem");
 // //	 test1("test hello world");
-// 	  test3();
-//  //    test2(2*N+1);
+// //	  test3();
+//       test2(2*N+1);
 //   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
 //    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
 //  //    testWrite("This is the first time to use flash libraray 3 l\n",4);

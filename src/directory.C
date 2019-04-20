@@ -1,7 +1,13 @@
 #include "directory.h"
 #include "file.h"
 #include "log.h"
+#include <map>
+#include <vector>
 using namespace std;
+
+
+map<string path,vector<string filename>> FileSystemMap; 
+
 
 int directoryInit(){
    char buffer[BLOCK_SIZE];

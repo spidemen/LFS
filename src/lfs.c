@@ -27,7 +27,6 @@ static const char *hello_path = "/hello";
 static const char *link_path = "/link";
 
 // TmP32719
-// Bug with mount
 
 static int lfs_getattr(const char *path, struct stat *stbuf)
 {

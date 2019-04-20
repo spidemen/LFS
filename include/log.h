@@ -124,6 +124,8 @@ extern int init(char *fileSystemName);
 extern int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
 extern int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
 extern int Log_free(struct logAddress logAddress1,u_int length);
+extern int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress);
+extern int Log_recordIfile(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize);
 
 #ifdef __cplusplus
 }

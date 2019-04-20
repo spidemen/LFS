@@ -1,7 +1,13 @@
 #ifndef _LOG_H
 #define _LOG_H
 
+// #ifdef CPLUSPLUS
+// extern "C"{
+// #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <time.h>
 //#include <map>
@@ -69,16 +75,17 @@ struct Block{
 	int  offset; 
 };
 
-struct SegmentSummary{
-	int segmentNo;
-    bool  inUse;
-    int   liveByte;
-	time_t   modifiedTime;
-    int  totalBlock; 
-    int  INUM[BLOCK_NUMBER];
-    int  BlockNumber[BLOCK_NUMBER];
-  //  map<inum,int> tables;   // inum associated with block No
-};
+// struct SegmentSummary{
+// 	  int segmentNo;
+//     bool  inUse;
+//     int   liveByte;
+//   	time_t   modifiedTime;
+// 		int  *blockUsed;
+//     int  totalBlock; 
+//     int  INUM[BLOCK_NUMBER];
+//     int  BlockNumber[BLOCK_NUMBER];
+//   //  map<inum,int> tables;   // inum associated with block No
+// };
 
 
 struct lData{
@@ -99,25 +106,27 @@ struct Segment{
 };
 
 // use one segment to hold metadata for file system
-struct metadata{
-	int blocksize;
-	int segmentsize;
-	int segments;
-	int limit;
-	int currentsector;
-	char filename[FILENAMESIZE];
-//	map<segmentNo,SegmentSummary> segmentUsageTable;
+// struct metadata{
+// 	int blocksize;
+// 	int segmentsize;
+// 	int segments;
+// 	int limit;
+// 	int currentsector;
+// 	char filename[FILENAMESIZE];
+// //	map<segmentNo,SegmentSummary> segmentUsageTable;
    
-	int checkpointStart;     // start block of checkpoint
-	int checkpointEnd;
-};
+// 	int checkpointStart;     // start block of checkpoint
+// 	int checkpointEnd;
+// };
 
 // for now, just put all the function here, later on will put all of them into a class
-int init(char *fileSystemName);
-int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
-int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
-int Log_free(struct logAddress logAddress1,u_int length);
+extern int init(char *fileSystemName);
+extern int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
+extern int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
+extern int Log_free(struct logAddress logAddress1,u_int length);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

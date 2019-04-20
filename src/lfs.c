@@ -90,7 +90,24 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
-    
+    init("FuseFileSystem");
+//     printf("*******************Log layer test 1 simple small write and read ****************************** \n");
+// 	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
+// //	strcat(buf,cat);
+// //	char  *buf="Hello LFS, welcome to CSC 545 OS class";
+// 	inum num=1;
+// 	struct logAddress address;
+// 	if(!Log_Write(num, 1, 40,(void*)buf,&address)){
+// 		char bufR[40];
+// 		if(!Log_read(address, 40,(void *)bufR)){
+// 			printf("return logadress segmentNo= %d  blockNo=%d \n",address.segmentNo,address.blockNo);
+// 			if(strcmp(buf,bufR)!=0){
+// 				printf("Fail:  write string  %s does not match read string %s \n",buf,bufR);
+// 			}else{
+// 				printf("**************Success    test 1 pass*******************************\n ");
+// 			}
+// 		}
+// 	}
     // if (strcmp(path, hello_path) != 0)
     //     return -ENOENT;
 
@@ -163,7 +180,7 @@ static int lfs_read(const char *path, char *buf, size_t size, off_t offset,
             memcpy(buf, hello_str + offset, size);
         } else
         size = 0;
-    } else
+    } else  
     if(strcmp(path, hello_path) != 0)
         return -ENOENT;
    
@@ -228,6 +245,10 @@ static int lfs_ftruncate(const char* path, off_t size){
     printf(" ftruncate function was called \n");
     return 0;
 }
+static int lfs_mknod(const char* path, mode_t mode, dev_t rdev){
+   printf(" mknod function was called \n");
+   return 0;
+}
 static struct fuse_operations lfs_oper = {
 
     .getattr	= lfs_getattr,
@@ -243,7 +264,7 @@ static struct fuse_operations lfs_oper = {
   //  .close= lfs_close,
     // .mkdir 	= lfs_mkdir,
      .destroy     = lfs_destroy,
-    // .mknod       = lfs_mknod,
+     .mknod       = lfs_mknod,
     // .symlink     = lfs_symlink,
     // .unlink      = lfs_unlink,
     // .rmdir       = lfs_rmdir,

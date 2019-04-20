@@ -6,10 +6,25 @@
 #include <stdlib.h>
 #include <iostream>
 #include <flash.h>
-#include "log.h"
+#include <map>
+#include "log.cpp"
 using namespace std;
-char *filename="FuseFileSystem";
- int totalsectors=2;
+// struct metadata{
+//   int blocksize;
+//   int segmentsize;
+//   int segments;
+//   int limit;
+//   int currentsector;
+//   char filename[FILENAMESIZE];
+//   map<segmentNo,SegmentSummary> segmentUsageTable;
+ 
+//   int checkpointStart;     // start block of checkpoint
+//   int checkpointEnd;
+// };
+
+
+//char *filename="FuseFileSystem";
+int totalsectors=2;
 int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);

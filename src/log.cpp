@@ -1,6 +1,39 @@
 
 #include "log.h"
 
+#include <iostream>
+#include <map>
+#include <unordered_map>
+#include <ctime> 
+#include <vector>
+using namespace std;
+
+
+struct SegmentSummary{
+	int segmentNo;
+    bool  inUse;
+    int   liveByte;
+  	time_t   modifiedTime;
+	int  *blockUsed;
+    int  totalBlock; 
+    // int  INUM[BLOCK_NUMBER];
+    // int  BlockNumber[BLOCK_NUMBER];
+    map<inum,int> tables;   // inum associated with block No
+};
+
+
+struct metadata{
+	int blocksize;
+	int segmentsize;
+	int segments;
+	int limit;
+	int currentsector;
+	char filename[FILENAMESIZE];
+	map<segmentNo,SegmentSummary> segmentUsageTable;
+ 
+	int checkpointStart;     // start block of checkpoint
+	int checkpointEnd;
+};
 
 
 char *filename="FuseFileSystem";
@@ -22,8 +55,9 @@ bool DoesFileExist (char *filename) {
     }   
 }
 
-int init(char *fileSystemName){
+ int init(char *fileSystemName){
 
+    cout<<"C++ compiler test  init function "<<endl;
    // init data struct 
 	segmentCache=(struct Segment*)malloc(sizeof(struct Segment));
 	pmetadata=(struct metadata*)malloc(sizeof(struct metadata));
@@ -148,10 +182,9 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 	      		    generateBlockNo++;
 				    struct	Block B;
 					B.blockNo=generateBlockNo;
-			
 				//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
-
+					
 		    // 		segmentCache->dataB[blockIndex]=B;
 					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
 					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
@@ -233,14 +266,14 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
             int  TotalSector=(segmentCache->summary->totalBlock-1)*blocksize;
       		u_int blocks;
       		char buf[BLOCK_SIZE];
-      	   printf("read from disk : startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
+      	    printf("read from disk : startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
       		Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
 	        if(f!=NULL){
 	      	   if(Flash_Read(f,StartSector,blocksize,buf)){
 	      	   	   printf("LogRead Segment Error: startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,blocksize,logAddress1.segmentNo,logAddress1.blockNo);
 	      	   	   return 1;
 	      	   }else{
-	      	   	  struct  SegmentSummary *summary=(struct SegmentSummary *)buf;
+	      	   	    struct  SegmentSummary *summary=(struct SegmentSummary *)buf;
 	      	   	    StartSector=StartSector+blocksize;
 	      	   	    char buf1[TotalSector*FLASH_SECTOR_SIZE];
 	      	   	    if(Flash_Read(f,StartSector,TotalSector,buf1)) {
@@ -248,8 +281,8 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      	   	 	  return 1;
 	      	   	    }else{ 
 	      	   	 	  struct  Block *pdata=(struct Block *) buf1;
-	      	   	 	    int i;
-	      	   	 	    for( i=0;i<N;i++){
+	      	   	 	   int i;
+	      	   	 	for( i=0;i<N;i++){
 	      	   	 	    	 printf(" read from flash i=%d \n",i);	
 	      	   	 	    	 if(pdata[i].blockNo==logAddress1.blockNo){
 	      	   	 	    	 	break;
@@ -265,7 +298,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      		 	    }else{
 	      		 	       printf(" Error read from disk: segment No= %d  do not have blockNo= %d \n",logAddress1.segmentNo, logAddress1.blockNo);
 	      	   	 	       printf("LogRead Segment Error: startsector  =%d  total sector  =%d  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
-	      		 	    	return 1;
+	      		 	       return 1;
 	      		 	    }
 	      		 		struct Segment p;
 	      		 		p.summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
@@ -354,7 +387,7 @@ void test2(int b){
 void test3(){
 	char *buf="test write super block ";
 	int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
-	int blocks;
+	u_int blocks;
 	Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
 	Flash_Write(f, startsector, 4, (void*)buf);
 	char *buf2="test write update super block";

@@ -40,13 +40,11 @@ BIN=../bin
 
 PKGFLAGS= pkg-config fuse --cflags --libs
 
-SRCS = hello.C
-
-#OBJS = $(SRCS:.C=.o)
+SRCS = flash.C log.C
+#OBJS = $(SRCS:.C=.o) $(SRCc:.c=.o)
 OBJS=lfs.o flash.o log.o
-OBJC=log.o
 
-LOGS=log.C flash.C
+LOGS=log.cpp  ../include/flash.h ../include/log.h flash.C
 OBJLOG = log.o flash.o
 
 FILES=cfile.c flash.C log.c
@@ -79,7 +77,7 @@ $(LOG):  $(OBJLOG)
 
 $(MKLFS): $(OBJMKLFS)
 	cd $(HOME)
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJMKLFS) -o $(MKLFS) $(LFLAGS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(OBJMKLFS) -o $(MKLFS) $(LFLAGS)
 	mv *.o $(BIN)
 
 $(FILE):  $(OBJFILE)
@@ -106,6 +104,9 @@ $(TLFSS): $(OBJFLS)
 	cd $(HOME)
 	$(CC) $(CFLAGS) $(INCLUDES) $(OBJFLS) -o $(TLFSS) $(LFLAGS)
 	mv *.o $(BIN)
+# union compile with C 
+log.o: $(LOGS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ log.cpp
 
 .C.o:
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<
@@ -119,7 +120,7 @@ depend: $(FILES)
 #Don't remove MLKFS, used in lfstest.py
 clean:
 	cd $(HOME)
-	rm -f *.o *~ $(MAIN) $(LOG) $(FILE) $(MAKECLEANGARBAGE) $(BIN)/*
+	rm -f *.o *~ $(MAIN) $(LOG) $(FILE) $(TEST) $(LFSCK) $(MAKECLEANGARBAGE) $(BIN)/*
 
 backup:
 	mkdir bak

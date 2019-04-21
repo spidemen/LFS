@@ -7,18 +7,24 @@
 #include <iostream>
 #include <flash.h>
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "log.h"
 using namespace std;
 char *filename="FuseFileSystem";
  int totalsectors=2;
 =======
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 #include <map>
 #include "log.cpp"
 using namespace std;
 
 //char *filename="FuseFileSystem";
 int totalsectors=4;
+<<<<<<< HEAD
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);
@@ -38,10 +44,14 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
             p->checkpointStart=1;
             p->limit=wearlimit;
 <<<<<<< HEAD
+<<<<<<< HEAD
             p->currentsector=segmentsize*2*blocksize;
 =======
             p->currentsector=segmentsize*blocksize;
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+            p->currentsector=segmentsize*blocksize;
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
          //   totalsectors=blocksize*segmentsize;
             if(Flash_Write(f, 0, totalsectors, (void*)p)){
                 cout<<"Error: cannot write metadat to the flash "<<endl;

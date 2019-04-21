@@ -2,9 +2,13 @@
 #include "file.h"
 #include "log.h"
 <<<<<<< HEAD
+<<<<<<< HEAD
 using namespace std;
 
 =======
+=======
+
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 #include <map>
 #include <vector>
 using namespace std;
@@ -13,7 +17,10 @@ using namespace std;
 map<string path,vector<string filename>> FileSystemMap; 
 
 
+<<<<<<< HEAD
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 int directoryInit(){
    char buffer[BLOCK_SIZE];
    if(!File_Read(IFILE,0, BLOCK_SIZE,buffer)){

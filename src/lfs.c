@@ -28,9 +28,12 @@ static const char *link_path = "/link";
 
 // TmP32719
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Bug with mount
 =======
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 
 static int lfs_getattr(const char *path, struct stat *stbuf)
 {
@@ -94,8 +97,11 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
 <<<<<<< HEAD
+<<<<<<< HEAD
     
 =======
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
     init("FuseFileSystem");
 //     printf("*******************Log layer test 1 simple small write and read ****************************** \n");
 // 	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
@@ -114,7 +120,10 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 // 			}
 // 		}
 // 	}
+<<<<<<< HEAD
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
     // if (strcmp(path, hello_path) != 0)
     //     return -ENOENT;
 
@@ -188,10 +197,14 @@ static int lfs_read(const char *path, char *buf, size_t size, off_t offset,
         } else
         size = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
     } else
 =======
     } else  
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+    } else  
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
     if(strcmp(path, hello_path) != 0)
         return -ENOENT;
    
@@ -257,12 +270,18 @@ static int lfs_ftruncate(const char* path, off_t size){
     return 0;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 static int lfs_mknod(const char* path, mode_t mode, dev_t rdev){
    printf(" mknod function was called \n");
    return 0;
 }
+<<<<<<< HEAD
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
 static struct fuse_operations lfs_oper = {
 
     .getattr	= lfs_getattr,
@@ -279,10 +298,14 @@ static struct fuse_operations lfs_oper = {
     // .mkdir 	= lfs_mkdir,
      .destroy     = lfs_destroy,
 <<<<<<< HEAD
+<<<<<<< HEAD
     // .mknod       = lfs_mknod,
 =======
      .mknod       = lfs_mknod,
 >>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
+=======
+     .mknod       = lfs_mknod,
+>>>>>>> 779ff9f55c81aef2f6459092e9fd72da05b182a1
     // .symlink     = lfs_symlink,
     // .unlink      = lfs_unlink,
     // .rmdir       = lfs_rmdir,

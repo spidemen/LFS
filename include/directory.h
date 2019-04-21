@@ -16,22 +16,13 @@
 
 #define IFILE 0
 
-<<<<<<< HEAD
-typedef string FileName;
-
-vector<pair<FileName,inum>> tables;
-
-=======
 #define NAMESIZE 50
 typedef string FileName;
 
->>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
 int inodeSize=144;   // default vaule
 
 int currentinum=1;
 
-<<<<<<< HEAD
-=======
 
  struct directoryTable
  { 
@@ -54,5 +45,4 @@ int readFile(const char *path, char *filename, int offset, char *buf);
 
 int writeFile(const char *path, char *filename, int offset, char *buf);
 
->>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
 #endif

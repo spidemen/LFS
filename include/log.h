@@ -31,11 +31,13 @@ typedef int segmentNo;
 
 #define BLOCK_SIZE (FLASH_SECTOR_SIZE*4)
 
+#define FILENAMESIZE 50
 
 #define BLOCK_NUMBER  4
 #define TOTALBLOCK  6
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
+
 struct logAddress{
 	u_int blockNo;
 	int segmentNo;
@@ -62,7 +64,8 @@ struct Block{
 	int blockNo;
 	bool aLive;
 	int  blockUse;
-	char  data[BLOCK_SIZE];   // size in cache
+//	char  data[BLOCK_SIZE];   // size in cache
+	char  *data;   
 	int  offset; 
 };
 
@@ -76,15 +79,14 @@ struct SegmentSummary{
     int  BlockNumber[BLOCK_NUMBER];
   //  map<inum,int> tables;   // inum associated with block No
 };
-// struct Data{
-// 	map<int,Block> data;
-// };
+
 
 struct lData{
 	int blockNo;
    struct Block B;
 	struct lData *next;
 };
+
 struct Segment{
 	struct SegmentSummary *summary;
 //	map<int,Block> data ;   // pair block number and Block structure
@@ -92,7 +94,8 @@ struct Segment{
 	struct lData *head;
 	bool used;
 	int currenIndex;
-	struct Block  dataB[BLOCK_NUMBER];
+//	struct Block  dataB[BLOCK_NUMBER];
+	struct Block *dataB;
 };
 
 // use one segment to hold metadata for file system
@@ -102,8 +105,11 @@ struct metadata{
 	int segments;
 	int limit;
 	int currentsector;
+	char filename[FILENAMESIZE];
 //	map<segmentNo,SegmentSummary> segmentUsageTable;
+   
 	int checkpointStart;     // start block of checkpoint
+	int checkpointEnd;
 };
 
 // for now, just put all the function here, later on will put all of them into a class

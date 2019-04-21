@@ -1,7 +1,7 @@
 import os
 import sys
 
-path="temp/foo"
+path="temp/hello"
 fd=open(path,"w")
 fd.write("hello")
 fd.close()

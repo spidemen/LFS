@@ -26,8 +26,13 @@ static int hello_getattr(const char *path, struct stat *stbuf)
     int res = 0;
 
     memset(stbuf, 0, sizeof(struct stat));
+
+    stbuf->st_uid = getuid(); // The owner of the file/directory is the user who mounted the filesystem
+	stbuf->st_gid = getgid(); // The group of the file/directory is the same as the group of the user who mounted the filesystem
+	stbuf->st_atime = time( NULL ); // The last "a"ccess of the file/directory is right now
+	stbuf->st_mtime = time( NULL ); // The last "m"odification of the file/directory is right now
     if (strcmp(path, "/") == 0) {
-        stbuf->st_mode = S_IFDIR | 0777;
+        stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
         stbuf->st_ino = 3;
     } else if (strcmp(path, hello_path) == 0) {
@@ -40,8 +45,12 @@ static int hello_getattr(const char *path, struct stat *stbuf)
         stbuf->st_nlink = 1;
         stbuf->st_size = strlen(hello_path);
         stbuf->st_ino = 17;
-    } else
-        res = -ENOENT;
+    } else {
+        stbuf->st_mode = S_IFREG | 0644;
+		stbuf->st_nlink = 1;
+		stbuf->st_size = 1024;
+    }
+    //  res = -ENOENT;
 
     return res;
 }

@@ -2,17 +2,15 @@
 #include "log.h"
 
 
-char *filename="FuseFileSystem";
-//Segment *segmentCache=new Segment;
-struct Segment *segmentCache=NULL;
-int startsector;
-//vector< pair<int, Segment > > MRC;   // implement N most access segment policy
 
-struct Segment MRA[N];
+char *filename="FuseFileSystem";
+int blocksize=4;
 int generateBlockNo=0;
-// metadata *pmetadata=new metadata;
+int startsector;
+
+struct Segment *segmentCache=NULL;
+struct Segment MRA[N];
 struct metadata *pmetadata=NULL;
-int blocksize=2;
 
 bool DoesFileExist (char *filename) {
 	FILE *fp=fopen(filename, "r");
@@ -30,6 +28,8 @@ int init(char *fileSystemName){
 	segmentCache=(struct Segment*)malloc(sizeof(struct Segment));
 	pmetadata=(struct metadata*)malloc(sizeof(struct metadata));
 	segmentCache->summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
+	segmentCache->dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
+
 	segmentCache->summary->segmentNo=1;
 	segmentCache->currenIndex=0;
 	for(int i=0;i<N;i++){
@@ -62,73 +62,52 @@ int init(char *fileSystemName){
       //      startsector=segmentCache->summary->totalBlock*2*blocksize;  // first segment hold metafile system, second segment hold ifile data
             startsector=pmetadata->currentsector;
             #define BLOCK_SIZE (FLASH_SECTOR_SIZE*blocksize)
+            #define BLOCK_NUMBER (segmentCache->summary->totalBlock-1)
             segmentCache->head=(struct lData*)malloc(sizeof(struct lData));
             segmentCache->head->next=NULL;
-            printf("init blocksize per sector %d   segment size (blocks) %d  startsector =%d \n",blocksize,segmentCache->summary->totalBlock,startsector);
+            printf("init blocksize per sector %d   segment size (blocks) %d  startsector =%d \n",blocksize,pmetadata->segmentsize,startsector);
+            printf(" BLOCKSIXE= %d   BLOCKNUMBER=%d\n",BLOCK_SIZE,BLOCK_NUMBER);
         }
     }
 	 return 1;
-	// startsector=0;
-
 }
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1){
 		u_int blocks;
+		
 	    Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
-	 //   Data *pdata=new Data;
-      
-	  //  SegmentSummary *summary=new SegmentSummary;
-	   struct SegmentSummary *summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
+	    struct SegmentSummary *summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
+
 		if(segmentCache->currenIndex>0&&segmentCache->currenIndex%BLOCK_NUMBER==0){  // segment full, write the disk 
 			  
 			   if(f!=NULL){
 			   	    int totalSector=blocksize;
-			   	//     SegmentSummary *summary=new SegmentSummary;
     				 memcpy(summary,segmentCache->summary,sizeof(struct SegmentSummary));
 			   		if(Flash_Write(f, startsector,totalSector, (void*)summary)) {    // write segment summary into disk
 			   			printf("LogWrite  Error: canont segment summary inum= %d  fileblock  =%d \n",num,block);
-			   		//	cout<<"LogWrite  Error: canont segment summary inum="<<num<<"   fileblock "<<block<<endl;
 			   			return 1;
 			   		}else{
 
 			   		//	cout<<"Segment Summart: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
 			   		    startsector=startsector+totalSector;
-			   	//	    Data *pdata=new Data;
-			   		//  struct Block tmp[BLOCK_NUMBER];
 			   		   struct Block *tmp=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
-			   		    memcpy(tmp,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
-			   		//	pdata->data.insert(segmentCache->pdata->data.begin(),segmentCache->pdata->data.end());
-
-			   			// lData *pwrite=NULL;
-			   			// pwrite=segmentCache->head;
-
-			   		  //  void *buf=(void *)pdata;
-
+			   		   memcpy(tmp,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
 			   		    void *buf=(void *)tmp;
-
 			   		    totalSector=(segmentCache->summary->totalBlock-1)*blocksize;
-			   		 //   totalSector=(BLOCK_NUMBER)*blocksize+1;
+			   		
 			   		    if(Flash_Write(f, startsector,totalSector, (void*)tmp)) {     // write segment data into disk
-			   		    //	cout<<"LogWrite  Error: segment data  inum="<<num<<"   fileblock "<<block<<endl;
 			   		    	printf("LogWrite  Error: canont segment summary inum= %d  fileblock  =%d \n",num,block);
 			   				return 1;	
 			   		    }else{
 
-			   		    
-
-			   		  //  	cout<<"Segment Data: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
 			   		  		startsector=startsector+totalSector; 
 			   		    	struct Segment  p1;
-			   			//	p1.dataB=segmentCache->dataB;
+			   		    	p1.dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
+
 			   				memcpy(p1.dataB,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
 			   				p1.summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
 			   				memcpy(p1.summary,segmentCache->summary,sizeof(struct SegmentSummary));
-			   			//	p1.summary=segmentCache->summary;
 			   				p1.used=true;
-			   				// while(MRC.size()>=N){
-			   				// 	MRC.erase(MRC.begin());
-			   				// 	cout<<"log write remove front segment "<<endl;
-			   				// }
 			   				if(MRA[N-1].used){
 			   					 for(int i=1;i<N;i++){
 			   					 	 MRA[i-1]=MRA[i];
@@ -141,19 +120,12 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   						break;
 			   					}
 			   				}
-			   		     // 	MRC.push_back(pair<int,Segment>(segmentCache->summary->segmentNo,p1));
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   		        memset(segmentCache->dataB,0,sizeof(struct Block)*BLOCK_NUMBER);
-			   		     
-			   	       //     segmentCache->data.clear();
-			   		   //     segmentCache->pdata->data.clear();
-			   		   //     segmentCache->summary->tables.clear();
-			   		        //  delete pdata,summary;
-
+	
 			   		    }
 			   		}
-			   	//	delete summary;
 			   	  Flash_Close(f);
 
 			   }else{
@@ -162,31 +134,38 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
       	 		 return 1;	
 			   }
 		}
-		
+
 		// write data to memory
 		int tmp=length;
 		 if(tmp>0){
-				generateBlockNo++;
-				
-			    struct	Block B;
-				B.blockNo=generateBlockNo;
-				memcpy(B.data,buffer,BLOCK_SIZE);
-			//	cout<<"write data. "<<B.data<<"  "<<BLOCK_SIZE<<endl;
-				tmp=tmp-BLOCK_SIZE;
-			//	segmentCache->data.insert(pair<int,Block>(generateBlockNo,B));
-			//	segmentCache->pdata->data.insert(pair<int,Block>(generateBlockNo,B));
-			//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
-				int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
-				segmentCache->dataB[blockIndex]=B;
-				printf("logwrite content= %s    buffer =%s \n",segmentCache->dataB[blockIndex].data,buffer);
-				segmentCache->currenIndex++;
+		 	 int i=0;
+		 	 for(i=0;i<N;i++){
+      	 	   if(segmentCache->dataB[i].blockNo==block) break;
+      		 }
+      		    if(i<=N-1){
+      		    	memcpy(segmentCache->dataB[i].data,buffer,BLOCK_SIZE);
+      		    }else{
+	      		    generateBlockNo++;
+				    struct	Block B;
+					B.blockNo=generateBlockNo;
+			
+				//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
+					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
+
+		    // 		segmentCache->dataB[blockIndex]=B;
+					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
+					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
+					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
+			//	    printf("blockNumber=%d  index=%d  currentindex=%d\n", segmentCache->dataB[blockIndex].blockNo,blockIndex,segmentCache->currenIndex);
+					segmentCache->currenIndex++;
+      		    }
+			  
 
 		}
 		logAddress1->segmentNo=segmentCache->summary->segmentNo;
 		logAddress1->blockNo=generateBlockNo;
 
-		printf("logwrite logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
- //		delete pdata,summary;
+		printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
 		return 0;
 
 		
@@ -194,39 +173,29 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
     
       if(segmentCache->summary->segmentNo==logAddress1.segmentNo){    // check current segment cache
-      	  	printf("test log read \n ");
-     //    	auto block=segmentCache->pdata->data.find(logAddress1.blockNo);
       	    int i;
       	    for(i=0;i<N;i++){
-      	    	 printf("test blockNo %d \n ",segmentCache->dataB[i].blockNo);
+      	 //   	 printf("test blockNo %d i=%d\n ",segmentCache->dataB[i].blockNo,i);
       	    	 if(segmentCache->dataB[i].blockNo==logAddress1.blockNo) break;
       	    }
       		if(length<=BLOCK_SIZE){
-      		 //	memcpy(buffer,block->second.data,length);
-      		 	memcpy(buffer,&segmentCache->dataB[i].data,length);
+      	
+      		 	memcpy(buffer,segmentCache->dataB[i].data,length);
       		 	printf("i= %d  content =%s \n", i,segmentCache->dataB[i].data);
-      		//   	cout<<"segment cache  "<<(char*)buffer<<"   "<<BLOCK_SIZE<<"  "<<length<<endl;
+      		
       		 }else{
       		 	memcpy(buffer,&segmentCache->dataB[i].data,BLOCK_SIZE);
       		 }
       	    return 0;
       }
-      // vector<pair<int,Segment> >::iterator it=MRC.begin();  // find function does not work , so use while loop, will fixed later on
-      // while(it!=MRC.end()){				// check Segment queue
-      // 	 if(it->first==logAddress1.segmentNo) break;
-      // 	 it++;
-      // }
       int index=0;
       for(index=0;index<N;index++){
-      		printf("index=%d \n",index);
+      	//	printf("index=%d \n",index);
       	    if(MRA[index].used&&MRA[index].summary->segmentNo==logAddress1.segmentNo) break;
       }
-   //   if(it!=MRC.end()){  // in the queue, read from memory
       if(index<=N-1){
-          	printf("enter find segment %d in the queue \n",logAddress1.segmentNo);
-      		   // Segment p=it->second;
       		   struct Segment p=MRA[index];
-      		// 	auto block=p.pdata->data.find(logAddress1.blockNo);
+
       		    char *block=NULL;
       		    int i;
       		 	for(i=0;i<N;i++){
@@ -236,7 +205,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       		 		}
       		 	}
       		 	if(i<=N-1){
-      		 	//	cout<<"find  segment "<<logAddress1.segmentNo<<" in the queue "<<endl;
+      		
       		 		printf("find segment %d in the queue \n",logAddress1.segmentNo);
       		 		if(length<=BLOCK_SIZE){
       		 		//	  memcpy(buffer,block->second.data,length);
@@ -246,7 +215,6 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       		 			 memcpy(buffer,block,BLOCK_SIZE);
       		 		}
       		 	}else{
-      		 //		cout<<"Error: segment No= "<<logAddress1.segmentNo<<" do not have blockNo "<<logAddress1.blockNo<<endl;
       		 	    printf("Error: segment No=  =%d   do not have blockNo  =%d \n",logAddress1.segmentNo, logAddress1.blockNo);
       		 		return 1;
       		 	}
@@ -259,21 +227,16 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       		 	MRA[i+1]=p;
       		 }
 
-      	//	 MRC.erase(it);
-      	//	 MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p)); // put it on the tail 
-
       } else{	// read from flash 
       		int  StartSector=(logAddress1.segmentNo-1+2)*segmentCache->summary->totalBlock*blocksize;
       	//	int  StartSector=(logAddress1.segmentNo-1)*blocksize;
             int  TotalSector=(segmentCache->summary->totalBlock-1)*blocksize;
       		u_int blocks;
       		char buf[BLOCK_SIZE];
-      	    printf("LogRead Segment Error: startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
+      	   printf("read from disk : startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
       		Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
 	        if(f!=NULL){
 	      	   if(Flash_Read(f,StartSector,blocksize,buf)){
-	      	   	   // cout<<"LogRead Segment Error: startsector ="<<StartSector<<"  total sector "<<blocksize
-	      	   	   // <<"canont read  segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
 	      	   	   printf("LogRead Segment Error: startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,blocksize,logAddress1.segmentNo,logAddress1.blockNo);
 	      	   	   return 1;
 	      	   }else{
@@ -281,25 +244,17 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      	   	    StartSector=StartSector+blocksize;
 	      	   	    char buf1[TotalSector*FLASH_SECTOR_SIZE];
 	      	   	    if(Flash_Read(f,StartSector,TotalSector,buf1)) {
-	      	   	    // 	cout<<"LogRead Segment Error: startsector ="<<StartSector<<"  total sector "<<TotalSector
-	      	   	 	  // <<"canont read  segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
 	      	   	 	  printf("LogRead Segment Error: startsector  =%d  total sector  =%d  canont read   segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
 	      	   	 	  return 1;
 	      	   	    }else{ 
-	      	   	 	  //  Data *pdata=(Data*)buf1;
 	      	   	 	  struct  Block *pdata=(struct Block *) buf1;
-		      	   	  //  map<int,Block> sData=pdata->data;
-		      	   	 //   auto it=sData.find(logAddress1.blockNo);
 	      	   	 	    int i;
 	      	   	 	    for( i=0;i<N;i++){
 	      	   	 	    	 printf(" read from flash i=%d \n",i);	
 	      	   	 	    	 if(pdata[i].blockNo==logAddress1.blockNo){
 	      	   	 	    	 	break;
 	      	   	 	    	 }
-      	    				// if(segmentCache->dataB[i].blockNo==logAddress1.blockNo) break;
       	   				 }
-
-		      	   	 //   if(it!=sData.end()){
       	   				if(i<=N-1){
 			      	   		if(length<=BLOCK_SIZE){
 			      	   			printf("i=%d   content  %s\n",i,pdata[i].data );
@@ -308,9 +263,6 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 		      					memcpy(buffer,pdata[i].data,BLOCK_SIZE);
 		      		 		 }
 	      		 	    }else{
-	      		 	    //	cout<<"Error read from disk: segment No= "<<logAddress1.segmentNo<<" do not have blockNo "<<logAddress1.blockNo<<endl;
-	      		 	    	// cout<<"LogRead Segment startsector ="<<StartSector<<"  total sector "<<TotalSector
-	      	   	 	  //       <<"  segmentNo= "<<logAddress1.segmentNo<<" blockNo ="<<logAddress1.blockNo<<endl;
 	      		 	       printf(" Error read from disk: segment No= %d  do not have blockNo= %d \n",logAddress1.segmentNo, logAddress1.blockNo);
 	      	   	 	       printf("LogRead Segment Error: startsector  =%d  total sector  =%d  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
 	      		 	    	return 1;
@@ -319,31 +271,23 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      		 		p.summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
 			   			memcpy(p.summary,summary,sizeof(struct SegmentSummary));
 	      		 	//	p.summary=summary;
-	      		 	//	p.dataB=pdata;
+	      		 		p.dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);;
 	      		 		memcpy(p.dataB,pdata,sizeof(struct Block)*BLOCK_NUMBER);
 
 	      		 		for(int i=1;i<N;i++){
 			   				MRA[i-1]=MRA[i];
 			   			}
 			   			MRA[N-1]=p;
-		      	//    		while(MRC.size()>=N){ 	// maintain the queue size
-				   		// 	MRC.erase(MRC.begin());
-				   		// }
-		      	//    		MRC.push_back(pair<int,Segment>(logAddress1.segmentNo,p));    // put on the tail 
-		      	   //     cout<<"Log: Success Read  data  segmentNo"<<logAddress1.segmentNo<<" blockNO ="<<logAddress1.blockNo<<endl;
-		      	    //    delete summary,pSegment;
 		      	        return 0;
 		      	    }
 	      	   }
 	      	 Flash_Close(f);
 	      }else{
-	      //	 cout<<"Error: Fail to open Flash file  "<<filename<<endl;
 	      	 printf("Error: Fail to open Flash file %s\n", filename);
 	      	 return 1;
 	      }
 	  }
-      
-      printf("logread logadress segmentNo= %d  blockNo=%d   \n",logAddress1.segmentNo,logAddress1.blockNo);
+
 	  return 0;
 }
 int Log_free(struct logAddress logAddress1,u_int length){
@@ -358,7 +302,6 @@ int Log_free(struct logAddress logAddress1,u_int length){
       			printf("Error: Fail to erase blocks segmentNo = %d  blcokNo = %d \n", logAddress1.segmentNo,logAddress1.blockNo );
       			return 1;
       		}else{
-      	//		cout<<"Success earse blocks  "<<logAddress1.segmentNo<<" blcokNo ="<<logAddress1.blockNo<<endl;
       //			printf("Error: Fail to erase blocks segmentNo = %d  blcokNo = %d \n", logAddress1.segmentNo,logAddress1.blockNo );
       			return 0;
       		}
@@ -368,9 +311,11 @@ int Log_free(struct logAddress logAddress1,u_int length){
       }
 }
 
-void test1(){
+void test1(char *cat){
 	printf("*******************Log layer test 1 simple small write and read ****************************** \n");
-	char *buf="Hello LFS, welcome to CSC 545 OS class";
+	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
+	strcat(buf,cat);
+//	char  *buf="Hello LFS, welcome to CSC 545 OS class";
 	inum num=1;
 	struct logAddress address;
 	if(!Log_Write(num, 1, 40,(void*)buf,&address)){
@@ -385,14 +330,16 @@ void test1(){
 		}
 	}
 }
-void test2(){
-	for(int i=0;i<=(N+2)*BLOCK_NUMBER;i++){
-		test1();
+void test2(int b){
+	char buf1[1];
+	for(int i=0;i<=b*BLOCK_NUMBER;i++){
+		buf1[0]='a'+i;
+		test1(buf1);
 	}
 	struct logAddress address;
-	address.segmentNo=2;
-	address.blockNo=5;
-	char *buf="Hello LFS, welcome to CSC 545 OS class";
+	address.segmentNo=1;
+	address.blockNo=1;
+	char *buf="Hello LFS, welcome to CSC 545 OS classc";
 	char bufR[40];
 	if(!Log_read(address, 40,(void *)bufR)){
 			printf("return logadress segmentNo= %d  blockNo=%d \n",address.segmentNo,address.blockNo);
@@ -403,6 +350,23 @@ void test2(){
 			}
 	}
 }
+
+void test3(){
+	char *buf="test write super block ";
+	int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
+	int blocks;
+	Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+	Flash_Write(f, startsector, 4, (void*)buf);
+	char *buf2="test write update super block";
+	if(Flash_Erase(f,startblock,1)){ printf("cannot erase block\n"); }
+	if(Flash_Write(f, startsector,4, (void*)buf2)){
+		printf("Fail write super blcok  startblcok= %d   FLASH_BLOCK sectors =%d\n",startblock,FLASH_SECTORS_PER_BLOCK);
+	}
+	char bufRead[2048];
+	Flash_Read(f, startsector, 4, bufRead);
+	printf("read super block %s\n",bufRead);
+}
+
 // void testWrite(char *buf,int start){
 // //	char *filename="test.txt";
 // 	u_int blocks=100;
@@ -468,6 +432,8 @@ void test2(){
 //     }
   
 // }
+
+
 // void testRead(int start){
 // //	char *filename="test.txt";
 // 	u_int blocks=100;
@@ -508,7 +474,9 @@ void test2(){
 	
 // 	 printf(" hello log layer \n");
 //      init("FuseFileSystem");
-//      test2();
+// //	 test1("test hello world");
+// 	  test3();
+//  //    test2(2*N+1);
 //   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
 //    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
 //  //    testWrite("This is the first time to use flash libraray 3 l\n",4);

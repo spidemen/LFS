@@ -31,7 +31,7 @@ extern "C" {
 typedef int inum;
 typedef int segmentNo;
 
-#define SUPERBLOCK	2
+#define SUPERBLOCK	4
 #define FLASH_SECTOR_SIZE 512
 #define FLASH_SECTORS_PER_BLOCK 16
 
@@ -41,6 +41,9 @@ typedef int segmentNo;
 
 #define BLOCK_NUMBER  4
 #define TOTALBLOCK  6
+
+#define THREADSHOLD 3  // cleaning
+
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 
@@ -69,7 +72,8 @@ struct logAddress{
 struct Block{
 	int blockNo;
 	bool aLive;
-	int  blockUse;
+	int  datasize;
+	time_t  modifiedTime;
 //	char  data[BLOCK_SIZE];   // size in cache
 	char  *data;   
 	int  offset; 
@@ -120,7 +124,7 @@ struct Segment{
 // };
 
 // for now, just put all the function here, later on will put all of them into a class
-extern int init(char *fileSystemName);
+extern int init(char *fileSystemName,int cachesize);
 extern int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
 extern int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
 extern int Log_free(struct logAddress logAddress1,u_int length);

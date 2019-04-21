@@ -1,8 +1,19 @@
 #include "directory.h"
 #include "file.h"
 #include "log.h"
+<<<<<<< HEAD
 using namespace std;
 
+=======
+#include <map>
+#include <vector>
+using namespace std;
+
+
+map<string path,vector<string filename>> FileSystemMap; 
+
+
+>>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
 int directoryInit(){
    char buffer[BLOCK_SIZE];
    if(!File_Read(IFILE,0, BLOCK_SIZE,buffer)){

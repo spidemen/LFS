@@ -2,6 +2,11 @@
     "files.associations": {
         "memory": "c",
         "ios": "c",
+<<<<<<< HEAD
         "ostream": "c"
+=======
+        "ostream": "c",
+        "iostream": "cpp"
+>>>>>>> ebeb226ab1ba6b6e0b7d968858be397a7dca2ad5
     }
 }

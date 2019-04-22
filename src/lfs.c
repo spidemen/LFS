@@ -89,7 +89,7 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
-    init("FuseFileSystem");
+    init("FuseFileSystem",4);
 //     printf("*******************Log layer test 1 simple small write and read ****************************** \n");
 // 	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
 // //	strcat(buf,cat);
@@ -221,7 +221,7 @@ static int lfs_utime(const char *path, struct utimbuf *ubuf){
 }
 static int lfs_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi){
     printf("write function was called \n");
-    return 0;
+    return size;
 }
 void lfs_destroy(void* private_data){
     printf("destory function was called\n ");
@@ -237,6 +237,7 @@ void lfs_destroy(void* private_data){
  }
 static int  lfs_flush(const char* path, struct fuse_file_info* fi){
     printf(" flush function was called \n");
+
     return 0;
  }
 
@@ -269,7 +270,7 @@ static struct fuse_operations lfs_oper = {
     // .rmdir       = lfs_rmdir,
     // .rename      = lfs_rename,
     // .link        = lfs_link,
-    // .chmod       = lfs_chmod,
+     // .chmod       = lfs_chmod,
       .chown       = lfs_chown,
       .truncate    = lfs_truncate,
      .ftruncate   = lfs_ftruncate,

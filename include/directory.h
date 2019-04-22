@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <vector>
 #include <flash.h>
-#include  "log.h"
 #include  "file.h"
 
 #define IFILE 0
@@ -30,6 +29,8 @@ int currentinum=1;
  	char filename[NAMESIZE];
  	int inum;
  };
+
+ int initDirectory();
 
 int getAllFiles(const char *path,struct Inode *files,int size);
 

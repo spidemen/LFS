@@ -83,7 +83,7 @@ int File_Create(int inum, int type) {
 	if (inum == IFILE_INUM) 
 	{
 		
-		struct Inode dummyInode ;
+		struct Inode dummyInode ;    // FIXEME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		//  = {
 		// 	.inum = IFILE_INUM,
 		// 	.type = type,
@@ -114,7 +114,7 @@ int File_Create(int inum, int type) {
   //   		}
 		// };
 
-		struct Ifile ifile ;
+		struct Ifile ifile ;  // FIXEME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		// = {
 		// 	.inum = inum,
 		// 	.size = 1, 	//number of files currently in the ifile
@@ -150,7 +150,7 @@ int File_Create(int inum, int type) {
 	}
 	else 
 	{
-		struct Inode inode ;
+		struct Inode inode ;   // FIXEME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		// = {
 		// 	.inum = inum,
 		// 	.type = type,

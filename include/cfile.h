@@ -6,7 +6,7 @@
 #include  "log.h"
 
 #define INODE_SIZE 144
-#define BLOCK_SIZE 50 * sizeof('a')
+//#define BLOCK_SIZE 10 //10* sizeof('a') 50
 #define MAX_FILES 10
 
 //Delete from here
@@ -34,6 +34,7 @@ struct Inode {
     unsigned long time_of_last_change;
     char owner; 					// u: user, r: root
     int permissions;
+    char* group;
     int offset;
 
     struct logAddress Block1Ptr;
@@ -78,4 +79,3 @@ int File_Read(int inum, int offset, int length, char* buffer);
 
 
 #endif /* file_h */
-

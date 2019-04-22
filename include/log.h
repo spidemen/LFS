@@ -91,7 +91,6 @@ struct Block{
 //   //  map<inum,int> tables;   // inum associated with block No
 // };
 
-
 struct lData{
 	int blockNo;
    struct Block B;
@@ -133,6 +132,4 @@ extern int Log_recordIfile(struct logAddress *oldAdrress,struct logAddress *newA
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

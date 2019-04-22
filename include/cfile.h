@@ -73,8 +73,8 @@ struct Ifile {
 
 
 int File_Create(int inum, int type);
-int File_Write(int inum, int offset, int length, char* buffer);
-int File_Read(int inum, int offset, int length, char* buffer);
+int File_Write(int inum, int offset, int length,  void * buffer);
+int File_Read(int inum, int offset, int length,  void * buffer);
 
 
 

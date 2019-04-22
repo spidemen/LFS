@@ -597,8 +597,8 @@ void test3(){
 	
 // 	 printf(" hello log layer \n");
 //      init("FuseFileSystem",4);
-// //	 test1("test hello world");
-// 	  test3();
+//     test1("test hello world");
+// 	//  test3();
 // //      test2(2*N+1);
 //   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
 //    //  testWrite("This is the first time to use flash libraray 2 l\n",2);

@@ -133,3 +133,5 @@ extern int Log_recordIfile(struct logAddress *oldAdrress,struct logAddress *newA
 #ifdef __cplusplus
 }
 #endif
+
+#endif

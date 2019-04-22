@@ -47,7 +47,7 @@ OBJS=lfs.o flash.o log.o
 LOGS=log.cpp  ../include/flash.h ../include/log.h flash.C
 OBJLOG = log.o flash.o
 
-FILES=cfile.c flash.C log.c
+FILES=cfile.cpp flash.C  ../include/flash.h  ../include/log.h  ../include/cfile.h
 OBJFILE= cfile.o flash.o log.o
 
 MKLF=log.C flash.C
@@ -82,7 +82,7 @@ $(MKLFS): $(OBJMKLFS)
 
 $(FILE):  $(OBJFILE)
 	cd $(HOME)
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJFILE) -o $(FILE) $(LFLAGS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(OBJFILE) -o $(FILE) $(LFLAGS)
 	mv *.o $(BIN)
 
 $(DIRECTORY): $(OBJDIRECTORY)
@@ -107,6 +107,8 @@ $(TLFSS): $(OBJFLS)
 # union compile with C 
 log.o: $(LOGS)
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ log.cpp
+cfile.o: $(FILES)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ cfile.cpp
 
 .C.o:
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<

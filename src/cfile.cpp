@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../include/cfile.h"
 
+#include <vector>
 //00 is false (but means things ran normally)
 // 1 is true
 
@@ -66,7 +67,7 @@ struct Inode Get_Inode(int inum) {
 
 int Put_Inode(int inum, struct Inode *iptr) {
 	struct Ifile ifile;
-	Get_Ifile(&ifile);
+//	Get_Ifile(&ifile);  // Get_Ifile function do not need paras
 	printf("Putting inode %d data, block %d seg %d\n", iptr->inum, iptr->Block1Ptr.blockNo, iptr->Block1Ptr.segmentNo);
 	ifile.data[inum] = *iptr;
 	return 0;
@@ -82,44 +83,46 @@ int File_Create(int inum, int type) {
 	if (inum == IFILE_INUM) 
 	{
 		
-		struct Inode dummyInode = {
-			.inum = IFILE_INUM,
-			.type = type,
-			.in_use = 1,					// true 1, false 0
-    		.time_of_last_change = (unsigned long)time(NULL),
-    		.owner = 'u',
-    		.permissions = 777,
-    		.group = 'group',
-    		.Block1Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block2Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block3Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block4Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.OtherBlocksPtr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		}
-		};
+		struct Inode dummyInode ;
+		//  = {
+		// 	.inum = IFILE_INUM,
+		// 	.type = type,
+		// 	.in_use = 1,					// true 1, false 0
+  //   		.time_of_last_change = (unsigned long)time(NULL),
+  //   		.owner = 'u',
+  //   		.permissions = 777,
+  //   		.group = 'group',
+  //   		.Block1Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block2Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block3Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block4Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.OtherBlocksPtr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		}
+		// };
 
-		struct Ifile ifile = {
-			.inum = inum,
-			.size = 1, 	//number of files currently in the ifile
-			.addresses[0] = { 
-				.blockNo = 22, 
-				.segmentNo = 22},
-			.data[0] = dummyInode
-		};
+		struct Ifile ifile ;
+		// = {
+		// 	.inum = inum,
+		// 	.size = 1, 	//number of files currently in the ifile
+		// 	.addresses[0] = { 
+		// 		.blockNo = 22, 
+		// 		.segmentNo = 22},
+		// 	.data[0] = dummyInode
+		// };
 
 		//Write the inode
 		int block = 0; //start of file
@@ -147,35 +150,36 @@ int File_Create(int inum, int type) {
 	}
 	else 
 	{
-		struct Inode inode = {
-			.inum = inum,
-			.type = type,
-			.in_use = 1,					// true 1, false 0
-    		.time_of_last_change = (unsigned long)time(NULL),
-    		.owner = 'u',
-    		.permissions = 777,
-    		.group = 'group',
-    		.Block1Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block2Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block3Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.Block4Ptr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		},
-    		.OtherBlocksPtr = {
-    			.blockNo = 22,
-    			.segmentNo = 22
-    		}
-		};
+		struct Inode inode ;
+		// = {
+		// 	.inum = inum,
+		// 	.type = type,
+		// 	.in_use = 1,					// true 1, false 0
+  //   		.time_of_last_change = (unsigned long)time(NULL),
+  //   		.owner = 'u',
+  //   		.permissions = 777,
+  //   		.group = 'group',
+  //   		.Block1Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block2Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block3Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.Block4Ptr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		},
+  //   		.OtherBlocksPtr = {
+  //   			.blockNo = 22,
+  //   			.segmentNo = 22
+  //   		}
+		// };
 
 		int block = 0; //start of file
 		int length = sizeof(inode);
@@ -214,7 +218,7 @@ int File_Create(int inum, int type) {
 	return 0;
 }
 
-int File_Write(int inum, int offset, int length, char* buffer) {
+int File_Write(int inum, int offset, int length, void* buffer) {
 
 	int flag;
 
@@ -306,7 +310,8 @@ int File_Write(int inum, int offset, int length, char* buffer) {
 			printf("Bytes left: %d\n", bytesLeft);
 			// We have more than 1 block of data to write
 			if (bytesLeft > BLOCK_SIZE) {
-				memcpy(writebuf, &buffer[j], BLOCK_SIZE);
+		//		memcpy(writebuf, &buffer[j], BLOCK_SIZE);   //FIXME: danger use buff[j], not alway be a array, use point +offset
+				memcpy(writebuf, buffer+j, BLOCK_SIZE);
 				if (!Log_Write(inum, 1, BLOCK_SIZE, (void *) writebuf, &dataAdd)) {
 					if (i == 1) fileinode.Block1Ptr = dataAdd;
 					if (i == 2) fileinode.Block2Ptr = dataAdd;
@@ -324,8 +329,8 @@ int File_Write(int inum, int offset, int length, char* buffer) {
 			// We have less than 1 block left
 			else if (bytesLeft > 0){
 				printf("less than a block left: %d\n", bytesLeft);
-				memcpy(writebuf, &buffer[j], bytesLeft);
-				
+			//	memcpy(writebuf, &buffer[j], bytesLeft); //FIXME: danger use buff[j], not alway be a array, use point +offset
+				memcpy(writebuf, buffer+j, bytesLeft);
 				if (!Log_Write(inum, 1, bytesLeft, (void *) writebuf, &dataAdd)) {
 					if (i == 1) fileinode.Block1Ptr = dataAdd;
 					if (i == 2) fileinode.Block2Ptr = dataAdd;
@@ -361,8 +366,9 @@ int File_Write(int inum, int offset, int length, char* buffer) {
 
 	return 0;
 }
-int File_Read(int inum, int offset, int length, char* buffer) {
-	printf("offset %d, length %d, buffer size %d \n", offset, length, sizeof(*buffer));
+int File_Read(int inum, int offset, int length, void * buffer) {
+//	printf("offset %d, length %d, buffer size %d \n", offset, length, sizeof(*buffer)); //FIXEME: buff just a void point, sizeof(buffer) if char then 1
+
 
 	struct Inode iptr = Get_Inode(inum);
 	int numBlocks = 1 + (((offset+length) - 1) / BLOCK_SIZE);
@@ -411,7 +417,8 @@ int File_Read(int inum, int offset, int length, char* buffer) {
 		
 		if (!Log_read(ladd, amtToRead2, content2)) {
 			printf("file read cont2: %s   buf: %s\n", content2, buffer);
-			memcpy(&buffer[BLOCK_SIZE-offset], content2, amtToRead2);
+	//		memcpy(&buffer[BLOCK_SIZE-offset], content2, amtToRead2); // FIXEME: buffer is point, point+offset can point the address
+		    memcpy(buffer+BLOCK_SIZE-offset, content2, amtToRead2);
 			printf("(%s %s %d %d)\n", buffer, content2, amtToRead2, BLOCK_SIZE);
 			
 		} else {
@@ -429,7 +436,8 @@ int File_Read(int inum, int offset, int length, char* buffer) {
 		
 		if (!Log_read(ladd, amtToRead3, content3)) {
 			printf("file read %s\n", content3);
-			memcpy(&buffer[BLOCK_SIZE*2], content3, amtToRead3);
+		//	memcpy(&buffer[BLOCK_SIZE*2], content3, amtToRead3); // FIXEME: buffer is point, point+offset can point the address
+			memcpy(buffer+BLOCK_SIZE*2, content3, amtToRead3); 
 			
 		} else {
 			printf("File_Read: error with Log_Read of file %d\n", inum);
@@ -446,16 +454,16 @@ int File_Read(int inum, int offset, int length, char* buffer) {
 		
 		if (!Log_read(ladd, amtToRead4, content4)) {
 			printf("file read %s\n", content4);
-			memcpy(&buffer[BLOCK_SIZE*3], content4, amtToRead4);
+		//	memcpy(&buffer[BLOCK_SIZE*3], content4, amtToRead4); // FIXEME: buffer is point, point+offset can point the address
+			memcpy(buffer+BLOCK_SIZE*3, content4, amtToRead4); 
 			
 		} else {
 			printf("File_Read: error with Log_Read of file %d\n", inum);
 		}
 	}
 	//memcpy(buffer, &totalRead[offset], length-offset);
-	buffer[length-1] = '\0';
-	
-;
+
+//	buffer[length-1] = '\0';  //FIXEME: buffer is not a char point
 	printf("BUFFER: %s\n", buffer);
 		printf("It's fine...\n");
 
@@ -535,7 +543,7 @@ int initFile() {
 	 // Create ifile inode, add it to the ifile data structure,
     // and write the ifile data structure to disk
 
-    init("FuseFileSystem");  
+    init("FuseFileSystem",4);  
 
     // Create the Ifile 
  //   File_Create(IFILE_INUM, TYPE_F);
@@ -703,7 +711,7 @@ void TestGroup() {
 	int inum = 3;
 	char group[6] = "greep";
 	int groupLength = 6;
-	Change_Group(inum, &group, groupLength);
+	Change_Group(inum, group, groupLength);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
 

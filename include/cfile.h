@@ -6,7 +6,7 @@
 #include  "log.h"
 
 #define INODE_SIZE 144
-#define BLOCK_SIZE 10 //10* sizeof('a') 50
+//#define BLOCK_SIZE 10 //10* sizeof('a') 50
 #define MAX_FILES 10
 
 //Delete from here

@@ -27,6 +27,8 @@ struct Inode {
     int permissions = 0;
     u_int offset = 0;
 
+    int versionNumber=0;
+
     struct logAddress Block1Ptr;
     struct logAddress Block2Ptr;
     struct logAddress Block3Ptr;
@@ -48,7 +50,6 @@ vector<logAddress> ifileAddress;
 int File_Create(int inum, int type);
 int File_Write(int inum, int offset, int length, char* buffer);
 int File_Read(int inum, int offset, int length, char* buffer);
-
 
 
 #endif /* file_h */

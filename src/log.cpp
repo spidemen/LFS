@@ -1,4 +1,11 @@
 
+
+/******************
+combination of C and C++
+rewrite C++ into C for integrating with fuse
+
+*********************/
+
 #include "log.h"
 
 #include <iostream>
@@ -12,24 +19,29 @@ using namespace std;
 struct SegmentSummary{
 	int segmentNo;
     bool  alive=true;
-    int   deadblock;
+    int   deadblock=0;
   	time_t  modifiedTime;
+  	time_t  mostRecentTime;
     int  totalBlock; 
-    // int  INUM[BLOCK_NUMBER];
-    // int  BlockNumber[BLOCK_NUMBER];
-    map<inum,int> tables;   // inum associated with block No
+    int aliveByte=0;
+    map<int,int> blocksByte;
+    multimap<inum,int> tables;   // inum associated with block No
 };
 
 
 struct metadata{
+
 	int blocksize;
 	int segmentsize;
 	int segments;
 	int limit;
 	int currentsector;
+	int currentBlockNumber;
+	int currentSegmentNumber;
 	char filename[FILENAMESIZE];
 	map<segmentNo,SegmentSummary> segmentUsageTable;
 	map<int, bool> blocksStatus;  // state of each block alive or dead
+	map<segmentNo,SegmentSummary> reUsedTable;
 	struct logAddress *checkPointRegion;
 };
 
@@ -38,7 +50,7 @@ char *filename="FuseFileSystem";
 int blocksize=4;
 int generateBlockNo=0;
 int startsector;
-
+int  cache=4;
 struct Segment *segmentCache=NULL;
 struct Segment MRA[N];
 struct metadata *pmetadata=NULL;
@@ -53,21 +65,9 @@ bool DoesFileExist (char *filename) {
     }   
 }
 
- int init(char *fileSystemName){
+ int init(char *fileSystemName,int cachesize=4){
 
     cout<<"C++ compiler test  init function "<<endl;
-   // init data struct 
-	segmentCache=(struct Segment*)malloc(sizeof(struct Segment));
-	pmetadata=(struct metadata*)malloc(sizeof(struct metadata));
-	segmentCache->summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
-	segmentCache->dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
-
-	segmentCache->summary->segmentNo=1;
-	segmentCache->currenIndex=0;
-	for(int i=0;i<N;i++){
-		MRA[i].used=false;
-	}
-
 
 //	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
 	// 	 string cmd="";
@@ -78,7 +78,8 @@ bool DoesFileExist (char *filename) {
 	 	// cmd=cmd+"./mklfs -b 4 -l 4 "+fileSystemName;
 	 	// system(cmd.c_str()); 
 	 	 system(cmd); 
- //   }										// commnet for testing file layer
+ //   }		
+ 								// commnet for testing file layer
 	u_int blocks;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
     if(f!=NULL){
@@ -86,8 +87,10 @@ bool DoesFileExist (char *filename) {
         if(Flash_Read(f,0,SUPERBLOCK,buf)){
           //  cout<<"Init Error Cannot read first two sector of file system"<<endl;
             printf("Init Error Cannot read first two sector of file system \n");
+            return 0;
         }else{
             pmetadata= (struct metadata *)buf;
+            cache=cachesize;
           //  memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
             segmentCache->summary->totalBlock=pmetadata->segmentsize;
             blocksize=pmetadata->blocksize;
@@ -95,6 +98,19 @@ bool DoesFileExist (char *filename) {
             startsector=pmetadata->currentsector;
             #define BLOCK_SIZE (FLASH_SECTOR_SIZE*blocksize)
             #define BLOCK_NUMBER (segmentCache->summary->totalBlock-1)
+            #define N  cache 
+            // init data struct 
+			segmentCache=(struct Segment*)malloc(sizeof(struct Segment));
+			pmetadata=(struct metadata*)malloc(sizeof(struct metadata));
+			segmentCache->summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
+			segmentCache->dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
+
+			segmentCache->summary->segmentNo=1;
+			segmentCache->currenIndex=0;
+			for(int i=0;i<N;i++){
+				MRA[i].used=false;
+			}
+
             segmentCache->head=(struct lData*)malloc(sizeof(struct lData));
             segmentCache->head->next=NULL;
             printf("init blocksize per sector %d   segment size (blocks) %d  startsector =%d \n",blocksize,pmetadata->segmentsize,startsector);
@@ -103,6 +119,20 @@ bool DoesFileExist (char *filename) {
     }
 	 return 1;
 }
+
+int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress){
+	  // 
+	  pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock++;
+	  pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte-=pmetadata->segmentUsageTable[oldAddress.segmentNo].blocksByte[oldAddress.blockNo];
+	  pmetadata->blocksStatus[oldAddress.blockNo]=false;
+	  // check segment dead or not
+	  if(pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte==0|| 
+	  	pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock==pmetadata->segmentUsageTable[oldAddress.segmentNo].totalBlock){
+	  	pmetadata->segmentUsageTable[oldAddress.segmentNo].alive=false;
+	  }
+	  return 1;
+}
+
 
 int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1){
 		u_int blocks;
@@ -114,18 +144,20 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			  
 			   if(f!=NULL){
 			   	    int totalSector=blocksize;
+			   	    segmentCache->summary->modifiedTime=time(NULL);
     				 memcpy(summary,segmentCache->summary,sizeof(struct SegmentSummary));
 			   		if(Flash_Write(f, startsector,totalSector, (void*)summary)) {    // write segment summary into disk
 			   			printf("LogWrite  Error: canont segment summary inum= %d  fileblock  =%d \n",num,block);
 			   			return 1;
 			   		}else{
-
+			   		    // write segment into segment usagetable
+			   		    pmetadata->segmentUsageTable.insert(pair<segmentNo,SegmentSummary>(segmentCache->summary->segmentNo,*summary));
 			   		//	cout<<"Segment Summart: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
-			   		    startsector=startsector+totalSector;
+			   		  // write data to disk
+			   		   startsector=startsector+totalSector;
 			   		   struct Block *tmp=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
 			   		   memcpy(tmp,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
-			   		    void *buf=(void *)tmp;
-			   		    totalSector=(segmentCache->summary->totalBlock-1)*blocksize;
+			   		   totalSector=(segmentCache->summary->totalBlock-1)*blocksize;
 			   		
 			   		    if(Flash_Write(f, startsector,totalSector, (void*)tmp)) {     // write segment data into disk
 			   		    	printf("LogWrite  Error: canont segment summary inum= %d  fileblock  =%d \n",num,block);
@@ -133,9 +165,9 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   		    }else{
 
 			   		  		startsector=startsector+totalSector; 
+			   		  		// implement N most recently used access segment
 			   		    	struct Segment  p1;
 			   		    	p1.dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);
-
 			   				memcpy(p1.dataB,segmentCache->dataB,sizeof(struct Block)*BLOCK_NUMBER);
 			   				p1.summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
 			   				memcpy(p1.summary,segmentCache->summary,sizeof(struct SegmentSummary));
@@ -152,12 +184,14 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   						break;
 			   					}
 			   				}
+
+			   			// reset segment data
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
-			   		        segmentCache->summary->modifiedTime=time(NULL);
 			   		        memset(segmentCache->dataB,0,sizeof(struct Block)*BLOCK_NUMBER);
 			   		        segmentCache->summary->tables.clear();
-			   		      //  segmentCache->summary->blockList.clear();
-	
+			   		        segmentCache->summary->aliveByte=0;
+			   		        segmentCache->summary->blocksByte.clear();
+		
 			   		    }
 			   		}
 			   	  Flash_Close(f);
@@ -173,12 +207,18 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		int tmp=length;
 		 if(tmp>0){
 	      		    generateBlockNo++;
-
-				//	segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
 					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
-					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
+					memcpy(segmentCache->dataB[blockIndex].data,buffer,length);
 					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
+					segmentCache->dataB[blockIndex].datasize=length;
+					segmentCache->dataB[blockIndex].modifiedTime=time(NULL) 
+					segmentCache->summary->tables.insert(pair<inum,int>(num,generateBlockNo));
+					segmentCache->summary->blocksByte.insert(pair<int,int>(generateBlockNo,length));
+					segmentCache->summary->aliveByte+=length;
+					segmentCache->summary->mostRecentTime=time(NULL);
+					pmetadata->blocksStatus.insert(pair<int,bool>(generateBlockNo,true));
+
 			//	    printf("blockNumber=%d  index=%d  currentindex=%d\n", segmentCache->dataB[blockIndex].blockNo,blockIndex,segmentCache->currenIndex);
 					segmentCache->currenIndex++;
       		    
@@ -488,21 +528,20 @@ void test3(){
 //     Flash_Close(f);
 // }
 
-
-// int main(int argc, char *argv[])
-// {
+ int main(int argc, char *argv[])
+ {
 	
-// 	 printf(" hello log layer \n");
-//      init("FuseFileSystem");
-// //	 test1("test hello world");
-// //	  test3();
-//       test2(2*N+1);
-//   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
-//    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
-//  //    testWrite("This is the first time to use flash libraray 3 l\n",4);
-//  //    testWrite("This is the first time to use flash libraray 4 l\n",6);
-//    //     testRead(4);
-//   //    TestLogWrite();
-// 	//  delete segmentCache;
-//     return 1;
-// }
+	 printf(" hello log layer \n");
+     init("FuseFileSystem",4);
+//	 test1("test hello world");
+//	  test3();
+      test2(2*N+1);
+  //   testWrite("This is the first time to use flash libraray 1 l\n",4);
+   //  testWrite("This is the first time to use flash libraray 2 l\n",2);
+ //    testWrite("This is the first time to use flash libraray 3 l\n",4);
+ //    testWrite("This is the first time to use flash libraray 4 l\n",6);
+   //     testRead(4);
+  //    TestLogWrite();
+	//  delete segmentCache;
+    return 1;
+}

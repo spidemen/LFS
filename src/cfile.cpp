@@ -539,11 +539,11 @@ int Test_File_Create(int inum) {
 	return 0;
 }
 
-int initFile() {
+int initFile(int size) {
 	 // Create ifile inode, add it to the ifile data structure,
     // and write the ifile data structure to disk
 
-    init("FuseFileSystem",4);  
+    init("FuseFileSystem",size);  
 
     // Create the Ifile 
  //   File_Create(IFILE_INUM, TYPE_F);
@@ -724,27 +724,27 @@ void TestGroup() {
 	return;
 }
 
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-   	initFile();
-   	Test_File_Create(0);
-    //Test_File_Create(1);
-    //test1F(); //stack smashing if blocksize is 50 but passes if 10
-    //Test_File_Create(2);
-    //test2F(); //seg fault if blocksize is 50, passes if 10
-    //Test_File_Create(3);
-    //test3F(); // original buffer has disappeared, passes if 10
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+//    	initFile();
+//    	Test_File_Create(0);
+//     //Test_File_Create(1);
+//     //test1F(); //stack smashing if blocksize is 50 but passes if 10
+//     //Test_File_Create(2);
+//     //test2F(); //seg fault if blocksize is 50, passes if 10
+//     //Test_File_Create(3);
+//     //test3F(); // original buffer has disappeared, passes if 10
 
-    //Overwrite
-    //test4F(); //overwrite original content
-    //test5F(); //concat
-    test6F(); //read offset
-    //printf("\n\n\n\n");
-    //Show_Ifile_Contents();
-    // TestOwner();
-    // TestPermissions();
-    // TestGroup();
+//     //Overwrite
+//     //test4F(); //overwrite original content
+//     //test5F(); //concat
+//     test6F(); //read offset
+//     //printf("\n\n\n\n");
+//     //Show_Ifile_Contents();
+//     // TestOwner();
+//     // TestPermissions();
+//     // TestGroup();
 
 
-	return 0;
-}
+// 	return 0;
+// }

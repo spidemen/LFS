@@ -1,4 +1,11 @@
-#ifndef file_h
+
+#ifndef _CFILE_H
+#define _CFILE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,11 +78,14 @@ struct Ifile {
 
 // vector<logAddress> ifileAddress; 
 
+int initFile(int size);
 
 int File_Create(int inum, int type);
 int File_Write(int inum, int offset, int length,  void * buffer);
 int File_Read(int inum, int offset, int length,  void * buffer);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* file_h */

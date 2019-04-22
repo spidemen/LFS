@@ -42,7 +42,7 @@ PKGFLAGS= pkg-config fuse --cflags --libs
 
 SRCS = flash.C log.C
 #OBJS = $(SRCS:.C=.o) $(SRCc:.c=.o)
-OBJS=lfs.o flash.o log.o
+OBJS=lfs.o flash.o  directory.o cfile.o log.o
 
 LOGS=log.cpp  ../include/flash.h ../include/log.h flash.C
 OBJLOG = log.o flash.o
@@ -53,8 +53,8 @@ OBJFILE= cfile.o flash.o log.o
 MKLF=log.C flash.C
 OBJMKLFS= mklfs.o flash.o
 
-DIRECTORYS=directory.C file.C log.C
-OBJDIRECTORY=directory.o file.o log.o 
+DIRECTORYS=directory.cpp cfile.cpp log.cpp ../include/directory.h  ../include/cfile.h ../include/flash.h  ../include/log.h  
+OBJDIRECTORY=directory.o cfile.o log.o flash.o
 
 TESTS=testCase.C log.C flash.C
 OBJTEST=testCase.o  file.o log.o flash.o 
@@ -87,7 +87,7 @@ $(FILE):  $(OBJFILE)
 
 $(DIRECTORY): $(OBJDIRECTORY)
 	cd $(HOME)
-	$(CC) $(CFLAGS) $(INCLUDES) $(OBJDIRECTORY) -o $(DIRECTORY) $(LFLAGS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(OBJDIRECTORY) -o $(DIRECTORY) $(LFLAGS)
 	mv *.o $(BIN)
 
 $(TEST): $(OBJTEST)
@@ -109,6 +109,8 @@ log.o: $(LOGS)
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ log.cpp
 cfile.o: $(FILES)
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ cfile.cpp
+directory.o: $(DIRECTORYS)
+	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c -o $@ directory.cpp
 
 .C.o:
 	$(CC1) $(CFLAGS) $(INCLUDES) $(LFLAGS) -c $<

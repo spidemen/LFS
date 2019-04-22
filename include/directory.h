@@ -1,26 +1,23 @@
 #ifndef _DIRECTORY_H
 #define _DIRECTORY_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <iostream>
-#include <algorithm>
-#include <vector>
 #include <flash.h>
-#include  "file.h"
+#include  "cfile.h"
 
 #define IFILE 0
 
 #define NAMESIZE 50
-typedef string FileName;
-
-int inodeSize=144;   // default vaule
-
-int currentinum=1;
 
 
  struct directoryTable
@@ -30,7 +27,7 @@ int currentinum=1;
  	int inum;
  };
 
- int initDirectory();
+extern int initDirectory();
 
 int getAllFiles(const char *path,struct Inode *files,int size);  // opendir ,readdir
 
@@ -50,5 +47,11 @@ int writeFile(const char *path, char *filename, int offset, char *buf);
 
 // Katy
 // fuse --create, chmod, chown, read, open, getattr, link
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

@@ -17,7 +17,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
- #include "log.h"
+#include "directory.h"
+
 // // #include "file.h"
 // // #include  "directory.h"
 // #include "flash.h"
@@ -89,7 +90,8 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
-    init("FuseFileSystem",4);
+  //  init("FuseFileSystem",4);
+      initDirectory();
 //     printf("*******************Log layer test 1 simple small write and read ****************************** \n");
 // 	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
 // //	strcat(buf,cat);

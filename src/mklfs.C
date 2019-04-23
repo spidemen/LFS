@@ -31,14 +31,14 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
         //    p->checkpointStart=1;
             p->limit=wearlimit;
             p->currentsector=segmentsize*blocksize;
-            p->currentBlockNumber=1;
+            p->currentBlockNumber=0;
             p->currentSegmentNumber=1;
          //   totalsectors=blocksize*segmentsize;
             if(Flash_Write(f, 0, totalsectors, (void*)p)){
                 cout<<"Error: cannot write metadat to the flash "<<endl;
                 return 1;
             }else{
-                cout<<"Success create mklfs. sizeof metadata "<<sizeof(p)<<endl;
+                cout<<"Success create mklfs. sizeof metadata "<<sizeof(p)<<"total block="<<totalblock<<endl;
                 return 0;
             }
 

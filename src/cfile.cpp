@@ -13,7 +13,7 @@ using namespace std;
 #define TYPE_F 0
 #define TYPE_D 0
 #define SIZEOF_INODE sizeof(struct Inode)
-#define BLOCK_SIZE 50
+//#define BLOCK_SIZE 50
 
 struct Ifile {
     std::vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -373,7 +373,8 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 }
 
 int File_Read(int inum, int offset, int length, void * buffer) {
-
+	printf("FILE READ for INODE %d\n", inum);
+	
 	struct Inode iptr = IfileArray.data[inum];//Get_Inode(inum);
 	int numBlocks = 1 + (((offset+length) - 1) / BLOCK_SIZE); //For now, read in everything
 	printf("Read in %d blocks (length: %d)for inode %d == %d\n", numBlocks, length, iptr.inum, inum);
@@ -626,7 +627,7 @@ void test2F(){
 void test3F(){
 	printf("*******************File layer test 3F simple big write and read ******************************\n");
 	Test_File_Create(3);
-	int size=BLOCK_SIZE*5 -1;   
+	int size=BLOCK_SIZE*2 -1;   
 	char buf[size];
 	for(int i=0;i<(size);i++){
 		buf[i]='a'+i%26;
@@ -817,8 +818,8 @@ int main(){
 
     //Overwrite
     test4F(); //overwrite original content
-    // test5F(); //concat
-    // test6F(); //read offset
+    test5F(); //concat
+    test6F(); //read offset
     // //printf("\n\n\n\n");
     // Show_Ifile_Contents();
     // for (int i=1; i<=6; i++) {

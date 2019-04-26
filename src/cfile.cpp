@@ -13,7 +13,7 @@ using namespace std;
 #define TYPE_F 0
 #define TYPE_D 0
 #define SIZEOF_INODE sizeof(struct Inode)
-//#define BLOCK_SIZE 50
+#define BLOCK_SIZE 50
 
 struct Ifile {
     std::vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -78,18 +78,20 @@ void Show_Ifile_Contents() {
     for (int i=1; i<=ifile.size; i++) {
         //struct Inode thisInode = ifile->data[i];
         struct Inode thisInode = IfileArray.data[i];
-        printf("inum: %d (size: %d) has data1 at block %d and seg %d \n", thisInode.inum, thisInode.size, thisInode.Block1Ptr.blockNo, thisInode.Block1Ptr.segmentNo);
-     	if (thisInode.Block2Ptr.blockNo != 0) { 
-     		printf(  "                       data2 at block %d and seg %d \n", thisInode.Block2Ptr.blockNo, thisInode.Block2Ptr.segmentNo);
-     	}
-     	if (thisInode.Block3Ptr.blockNo != 0) { 
-     		printf(  "                       data3 at block %d and seg %d \n", thisInode.Block3Ptr.blockNo, thisInode.Block3Ptr.segmentNo);
-     	}
-     	if (thisInode.Block4Ptr.blockNo != 0) { 
-     		printf(  "                       data4 at block %d and seg %d \n", thisInode.Block4Ptr.blockNo, thisInode.Block4Ptr.segmentNo);
-     	}
-     	if (thisInode.OtherBlocksPtr.blockNo != 0) { 
-     		printf(  "               and more data at block %d and seg %d \n", thisInode.OtherBlocksPtr.blockNo, thisInode.OtherBlocksPtr.segmentNo);
+        if (thisInode.in_use) {
+	        printf("inum: %d (size: %d) has data1 at block %d and seg %d \n", thisInode.inum, thisInode.size, thisInode.Block1Ptr.blockNo, thisInode.Block1Ptr.segmentNo);
+	     	if (thisInode.Block2Ptr.blockNo != 0) { 
+	     		printf(  "                       data2 at block %d and seg %d \n", thisInode.Block2Ptr.blockNo, thisInode.Block2Ptr.segmentNo);
+	     	}
+	     	if (thisInode.Block3Ptr.blockNo != 0) { 
+	     		printf(  "                       data3 at block %d and seg %d \n", thisInode.Block3Ptr.blockNo, thisInode.Block3Ptr.segmentNo);
+	     	}
+	     	if (thisInode.Block4Ptr.blockNo != 0) { 
+	     		printf(  "                       data4 at block %d and seg %d \n", thisInode.Block4Ptr.blockNo, thisInode.Block4Ptr.segmentNo);
+	     	}
+	     	if (thisInode.OtherBlocksPtr.blockNo != 0) { 
+	     		printf(  "               and more data at block %d and seg %d \n", thisInode.OtherBlocksPtr.blockNo, thisInode.OtherBlocksPtr.segmentNo);
+	     	}
      	}
         
     }
@@ -497,6 +499,27 @@ int File_Free(int inum) {
 	struct Inode inode = IfileArray.data[inum];//Get_Inode(inum);
 	inode.in_use = 0; //Inode is no longer in use
 
+	printf("!!!!!!  We have a dead block at seg %d, block %d!!!!!!\n", inode.Block1Ptr.segmentNo, inode.Block1Ptr.blockNo);
+	struct logAddress dataAdd;
+	dataAdd.blockNo = 0;
+	dataAdd.segmentNo = 0;
+	if (Log_writeDeadBlock(inum, inode.Block1Ptr, dataAdd)){ //Katy CHANGE THIS WHEN FIXED TO !Log_write...
+		printf("Block %d in segment %d was successfully marked as dead\n", inode.Block1Ptr.blockNo, inode.Block1Ptr.segmentNo);
+	} else {
+		printf("Error in File_Write: dead block not handled properly\n");
+	}
+	int numBlocks = 1 + ((inode.size - 1) / BLOCK_SIZE); 
+	for (int i=1; i<=numBlocks; i++){
+		if (i == 1) inode.Block1Ptr = dataAdd;
+		if (i == 2) inode.Block2Ptr = dataAdd;
+		if (i == 3) inode.Block3Ptr = dataAdd;
+		if (i == 4) inode.Block4Ptr = dataAdd;
+		else inode.OtherBlocksPtr = dataAdd;
+	}
+	IfileArray.data[inum] = inode;
+
+
+
 }
 
 int Change_Permissions(int inum, int permissions) {
@@ -569,6 +592,13 @@ int Test_File_Create(int inum) {
  //    }
     printf("############ end Test_File_Create %d ############\n",inum);
 	return 0;
+}
+
+int Test_File_Write(int inum) {
+	char *buffer = "aaaaaaaaaa";
+	if (File_Write(inum, 0, 10, (void *) buffer)){
+		printf("Error in Test_File_Write\n");
+	}
 }
 
 int initFile(int size) {
@@ -714,7 +744,59 @@ void test6F(){
 	}
 }
 
+void test7F() {
+	printf("*******************File layer test 7F dead block  ******************************\n");
+	char *buf= "aaaaaaaa";//"First write, welcome to CSC 545 OS class"; //40
+	inum num=7;
+	int offset=0;
+	Test_File_Create(num);
+	Show_Ifile_Contents();
+	if(!File_Write(num, 0, 10, (void*)buf)){
+		printf("File's current block %d, segment %d\n", IfileArray.data[num].Block1Ptr.blockNo, IfileArray.data[num].Block1Ptr.segmentNo);
+		File_Free(num);
+		printf("File's  freed  block %d, segment %d\n", IfileArray.data[num].Block1Ptr.blockNo, IfileArray.data[num].Block1Ptr.segmentNo);
+		Show_Ifile_Contents();
+		Test_File_Create(num+1);
+		Test_File_Write(num+1);
+		Show_Ifile_Contents();
+	}
+}
 void WriteIfileToLog() {
+	printf("Begin writing ifile to log...\n");
+	
+	logAddress oldAdd;
+	logAddress newAdd;
+	void* content = &IfileArray; //.data.data();
+
+	int oldSize = 1;
+	int newSize = sizeof(content);
+	
+	if (!Log_Write(IFILE_INUM, 0, newSize, (void *) content, &newAdd)) {
+		printf("Wrote Ifile to block %d , segment %d\n", newAdd.blockNo, newAdd.segmentNo);
+	}
+
+
+
+	struct Ifile IfileArray2; 
+	void *rcontents[newSize];
+	Log_read(newAdd, newSize, rcontents);
+	printf("Log_read completed, size: %d, read in %u\n", newSize, rcontents);
+	memcpy(&IfileArray2, rcontents, newSize); //sizeof(struct Ifile));
+
+	int numFiles = IfileArray.data.size();
+	printf("Size of IfileArray2: %d\n", numFiles);
+	
+	for (int i=0; i<numFiles; i++) {
+		struct Inode in = IfileArray2.data[i];
+		printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+	}
+
+	// printf("Call Log_recordIfile \n");
+	// newSize = numFiles;
+	// if(!Log_recordIfile( &oldAdd, &newAdd, oldSize, newSize)){
+	// 	printf("Saved Ifile to block %d, segment %d\n", newAdd.blockNo, newAdd.segmentNo);
+	// }
+
 
 	return;
 }
@@ -811,15 +893,20 @@ int main(){
     Test_File_Create(1);
     //Print_Inode(1);
     test1F(); 
+    
     // Show_Ifile_Contents();
 
     test2F();
     test3F(); 
-
-    //Overwrite
+    
+    // //Overwrite
     test4F(); //overwrite original content
     test5F(); //concat
+    //WriteIfileToLog();
+    
     test6F(); //read offset
+    test7F();
+
     // //printf("\n\n\n\n");
     // Show_Ifile_Contents();
     // for (int i=1; i<=6; i++) {

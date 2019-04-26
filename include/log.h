@@ -31,7 +31,7 @@ extern "C" {
 typedef int inum;
 typedef int segmentNo;
 
-#define SUPERBLOCK	4
+#define SUPERBLOCK	64
 #define FLASH_SECTOR_SIZE 512
 #define FLASH_SECTORS_PER_BLOCK 16
 
@@ -40,12 +40,12 @@ typedef int segmentNo;
 #define FILENAMESIZE 50
 
 #define BLOCK_NUMBER  4
-#define TOTALBLOCK  6
+#define TOTALBLOCK  32
 
 #define THREADSHOLD 3  // cleaning
 
 #define MAX_SEGMENT  100
-#define MAX_BLOCK  1000
+#define MAX_BLOCK  2000
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 
@@ -130,8 +130,9 @@ extern int Log_Write(inum num, u_int block, u_int length, void *buffer, struct l
 extern int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
 extern int Log_free(struct logAddress logAddress1,u_int length);
 extern int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress);
-extern int Log_recordIfile(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize);
-
+extern int Log_CheckPoint(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize);
+extern int Log_GetIfleAddress(struct logAddress *Adrress,int size);
+extern int  Log_destory();
 #ifdef __cplusplus
 }
 #endif

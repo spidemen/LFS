@@ -98,11 +98,15 @@ struct Inode {
 
 // vector<logAddress> ifileAddress; 
 
-int initFile(int size);
+extern int initFile(int size);
 
-int File_Create(int inum, int type);
-int File_Write(int inum, int offset, int length,  void * buffer);
-int File_Read(int inum, int offset, int length,  void * buffer);
+extern int File_Create(int inum, int type);
+extern int File_Write(int inum, int offset, int length,  void * buffer);
+extern int File_Read(int inum, int offset, int length,  void * buffer);
+
+extern int File_Get(int inum,struct Inode node);
+
+extern void File_destory();
 
 int Test_File_Create(int inum);
 

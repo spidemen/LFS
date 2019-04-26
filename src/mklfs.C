@@ -11,7 +11,7 @@
 using namespace std;
 
 //char *filename="FuseFileSystem";
-int totalsectors=4;
+int totalsectors=SUPERBLOCK;
 int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);
@@ -33,6 +33,7 @@ int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1
             p->currentsector=segmentsize*blocksize;
             p->currentBlockNumber=0;
             p->currentSegmentNumber=1;
+            p->reUsedTableSize=0;
          //   totalsectors=blocksize*segmentsize;
             if(Flash_Write(f, 0, totalsectors, (void*)p)){
                 cout<<"Error: cannot write metadat to the flash "<<endl;

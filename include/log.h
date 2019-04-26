@@ -35,7 +35,7 @@ typedef int segmentNo;
 #define FLASH_SECTOR_SIZE 512
 #define FLASH_SECTORS_PER_BLOCK 16
 
-#define BLOCK_SIZE (FLASH_SECTOR_SIZE*4)
+#define BLOCK_SIZE (FLASH_SECTOR_SIZE*2)
 
 #define FILENAMESIZE 50
 
@@ -44,6 +44,8 @@ typedef int segmentNo;
 
 #define THREADSHOLD 3  // cleaning
 
+#define MAX_SEGMENT  100
+#define MAX_BLOCK  1000
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 
@@ -74,8 +76,8 @@ struct Block{
 	bool aLive;
 	int  datasize;
 	time_t  modifiedTime;
-//	char  data[BLOCK_SIZE];   // size in cache
-	char  *data;   
+	char  data[BLOCK_SIZE];   // size in cache
+//	char  *data;   
 	int  offset; 
 };
 

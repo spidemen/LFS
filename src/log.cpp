@@ -25,8 +25,15 @@ struct SegmentSummary{
     int  totalBlock; 
     int aliveByte=0;
     long costBenefitRate=0.0;
-    multimap<inum,int> tables;   // inum associated with block No
-    map<int,int> blocksByte;
+//    multimap<inum,int> tables;   // inum associated with block No
+      pair<int, int> tables[64];
+  //  map<int,int> blocksByte;
+      pair<int, int>  blocksByte[64];
+};
+
+struct SegmentUsageTable{
+	int segmentNo;
+	SegmentSummary  summary;
 };
 
 
@@ -40,12 +47,15 @@ struct metadata{
 	int currentBlockNumber;
 	int currentSegmentNumber;
 	char filename[FILENAMESIZE];
-	map<segmentNo,SegmentSummary> segmentUsageTable;
-	map<int, bool> blocksStatus;  // state of each block alive or dead
-	map<segmentNo,SegmentSummary> reUsedTable;
-	struct logAddress *checkPointRegion;
 	time_t  checkPiontTime;
 	int checkPointsize;
+	SegmentUsageTable segmentUsageTable[MAX_SEGMENT];
+	int segementUsageSize;
+//	map<segmentNo,SegmentSummary> segmentUsageTable;
+	pair<int, bool>  blocksStatus[MAX_BLOCK];  // state of each block alive or dead
+	SegmentUsageTable reUsedTable[MAX_SEGMENT];
+	struct logAddress checkPointRegion[10];
+	
 };
 
 multimap<inum,int> tables;  
@@ -78,14 +88,15 @@ bool DoesFileExist (char *filename) {
     cout<<"C++ compiler test  init function "<<endl;
        // init data struct 
 	segmentCache=(struct Segment*)malloc(sizeof(struct Segment));
-	pmetadata=(struct metadata*)malloc(sizeof(struct metadata));
+	pmetadata=(struct metadata*)malloc(SUPERBLOCK*FLASH_SECTOR_SIZE);
+//	pmetadata=new metadata;
 	segmentCache->summary=(struct SegmentSummary*)malloc(sizeof(struct SegmentSummary));
 //	segmentCache->summary=new SegmentSummary;
 
 	for(int i=0;i<N;i++){
 		MRA[i].used=false;
 	}
-//	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
+	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
 	// 	 string cmd="";
 	 	 char cmd[50];
 	 	 memset(cmd,0,50);
@@ -94,7 +105,7 @@ bool DoesFileExist (char *filename) {
 	 	// cmd=cmd+"./mklfs -b 4 -l 4 "+fileSystemName;
 	 	// system(cmd.c_str()); 
 	 	 system(cmd); 
- //   }		
+     }		
  								// commnet for testing file layer
 	u_int blocks;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
@@ -106,8 +117,8 @@ bool DoesFileExist (char *filename) {
             printf("Init Error Cannot read first two sector of file system \n");
             return 0;
         }else{
-            pmetadata= (struct metadata *)buf;
-         //   memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
+        //    pmetadata= (struct metadata *)buf;
+            memcpy(pmetadata,buf,SUPERBLOCK*FLASH_SECTOR_SIZE);
             segmentCache->summary->totalBlock=pmetadata->segmentsize;
             blocksize=pmetadata->blocksize;
       //      startsector=segmentCache->summary->totalBlock*2*blocksize;  // first segment hold metafile system, second segment hold ifile data
@@ -128,6 +139,7 @@ bool DoesFileExist (char *filename) {
             // segmentCache->head->next=NULL;
             printf("init blocksize per sector %d   segment size (blocks) %d  startsector =%d \n",blocksize,pmetadata->segmentsize,startsector);
             printf(" BLOCKSIXE= %d   BLOCKNUMBER=%d\n",BLOCK_SIZE,BLOCK_NUMBER);
+            cout<<" current sector ="<<startsector<<"  current blockNo="<<generateBlockNo<<" currentSement="<<pmetadata->currentSegmentNumber<<endl;
         }
     }
 	 return 1;
@@ -135,36 +147,36 @@ bool DoesFileExist (char *filename) {
 
 int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress){
 	  // 
-	  pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock++;
-	//  pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte-=pmetadata->segmentUsageTable[oldAddress.segmentNo].blocksByte[oldAddress.blockNo];
-	//  pmetadata->blocksStatus[oldAddress.blockNo]=false;
-	  long u=1-(pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock/pmetadata->segmentUsageTable[oldAddress.segmentNo].totalBlock);
-	  pmetadata->segmentUsageTable[oldAddress.segmentNo].costBenefitRate=((1-u)*pmetadata->segmentUsageTable[oldAddress.segmentNo].age)/(1+u);
-	  // check segment dead or not
-	  if(pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte==0|| 
-	  	pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock==pmetadata->segmentUsageTable[oldAddress.segmentNo].totalBlock){
-	  	pmetadata->segmentUsageTable[oldAddress.segmentNo].alive=false;
-	    pmetadata->reUsedTable.insert(pair<segmentNo,SegmentSummary>(oldAddress.segmentNo,pmetadata->segmentUsageTable[oldAddress.segmentNo]));
-	    cleanSegment++;
-	    // cleaning
-	    if(cleanSegment==THREADSHOLD){
-	       int  segmentStartSector=(oldAddress.segmentNo+1)*segmentCache->summary->totalBlock*blocksize;
-	       int startblock=segmentStartSector/FLASH_SECTORS_PER_BLOCK;
-	       int  totalErase=segmentCache->summary->totalBlock/FLASH_SECTORS_PER_BLOCK;
-	       if(segmentStartSector%FLASH_SECTORS_PER_BLOCK!=0){  // default setting make block size or segment  modual by FLASH_SECTORS_PER_BLOCK
-	       	// hard to implement, would waster a lot of space
-	       }
-	       u_int blocks;
-	       Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-	       if(f!=NULL){
-	      		if(Flash_Erase(f,startblock,totalErase))
-	      		   { printf("cannot erase startblock(flash ) %d  totalBlock=%d \n",startblock,totalErase); }
-	  		} else{
-	  			printf("Flash Open Error \n");
-	  		}
+	//   pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock++;
+	// //  pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte-=pmetadata->segmentUsageTable[oldAddress.segmentNo].blocksByte[oldAddress.blockNo];
+	// //  pmetadata->blocksStatus[oldAddress.blockNo]=false;
+	//   long u=1-(pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock/pmetadata->segmentUsageTable[oldAddress.segmentNo].totalBlock);
+	//   pmetadata->segmentUsageTable[oldAddress.segmentNo].costBenefitRate=((1-u)*pmetadata->segmentUsageTable[oldAddress.segmentNo].age)/(1+u);
+	//   // check segment dead or not
+	//   if(pmetadata->segmentUsageTable[oldAddress.segmentNo].aliveByte==0|| 
+	//   	pmetadata->segmentUsageTable[oldAddress.segmentNo].deadblock==pmetadata->segmentUsageTable[oldAddress.segmentNo].totalBlock){
+	//   	pmetadata->segmentUsageTable[oldAddress.segmentNo].alive=false;
+	//     pmetadata->reUsedTable.insert(pair<segmentNo,SegmentSummary>(oldAddress.segmentNo,pmetadata->segmentUsageTable[oldAddress.segmentNo]));
+	//     cleanSegment++;
+	//     // cleaning
+	//     if(cleanSegment==THREADSHOLD){
+	//        int  segmentStartSector=(oldAddress.segmentNo+1)*segmentCache->summary->totalBlock*blocksize;
+	//        int startblock=segmentStartSector/FLASH_SECTORS_PER_BLOCK;
+	//        int  totalErase=segmentCache->summary->totalBlock/FLASH_SECTORS_PER_BLOCK;
+	//        if(segmentStartSector%FLASH_SECTORS_PER_BLOCK!=0){  // default setting make block size or segment  modual by FLASH_SECTORS_PER_BLOCK
+	//        	// hard to implement, would waster a lot of space
+	//        }
+	//        u_int blocks;
+	//        Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+	//        if(f!=NULL){
+	//       		if(Flash_Erase(f,startblock,totalErase))
+	//       		   { printf("cannot erase startblock(flash ) %d  totalBlock=%d \n",startblock,totalErase); }
+	//   		} else{
+	//   			printf("Flash Open Error \n");
+	//   		}
 
-	    }
-	  }
+	//     }
+	//   }
 
 	  return 1;
 }
@@ -172,20 +184,34 @@ int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress n
 // checkpoint 
 
  int Log_recordIfile(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize){
- 		  pmetadata->checkPointRegion=(struct logAddress*)malloc(sizeof(struct logAddress)*(newSize+1));
+ 		//  pmetadata->checkPointRegion=(struct logAddress*)malloc(sizeof(struct logAddress)*(newSize+1));
  		    // store ifile
- 		  memcpy(pmetadata->checkPointRegion,newAdress,sizeof(struct logAddress)*newSize);
+   	      memcpy(pmetadata->checkPointRegion,newAdress,sizeof(struct logAddress)*newSize);
  		  // update checkpoint time
  	      pmetadata->checkPiontTime=time(NULL);
  	      pmetadata->checkPointsize=newSize+1;
-
- 	     int  totalErase=segmentCache->summary->totalBlock/FLASH_SECTORS_PER_BLOCK;
- 	     u_int blocks;
+ 	      pmetadata->currentsector=startsector;
+ 	      pmetadata->currentBlockNumber=generateBlockNo-1;
+ 	      pmetadata->currentSegmentNumber=segmentCache->summary->segmentNo;
+ 	      pmetadata->blocksize=blocksize;
+ 	      pmetadata->segmentsize=segmentCache->summary->totalBlock;
+ 	      pmetadata->segementUsageSize=segmentUsageTable.size();
+          
+          auto it=segmentUsageTable.begin();
+          for(int i=0;i<segmentUsageTable.size();i++){
+          	    pmetadata->segmentUsageTable[i].segmentNo=it->first;
+          	    pmetadata->segmentUsageTable[i].summary=it->second;
+          	//    cout<<"i="<<i<<"  summary segmentNo "<<pmetadata->segmentUsageTable[i].summary.segmentNo<<endl;
+          	    it++;
+          }
+           
+ 	      int  totalErase=(segmentCache->summary->totalBlock*blocksize)/FLASH_SECTORS_PER_BLOCK;
+ 	      u_int blocks;
 	     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
 	     if(f!=NULL){
- 	    	 if(Flash_Erase(f,0,totalErase))
- 	    	   { printf("cannot erase block\n"); } 
-	 	    	if(Flash_Write(f, 0, segmentCache->summary->totalBlock, (void*)pmetadata)){
+ 	    	 if(Flash_Erase(f,0,1)){ printf("cannot erase block\n"); } 
+
+	 	     if(Flash_Write(f, 0, SUPERBLOCK, (void*)pmetadata)){
 	                cout<<"Error: cannot write metadata to the flash "<<endl;
 	                return 1;
 	            }else{
@@ -212,12 +238,13 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   	    int totalSector=blocksize;
 			   	    segmentCache->summary->modifiedTime=time(NULL);
     		    	memcpy(summary,segmentCache->summary,sizeof(struct SegmentSummary));
-    		    	summary->tables.clear();
-    				summary->tables.insert(tables.begin(),tables.end());
-    				tables.clear();
-    				summary->blocksByte.clear();
-    				summary->blocksByte.insert(blocksByte.begin(),blocksByte.end());
-    				blocksByte.clear();
+    		        //	summary->tables.clear();
+    		    	
+    				// summary->tables.insert(tables.begin(),tables.end());
+    				// tables.clear();
+    				// summary->blocksByte.clear();
+    				// summary->blocksByte.insert(blocksByte.begin(),blocksByte.end());
+    				// blocksByte.clear();
 			   		if(Flash_Write(f, startsector,totalSector, (void*)summary)) {    // write segment summary into disk
 			   			printf("LogWrite  Error: canont write segment summary inum= %d   fileblock  =%d  startsector=%d \n",num,block,startsector);
 			   			return 1;
@@ -261,10 +288,10 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   			// reset segment data
 			   		        segmentCache->summary->segmentNo++;   // empty segment , increase segment number for next write
 			   		        memset(segmentCache->dataB,0,sizeof(struct Block)*BLOCK_NUMBER);
-			   		        segmentCache->summary->tables.clear();
+			   		    //    segmentCache->summary->tables.clear();
 			   		        segmentCache->summary->aliveByte=0;
-			   		        segmentCache->summary->blocksByte.clear();
-							cout<<"Sector point: Success write flash. startsector "<<startsector<<" totalSector="<<totalSector<<endl;
+			   		   //     segmentCache->summary->blocksByte.clear();
+							cout<<"Sector point: Success Finish write flash. current "<<startsector<<" totalSector="<<totalSector<<endl;
 			   		    }
 			   		}
 			   	  Flash_Close(f);
@@ -281,7 +308,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		 if(tmp>0){
 	      		    generateBlockNo++;
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
-					segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
+			//		segmentCache->dataB[blockIndex].data=(char *)malloc(BLOCK_SIZE*sizeof(char));
 					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE);
 					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
 					segmentCache->dataB[blockIndex].datasize=length;
@@ -368,7 +395,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
             int  TotalSector=(segmentCache->summary->totalBlock-1)*blocksize;
       		u_int blocks;
       		char buf[BLOCK_SIZE];
-      	    printf("read from disk : startsector =%d  total sector  =%d  canont read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
+      	    printf("read from disk : startsector =%d  total sector  =%d   read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
       		Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
 	        if(f!=NULL){
 	      	   if(Flash_Read(f,StartSector,blocksize,buf)){
@@ -384,13 +411,13 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      	   	    }else{ 
 	      	   	 	  struct  Block *pdata=(struct Block *) buf1;
 	      	   	 	   int i;
-	      	   	 	for( i=0;i<N;i++){
-	      	   	 	//    	 printf(" read from flash i=%d blockNo=%d \n",i,pdata[i].blockNo);	
+	      	   	 	for( i=0;i<BLOCK_NUMBER;i++){
+	      	   	 	   	 printf(" read from flash i=%d blockNo=%d \n",i,pdata[i].blockNo);	
 	      	   	 	    	 if(pdata[i].blockNo==logAddress1.blockNo){
 	      	   	 	    	 	break;
 	      	   	 	    	 }
       	   				 }
-      	   				if(i<=N-1){
+      	   				if(i<=BLOCK_NUMBER-1){
 			      	   		if(length<=BLOCK_SIZE){
 			      	   			printf("i=%d   content  %s\n",i,pdata[i].data );
 		      		 			memcpy(buffer,pdata[i].data,length);
@@ -486,27 +513,45 @@ void test2(int b){
 	}
 }
 
-void test3(){
-	char *buf="test write super block ";
-	startsector=160;
-	int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
-	u_int blocks;
-	Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
-	Flash_Write(f, startsector, 8, (void*)buf);
-	Flash_Write(f, startsector+16, 1, (void*)buf);
-	char *buf2="test write update super block";
-	if(Flash_Erase(f,0,11)){ printf("cannot erase block\n"); }
-	if(Flash_Write(f, startsector,8, (void*)buf2)){
-		printf("Fail write super blcok  startblcok= %d   FLASH_BLOCK sectors =%d\n",startblock,FLASH_SECTORS_PER_BLOCK);
-	}
-	Flash_Write(f, startsector+16,1, (void*)buf2);
-	char bufRead[2048];
-	Flash_Read(f, startsector, 4, bufRead);
-	printf("read super block %s\n",bufRead);
-	Flash_Read(f, startsector+16, 1, bufRead);
-	printf("read super block %s\n",bufRead);
+int test3(){
+	
+	logAddress oldAdrress,newAdress;
+	test2(1);
+	Log_recordIfile(&oldAdrress,&newAdress, 1, 1);
+	 // pmetadata->currentsector=128;
+ 	//  pmetadata->currentBlockNumber=1000;
+ 	//  pmetadata->currentSegmentNumber=1000;
+ 	//   u_int blocks;
+	 //     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+	 //     if(f!=NULL){
+ 	//     	 if(Flash_Erase(f,0,1)){ 
+ 	//     	 	printf("cannot erase block\n"); 
+ 	//     	 } 
+ 	//     	 else{
+	 // 	        if(Flash_Write(f, 0, SUPERBLOCK, (void*)pmetadata)){
+	 //                cout<<"Error: cannot write metadata to the flash "<<endl;
+	 //                return 1;
+	 //             }else{
+	 //                cout<<"Success checkpoint time "<<time(NULL)<<endl;
+	 //             //   return 0;
+	 //            }
+	 //        }
+ 	//  	  } else{
+ 	//  	  	printf("Flash Open Error \n");
+ 	//  	  	return 1;
+ 	//  }
+     cout<<" rewrite metadata "<<endl;
+ 	 init("FuseFileSystem",4);
+ //	 test2(0);
+
 }
 
+void test4(){
+	logAddress oldAdrress,newAdress;
+	test2(2);
+	Log_recordIfile(&oldAdrress,&newAdress, 1, 1);
+	init("FuseFileSystem",4);
+}
 // void testWrite(char *buf,int start){
 // //	char *filename="test.txt";
 // 	u_int blocks=100;
@@ -609,13 +654,15 @@ void test3(){
 // }
 
  int main(int argc, char *argv[])
-  {
+ {
 	
 	 printf(" hello log layer \n");
-     init("FuseFileSystem",4);
+      init("FuseFileSystem",4);
  //   test1("test hello world");
-	//  test3();
-      test2(3*N+1);
+	   test4();
+
+   //    test2(3);
+  //    test4();
   //   testWrite("This is the first time to use flash libraray 1 l\n",4);
    //  testWrite("This is the first time to use flash libraray 2 l\n",2);
  //    testWrite("This is the first time to use flash libraray 3 l\n",4);

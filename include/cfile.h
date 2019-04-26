@@ -104,7 +104,7 @@ extern int File_Create(int inum, int type);
 extern int File_Write(int inum, int offset, int length,  void * buffer);
 extern int File_Read(int inum, int offset, int length,  void * buffer);
 
-extern int File_Get(int inum,struct Inode node);
+extern int File_Get(int inum,struct Inode node);   // 0 success  2: deleted file  1: Fail does not exit
 
 extern void File_destory();
 

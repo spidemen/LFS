@@ -103,7 +103,7 @@ bool DoesFileExist (char *filename) {
 	for(int i=0;i<N;i++){
 		MRA[i].used=false;
 	}
-//	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
+	 if(!DoesFileExist(fileSystemName)){    // comment for testing file layer
 	// 	 string cmd="";
 	 	 char cmd[50];
 	 	 memset(cmd,0,50);
@@ -112,7 +112,7 @@ bool DoesFileExist (char *filename) {
 	 	// cmd=cmd+"./mklfs -b 4 -l 4 "+fileSystemName;
 	 	// system(cmd.c_str()); 
 	 	 system(cmd); 
- //    }		
+     }		
  								// commnet for testing file layer
 	u_int blocks;
     Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
@@ -146,6 +146,10 @@ bool DoesFileExist (char *filename) {
 			for(int i=0;i<pmetadata->blocksStatusSize;i++){
 				blocksStatus.insert(pair<int,bool>(pmetadata->blocksStatus[i].first,pmetadata->blocksStatus[i].second));
 			}
+
+		 //    int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
+			// int  totalErase=(segmentCache->summary->totalBlock*blocksize)/FLASH_SECTORS_PER_BLOCK;
+		//	if(Flash_Erase(f,startblock,totalErase)) {cout<<"Init error: cannot erase next segment "<<endl;}
 			// for(int i=0;i<pmetadata->reUsedTableSize;i++){
 			// 	reUsedTable.insert(pair<segmentNo,SegmentSummary>(pmetadata->reUsedTable[i].segmentNo,pmetadata->reUsedTable[i].summary));
 			// }
@@ -159,6 +163,30 @@ bool DoesFileExist (char *filename) {
 	 return 1;
 }
 
+
+int Log_GetIfleAddress(struct logAddress *Adrress,int size){
+	 memcpy(Adrress,pmetadata->checkPointRegion,sizeof(struct logAddress)*size);
+	 size=pmetadata->checkPointsize;
+	 if(size=0) {
+	 	cout<<"checkpoint address error: No any checkpoint, check...."<<endl;
+	 	return 1;
+	 }
+	 return 0;
+}
+int  Log_destory(){
+	struct logAddress *oldAdrress,*newaddress;
+	segmentCache->currenIndex=BLOCK_NUMBER;
+	char buf[50]="Hello LFS, welcome to CSC 545 OS classf";
+    Log_Write(0, 1, 50,(void*)buf,oldAdrress);   // write segment to disk
+
+	
+	memcpy(oldAdrress,pmetadata->checkPointRegion,sizeof(struct logAddress)*1);
+	memcpy(newaddress,pmetadata->checkPointRegion,sizeof(struct logAddress)*1);
+	Log_CheckPoint(oldAdrress,newaddress, 1, 1);		// checkpoint
+
+	return 0;
+
+}
 // cleanning , every write deadblock to check whether segment neeed to clean based on costbenefit rate
 // there are two different way to do clean, one just directly clean dead segment, other way based on costbenefit rate
 int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress){
@@ -697,17 +725,18 @@ void test4(){
        count++;
        if(count>2) break;
     }
-    segmentCache->currenIndex=BLOCK_NUMBER;
-    Log_Write(num, 1, 50,(void*)buf,&oldAddress);
-    u_int blocks=100;
-    startsector=128;
-    segmentCache->summary->segmentNo=2;
-    generateBlockNo=31;
-    segmentCache->currenIndex=0;
-    address.segmentNo=2;
-	address.blockNo=32;
+ //    segmentCache->currenIndex=BLOCK_NUMBER;
+ //    Log_Write(num, 1, 50,(void*)buf,&oldAddress);
+ //    u_int blocks=100;
+ //    startsector=128;
+ //    segmentCache->summary->segmentNo=2;
+ //    generateBlockNo=31;
+ //    segmentCache->currenIndex=0;
+ //    address.segmentNo=2;
+	// address.blockNo=32;
 	char buf1[50]="Hello LFS, welcome to CSC 545 OS classa";
     test2(1,address,buf1);
+    Log_CheckPoint(&oldAdrress,&newAdress, 1, 1);
 
 }
 

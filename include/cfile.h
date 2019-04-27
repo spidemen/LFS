@@ -37,16 +37,18 @@ struct Inode {
 
 
     int inum;           
-    int type;           			// 0 for file, 1 for directory
-    int size = 0;        
+    int type = 0;           			// 0 for file, 1 for directory
+    int size = 0;   
+    int numBlocks = 0;              //the size but in blocks     
     
     int in_use = 1; 					// true 1, false 0
     char* atime;                        //last access of file/directory
     char* mtime;                        //last modification of file/directory
+    char* ctime;                        //last status change
     char owner = 'u'; 					// u: user, r: root
     int permissions = 777;
-    int nlink;                      // 1 for file, 2 for directory
-    char* group = "aaa";
+    int nlink = 1;                      // 1 for file, 2 for directory
+    char group = 'a';
     int offset;
 
     struct logAddress Block1Ptr= {
@@ -104,9 +106,12 @@ extern int File_Create(int inum, int type);
 extern int File_Write(int inum, int offset, int length,  void * buffer);
 extern int File_Read(int inum, int offset, int length,  void * buffer);
 
-extern int File_Get(int inum,struct Inode node);   // 0 success  2: deleted file  1: Fail does not exit
+extern struct Inode File_Get(int inum);   // 0 success  2: deleted file  1: Fail does not exit
 
 extern void File_destory();
+
+extern int Test_File_Create(int inum);
+extern void Show_Ifile_Contents();
 
 #ifdef __cplusplus
 }

@@ -29,7 +29,7 @@ extern "C" {
 
 extern int initDirectory();
 
-int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size,);  // opendir ,readdir
+int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
 
 int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf);
 

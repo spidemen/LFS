@@ -29,25 +29,25 @@ struct Inode Get_Ifile() {
 	//return LFSlog[IFILE_INUM];
 }
 
-int File_Get(int inum, struct Inode node) {
+struct Inode File_Get(int inum) {
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
 		printf("Error: Inode %d does not exist (out of bounds, %d)\n", inum, availInodes);
-		return 3;
+		//return 3;
 	} else {
 		if (IfileArray.data[inum].in_use == 0) {
 			// Inode did exist but is no longer in use
 			printf("Error: inode %d has been deleted\n");
-			return 2;
+			//return 2;
 		}
 		printf("Returning the inode %d...\n", inum);
-		node = IfileArray.data[inum];
-		return 0;
+		return IfileArray.data[inum];
+		//return 0;
 	}
 	
 
-	return 1;
+	//return 1;
 }
 
 int Put_Ifile(struct Inode *ifiledata) {
@@ -137,7 +137,8 @@ int File_Create(int inum, int type) {
 		struct Inode dummyInode ;    // DONE -- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		dummyInode.inum = IFILE_INUM;
 		dummyInode.type = type;
-		dummyInode.nlink = (type) ? 2 : 1;
+		if (type == TYPE_F) dummyInode.nlink = 1;
+		if (type == TYPE_D) dummyInode.nlink = 2;
 		// current date/time based on current system
 	   	time_t now = time(0);
    
@@ -175,7 +176,9 @@ int File_Create(int inum, int type) {
 	{
 		struct Inode inode;   // DONE-- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		inode.inum = inum;
-		inode.nlink = (type) ? 2 : 1;
+		inode.type = type;
+		if (type == TYPE_F) inode.nlink = 1;
+		if (type == TYPE_D) inode.nlink = 2;
 	    // current date/time based on current system
 	   	time_t now = time(0);
    
@@ -600,7 +603,7 @@ int Change_Group(int inum, char group, int groupLength) {
 
 int Test_File_Create(int inum) {
 	printf("############ begin Test_File_Create %d ############\n",inum);
-	int type = TYPE_F;
+	int type = TYPE_D;
 
 	if (File_Create(inum, type) == 0) {
 		printf("SUCCESS -- File Create worked\n");
@@ -950,9 +953,9 @@ void TestGroup() {
     // TestOwner();
     // TestPermissions();
     // TestGroup();
-    // for (int i=1; i<=6; i++) {
-    // 	Print_Inode(i);
-    // }
+    for (int i=1; i<=3; i++) {
+    	Print_Inode(i);
+    }
 
 	return 0;
 }*/

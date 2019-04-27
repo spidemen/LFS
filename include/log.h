@@ -44,8 +44,8 @@ typedef int segmentNo;
 
 #define THREADSHOLD 3  // cleaning
 
-#define MAX_SEGMENT  100
-#define MAX_BLOCK  2000
+#define MAX_SEGMENT  35
+#define MAX_BLOCK  1000
 //int generateBlockNo=0;
 // char *filename="FuseFileSystem";
 

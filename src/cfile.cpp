@@ -29,6 +29,27 @@ struct Inode Get_Ifile() {
 	//return LFSlog[IFILE_INUM];
 }
 
+int File_Get(int inum, struct Inode node) {
+	int availInodes = IfileArray.data.size();
+	if (inum > availInodes) {
+		// Asking for an Inum that we don't have
+		printf("Error: Inode %d does not exist (out of bounds, %d)\n", inum, availInodes);
+		return 3;
+	} else {
+		if (IfileArray.data[inum].in_use == 0) {
+			// Inode did exist but is no longer in use
+			printf("Error: inode %d has been deleted\n");
+			return 2;
+		}
+		printf("Returning the inode %d...\n", inum);
+		node = IfileArray.data[inum];
+		return 0;
+	}
+	
+
+	return 1;
+}
+
 int Put_Ifile(struct Inode *ifiledata) {
 	IfileMetadata = *ifiledata;
 	//LFSlog[IFILE_INUM] = *ifile;
@@ -105,7 +126,7 @@ void Print_Inode(int inum) {
 
 	struct Inode in = IfileArray.data[inum];
 	//struct Inode in = Get_Inode(inum);
-	printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+	printf("%d %d %c  %c   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
 }
 
 
@@ -121,8 +142,9 @@ int File_Create(int inum, int type) {
 	   	time_t now = time(0);
    
 	   	// convert now to string form
-	   	dummyInode.mtime = ctime(&now);
-	   	dummyInode.atime = ctime(&now);
+	   	char* timestring = ctime(&now);
+	   	dummyInode.mtime = timestring;
+	   	dummyInode.atime = timestring;
 		//Write the inode
 		int block = 0; //start of file
 		int length = sizeof(dummyInode);
@@ -158,8 +180,9 @@ int File_Create(int inum, int type) {
 	   	time_t now = time(0);
    
 	   	// convert now to string form
-	   	inode.mtime = ctime(&now);
-	   	inode.atime = ctime(&now);
+	   	char* timestring = ctime(&now);
+	   	inode.mtime = timestring;
+	   	inode.atime = timestring;
 
 
 		int block = 0; //start of file
@@ -254,6 +277,7 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 					//ifile.data[inum].Block1Ptr = dataAdd;
 					fileinode.Block1Ptr = dataAdd;
 					fileinode.size = wsize;
+					fileinode.numBlocks = numBlocks;
 					if ((pRead.blockNo != dataAdd.blockNo) && (pRead.segmentNo != dataAdd.segmentNo)) {
 						printf("!!!!!!  We have a dead block at seg %d, block %d!!!!!!\n", pRead.segmentNo, pRead.blockNo);
 						if (!Log_writeDeadBlock(inum, pRead, dataAdd)){
@@ -354,12 +378,14 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 		}
 		//First write so length == file size
 		fileinode.size = length;
+		fileinode.numBlocks = numBlocks;
 	}
 
 	// Update the inode time
 	time_t now = time(0);
-	fileinode.mtime = ctime(&now);
-	fileinode.atime = ctime(&now);
+	char* timestring = ctime(&now);
+	fileinode.mtime = timestring;
+	fileinode.atime = timestring;
 
 	// Write the inode data
 	//Put_Inode(inum, &fileinode);
@@ -554,7 +580,7 @@ int Change_Owner(int inum, char owner) {
 	return 0;
 }
 
-int Change_Group(int inum, char* group, int groupLength) {
+int Change_Group(int inum, char group, int groupLength) {
 	// printf("Group: %s \n", group);
 	// struct Inode fileinode = Get_Inode(inum);
 	
@@ -608,7 +634,7 @@ int initFile(int size) {
     init("FuseFileSystem",size);  
 
     // Create the Ifile 
- //   File_Create(IFILE_INUM, TYPE_F);
+    File_Create(IFILE_INUM, TYPE_F);
 	return 0;
 }
 
@@ -751,7 +777,7 @@ void test7F() {
 	int offset=0;
 	Test_File_Create(num);
 	Show_Ifile_Contents();
-	if(!File_Write(num, 0, 10, (void*)buf)){
+	if(!File_Write(num, offset, 10, (void*)buf)){
 		printf("File's current block %d, segment %d\n", IfileArray.data[num].Block1Ptr.blockNo, IfileArray.data[num].Block1Ptr.segmentNo);
 		File_Free(num);
 		printf("File's  freed  block %d, segment %d\n", IfileArray.data[num].Block1Ptr.blockNo, IfileArray.data[num].Block1Ptr.segmentNo);
@@ -788,7 +814,7 @@ void WriteIfileToLog() {
 	
 	for (int i=0; i<numFiles; i++) {
 		struct Inode in = IfileArray2.data[i];
-		printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+		printf("%d %d %c  %c   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
 	}
 
 	// printf("Call Log_recordIfile \n");
@@ -835,26 +861,26 @@ void TestOwner() {
 
 void TestGroup() {
 	int inum = 3;
-	char* group = "grp";
-	int groupLength = 6;
+	char group = 'c';
+	int groupLength = 1;
 	Change_Group(inum, group, groupLength);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
 
 	struct Inode inode = IfileArray.data[inum]; //Get_Inode(inum);
 	if (inode.group != group) {
-		printf("Fail: old group was not changed (old: %s, new: %s).\n ", inode.group, group);
+		printf("Fail: old group was not changed (old: %c, new: %c).\n ", inode.group, group);
 	} else {
-		printf("************* Success   TestOwner pass (%s == %s) **********\n", inode.group, group);
+		printf("************* Success   TestOwner pass (%c == %c) **********\n", inode.group, group);
 	}
 	return;
 }
 
 
-int main(){
+/*int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
-   	initFile(4);
+   	initFile(size);
    	// struct Inode dummyInode;
    	// Put_Inode(0, &dummyInode);
 
@@ -899,13 +925,22 @@ int main(){
     test2F();
     test3F(); 
     
-    // //Overwrite
-    test4F(); //overwrite original content
-    test5F(); //concat
-    //WriteIfileToLog();
+    // // //Overwrite
+    // test4F(); //overwrite original content
+    // test5F(); //concat
+    // //WriteIfileToLog();
     
-    test6F(); //read offset
-    test7F();
+    // test6F(); //read offset
+    // test7F();
+    // struct Inode in;
+    // File_Get(1, in);
+    // printf("File got\n");
+    // printf("%d %d %c %s %d %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+    // time_t now = time(0);
+   
+    // in.mtime = ctime(&now);
+    // printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+
 
     // //printf("\n\n\n\n");
     // Show_Ifile_Contents();
@@ -920,4 +955,4 @@ int main(){
     // }
 
 	return 0;
-}
+}*/

@@ -68,6 +68,7 @@ map<int,int> blocksByte;
 map<int, bool> blocksStatus;
 map<segmentNo,SegmentSummary> segmentUsageTable;
 map<segmentNo,SegmentSummary> reUsedTable;
+map<long,int, greater<long> > costBenefitTable;
 
 char *filename="FuseFileSystem";
 int blocksize=4;
@@ -158,24 +159,29 @@ bool DoesFileExist (char *filename) {
 	 return 1;
 }
 
+// cleanning , every write deadblock to check whether segment neeed to clean based on costbenefit rate
+// there are two different way to do clean, one just directly clean dead segment, other way based on costbenefit rate
 int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress){
 	  
 	  auto it=segmentUsageTable.find(oldAddress.segmentNo);
 	  if(it!=segmentUsageTable.end()){
 		  it->second.deadblock++;
 		  int liveByteBlock=0;
-		  for(int i=0;i<32;i++){
-		  	 if(it->second.blocksByte[i].first==oldAddress.blockNo){
+		  for(int i=0;i<it->second.blocksByteSize;i++){
+		  	 if(it->second.blocksByte[i].first==oldAddress.blockNo){    // cleaning byte on block
 		  	 	 liveByteBlock=it->second.blocksByte[i].second;
+		  	 	 it->second.blocksByte[i].second=0;
 		  	 	 break;
 		  	 }
 		  }
+	//	  cout<<"block no "<<oldAddress.blockNo<<"  live Byte "<<liveByteBlock<<endl;
 		  it->second.aliveByte-=liveByteBlock;					// live data on segment
 		  blocksStatus[oldAddress.blockNo]=false;
 		  float u=1-(float)(it->second.deadblock/(float)(it->second.totalBlock-1));  // segment usage rate
 		  it->second.costBenefitRate=((1-u)*it->second.age)/(1+u);					// cost benefit rate
 	     //   cout<<"segment "<<it->second.segmentNo<<"blockNo="<<oldAddress.blockNo<<"u="<<u<<" deadblock="<<it->second.deadblock<<" aliveByte="<< it->second.aliveByte<<endl;
-		  // check segment dead or not
+		  costBenefitTable.insert(pair<long,int>(it->second.costBenefitRate,it->second.segmentNo));
+		 //  check segment dead or not
 		  if(it->second.aliveByte==0 || 
 		  	it->second.deadblock==it->second.totalBlock-1){
 		  	it->second.alive=false;
@@ -214,6 +220,61 @@ int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress n
 		    cleanSegment=0;
 		    }
 		  }
+		  // chose high rate segment to clean , ThreadShould --1 for cost benefit clean
+		//  cout<<"costBenefitTable size ="<<costBenefitTable.size()<<" rate="<<it->second.costBenefitRate<<"  biggest rate "<<costBenefitTable.begin()->first<<endl;
+		 if(segmentUsageTable.size()>1&& it->second.costBenefitRate==costBenefitTable.begin()->first){
+
+		 		   auto exitSegment=reUsedTable.find(it->second.segmentNo);
+		 		   if(exitSegment==reUsedTable.end()){
+			 	       int segmentNo=it->second.segmentNo;
+				       int  segmentStartSector=(segmentNo)*segmentCache->summary->totalBlock*blocksize;
+				       int startblock=segmentStartSector/FLASH_SECTORS_PER_BLOCK;
+				       int  totalErase=(segmentCache->summary->totalBlock*blocksize)/FLASH_SECTORS_PER_BLOCK;
+				       cout<<"costbenefit  clean segment ="<<segmentNo<<endl;
+				       // copy live data to the tail of log
+				       logAddress  address;
+				       address.segmentNo=segmentNo;
+				       address.blockNo=it->second.blocksByte[0].first;
+				       int sizebuffer=(it->second.totalBlock-1)*blocksize*FLASH_SECTOR_SIZE;
+				       char buf[sizebuffer];
+				       u_int blocks;
+				       Flash f=Flash_Open(filename,FLASH_ASYNC, &blocks);
+				        if(f!=NULL){
+					       if(!Log_read(address ,sizebuffer, buf)){
+		  					   struct  Block *pdata=(struct Block *) buf;
+											       
+						       for(int i=0;i<it->second.blocksByteSize;i++){
+						//       	cout<<"blockNo="<<it->second.blocksByte[i].first<<" block live data size "<<it->second.blocksByte[i].second<<" content ="<<pdata[i].data<<endl;
+					  			 if(it->second.blocksByte[i].second!=0){    // cleaning byte on block
+					  	 			liveByteBlock=it->second.blocksByte[i].second;
+					  	 			 if(!Log_Write(1,0,it->second.blocksByte[i].second,pdata[i].data,&address)) {
+					  	 		//	 	cout<<"costbenefit copy  block "<<it->second.blocksByte[i].first<<" live data "<<endl;
+					  	 			 } else{
+					  	 			 	cout<<"Error: constBenefit clean write error  segment ="<<segmentNo<<endl;
+					  	 			 }
+
+					  	 			 it->second.blocksByte[i].second=0;
+					  			 }
+					 		   }
+				 		 } else{
+				 		 	 cout<<"Error: constBenefit read segment error  segmentNo= "<<segmentNo<<endl;
+				 		 }
+
+				       // cleaning segment
+	 					if(Flash_Erase(f,startblock,totalErase)){
+				      		    printf("cannot erase startblock(flash ) %d  totalBlock=%d \n",startblock,totalErase);
+				      		} else{
+				      			it->second.alive=true;
+				      			reUsedTable.insert(pair<int,SegmentSummary>(it->second.segmentNo,it->second));
+				      		}
+				  		} else{
+				  			printf("Flash Open Error \n");
+				  		}
+
+				  		Flash_Close(f);
+			}
+
+		 }
 	} else{
 		cout<<"Error: invalid log address, does not exit in segmentUsage tabel segmentNo="<<oldAddress.segmentNo<<endl;
 		return 0;
@@ -307,7 +368,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 			   			return 1;
 			   		}else{
 			   		    // write segment into segment usagetable
-			   		     segmentUsageTable.insert(pair<segmentNo,SegmentSummary>(segmentCache->summary->segmentNo,*summary));
+			   		    segmentUsageTable.insert(pair<segmentNo,SegmentSummary>(segmentCache->summary->segmentNo,*summary));
 			   		   //  pmetadata->segmentUsageTable.insert(pair<segmentNo,SegmentSummary>(segmentCache->summary->segmentNo,*summary));
 			   	
 			   		  // write data to disk
@@ -379,7 +440,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 	      		    generateBlockNo++;
 					int blockIndex=segmentCache->currenIndex%BLOCK_NUMBER;
 			    	memset(segmentCache->dataB[blockIndex].data,'\0',BLOCK_SIZE-100);
-					memcpy(segmentCache->dataB[blockIndex].data,buffer,BLOCK_SIZE-100);
+					memcpy(segmentCache->dataB[blockIndex].data,buffer,length);
 
 					segmentCache->dataB[blockIndex].blockNo=generateBlockNo;
 					segmentCache->dataB[blockIndex].datasize=length;
@@ -398,7 +459,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		logAddress1->segmentNo=segmentCache->summary->segmentNo;
 		logAddress1->blockNo=generateBlockNo;
 
-		printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
+	//	printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
 		return 0;
 
 		
@@ -416,7 +477,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       		// 	printf("i= %d  content =%s \n", i,segmentCache->dataB[i].data);
       		
       		 }else{
-      		 	memcpy(buffer,&segmentCache->dataB[i].data,BLOCK_SIZE-100);
+      		 	memcpy(buffer,&segmentCache->dataB[i],length);
       		 }
       	    return 0;
       }
@@ -447,15 +508,17 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       		 			  memcpy(buffer,block,length);
       		 		} else{
       		 		//	 memcpy(buffer,block->second.data,BLOCK_SIZE);
-      		 			 memcpy(buffer,block,BLOCK_SIZE-100);
+      		 			 memcpy(buffer,&p.dataB[i],length);
       		 		}
       		 	}else{
       		 	    printf("Error: segment No=  =%d   do not have blockNo  =%d \n",logAddress1.segmentNo, logAddress1.blockNo);
       		 		return 1;
       		 	}
 
-    //   		 free(MRA[index].dataB);
-			 // free(MRA[index].summary);
+      		 free(MRA[index].dataB);
+			 free(MRA[index].summary);
+			 MRA[index].dataB=NULL;
+			 MRA[index].summary=NULL;
       		 for(i=index;i<N-1;i++){
       		 	MRA[i]=MRA[i+1];
       		 	if(!MRA[i].used) break;
@@ -470,7 +533,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
             int  TotalSector=(segmentCache->summary->totalBlock-1)*blocksize;
       		u_int blocks;
       		char buf[BLOCK_SIZE];
-      	  //  printf("read from disk : startsector =%d  total sector  =%d   read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
+      	    printf("read from disk : startsector =%d  total sector  =%d   read  segmentNo= %d  blockNo =%d \n",StartSector,TotalSector,logAddress1.segmentNo,logAddress1.blockNo);
       		Flash f=Flash_Open(filename,FLASH_ASYNC,&blocks);
 	        if(f!=NULL){
 	      	   if(Flash_Read(f,StartSector,blocksize,buf)){
@@ -497,7 +560,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 			      	   		//	printf("i=%d   content  %s\n",i,pdata[i].data );
 		      		 			memcpy(buffer,pdata[i].data,length);
 		      				 }else{
-		      					memcpy(buffer,pdata[i].data,BLOCK_SIZE-100);
+		      					memcpy(buffer,&pdata[i],length);
 		      		 		 }
 	      		 	    }else{
 	      		 	       printf(" Error read from disk: segment No= %d  do not have blockNo= %d \n",logAddress1.segmentNo, logAddress1.blockNo);
@@ -511,8 +574,10 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
 	      		 		p.dataB=(struct Block*)malloc(sizeof(struct Block)*BLOCK_NUMBER);;
 	      		 		memcpy(p.dataB,pdata,sizeof(struct Block)*BLOCK_NUMBER);
 
-	      		//  		free(MRA[0].dataB);
-			   			// free(MRA[0].summary);
+	      		   		free(MRA[0].dataB);
+			   			free(MRA[0].summary);
+			   			MRA[0].dataB=NULL;
+			   			MRA[0].summary=NULL;
 	      		 		for(int i=1;i<N;i++){
 			   				MRA[i-1]=MRA[i];
 			   			}
@@ -626,12 +691,14 @@ void test4(){
     	for(int i=0;i<it.second.blocksByteSize;i++){
     		pair<int,int> tmp=it.second.blocksByte[i];
     		oldAddress.blockNo=tmp.first;
-    		if(tmp.first!=3)
+    	  if(tmp.first%10!=0)
        		Log_writeDeadBlock(num,oldAddress,oldAddress);
        }
        count++;
-       if(count>3) break;
+       if(count>2) break;
     }
+    segmentCache->currenIndex=BLOCK_NUMBER;
+    Log_Write(num, 1, 50,(void*)buf,&oldAddress);
     u_int blocks=100;
     startsector=128;
     segmentCache->summary->segmentNo=2;
@@ -640,7 +707,7 @@ void test4(){
     address.segmentNo=2;
 	address.blockNo=32;
 	char buf1[50]="Hello LFS, welcome to CSC 545 OS classa";
-    test2(3,address,buf1);
+    test2(1,address,buf1);
 
 }
 

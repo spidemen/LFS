@@ -77,7 +77,8 @@ struct Inode {
     // struct Block Block4Ptr;
     // struct Block OtherBlocksPtr;
 
-    //char filename[];
+    char filename[50];
+    char directory[50];
 };
 
 
@@ -106,12 +107,15 @@ extern int File_Create(int inum, int type);
 extern int File_Write(int inum, int offset, int length,  void * buffer);
 extern int File_Read(int inum, int offset, int length,  void * buffer);
 
-extern struct Inode File_Get(int inum);   // 0 success  2: deleted file  1: Fail does not exit
+extern int File_Get(int inum, struct Inode *node)  // 0 success  2: deleted file  1: Fail does not exit
 
 extern void File_destory();
 
 extern int Test_File_Create(int inum);
 extern void Show_Ifile_Contents();
+
+extern int File_Naming(char *directory,char *filename);   // pass the directory and filename and do update on inode
+
 
 #ifdef __cplusplus
 }

@@ -147,9 +147,15 @@ bool DoesFileExist (char *filename) {
 				blocksStatus.insert(pair<int,bool>(pmetadata->blocksStatus[i].first,pmetadata->blocksStatus[i].second));
 			}
 
-		 //    int startblock=startsector/FLASH_SECTORS_PER_BLOCK;
-			// int  totalErase=(segmentCache->summary->totalBlock*blocksize)/FLASH_SECTORS_PER_BLOCK;
-		//	if(Flash_Erase(f,startblock,totalErase)) {cout<<"Init error: cannot erase next segment "<<endl;}
+		 //    int startblock;
+		 //    if(startsector%FLASH_SECTORS_PER_BLOCK==0){
+		 //    	startblock=startsector/FLASH_SECTORS_PER_BLOCK;
+		 //    } else{
+		 //    	startblock=(startsector/FLASH_SECTORS_PER_BLOCK)+1;
+		 //    	startsector=startblock*FLASH_SECTORS_PER_BLOCK;
+		 //    }
+		 //    int  totalErase=(segmentCache->summary->totalBlock*blocksize)/FLASH_SECTORS_PER_BLOCK;
+			// if(Flash_Erase(f,startblock,totalErase)) {cout<<"Init error: cannot erase next segment "<<endl;}
 			// for(int i=0;i<pmetadata->reUsedTableSize;i++){
 			// 	reUsedTable.insert(pair<segmentNo,SegmentSummary>(pmetadata->reUsedTable[i].segmentNo,pmetadata->reUsedTable[i].summary));
 			// }
@@ -736,19 +742,19 @@ void test4(){
 	// address.blockNo=32;
 	char buf1[50]="Hello LFS, welcome to CSC 545 OS classa";
     test2(1,address,buf1);
-    Log_CheckPoint(&oldAdrress,&newAdress, 1, 1);
+     Log_CheckPoint(&oldAdrress,&newAdress, 1, 1);
 
 }
 
- int main(int argc, char *argv[])
- {
+//  int main(int argc, char *argv[])
+//  {
 	
-	 printf(" hello log layer \n");
-      init("FuseFileSystem",4);
- //   test1("test hello world");
-	   test4();
+// 	 printf(" hello log layer \n");
+//       init("FuseFileSystem",4);
+//  //   test1("test hello world");
+// 	   test4();
 
-   //    test2(3);
-  //    test4();
-    return 1;
-}
+//    //    test2(3);
+//   //    test4();
+//     return 1;
+// }

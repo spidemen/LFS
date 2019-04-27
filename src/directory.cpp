@@ -7,30 +7,30 @@
 using namespace std;
 
 
-map<string,vector<string> > FileSystemMap; 
+map<string,vector<string> > *FileSystemMap;   // <path/directory, filename>
 
 int inodeSize=144;   // default vaule
 
-int currentinum=1;
 
 
-
-int initDirectory() {
+int initDirectory(int cachesize) {
    
-   initFile(4);
-   cout<<"compile C++ test"<<endl;
-   char buffer[BLOCK_SIZE];
-   if(!File_Read(IFILE,0, BLOCK_SIZE,buffer)){
-	//	Ifile *file=(Ifile *)buffer;
-//		currentinum=file->data.size();   
-		// for(int i=0;i<file->data.size();i++){
-		// 	cout<<"test";
-		// //	tables.push_back(pair<FileName,inum>(file->data[i].filename,file->data[i].inum));
-		// }
-   }
-   return 0;
+    currentinum=initFile(cachesize);
+    char buf[BLOCK_SIZE-100];
+    if(!File_Read(2, 0, BLOCK_SIZE,buf)){
+       FileSystemMap=(map<string,vector<string> > *) buf;
+    } else{
+      cout<<"Fail: get entry for all file "<<endl;
+      return 1;
+    }
+    return 0;
 }
 
+int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf){
+
+
+
+}
 int convertInodeToStat(struct Inode inode, struct stat s) {
 	s.st_dev = 0;
 	s.st_ino = inode.inum;
@@ -59,6 +59,9 @@ int createFile(const char *path, char *filename, struct stat *stbuf){
 		currentinum++;
 		if(!File_Create(currentinum,0)){
 			cout<<"test";
+      vector<string> tmp=FileSystemMap->find(path);
+      tmp.push_back(filename);
+      FileSystemMap->insert(path,tmp);
 		//	tables.push_back(pair<FileName,inum>(filecreate, currentinum));
 		}
 }
@@ -70,6 +73,16 @@ int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf) {
 }
 
 
+
+void test1(){
+     initDirectory();
+     char *path="/root/foo/bar";
+     char *filename="test.txt";
+     struct stat *stbuf;
+     createFile(path, filename,stbuf);
+     createFile(path, filename,stbuf);
+     
+}
 int main(int argc, char *argv[])
 {
 	cout<<"hell World"<<endl;

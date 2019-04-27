@@ -13,7 +13,7 @@ using namespace std;
 #define TYPE_F 0
 #define TYPE_D 0
 #define SIZEOF_INODE sizeof(struct Inode)
-#define BLOCK_SIZE 50
+#define BLOCK_SIZE 1000
 
 struct Ifile {
     std::vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>

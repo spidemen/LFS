@@ -29,23 +29,23 @@ extern "C" {
 
 extern int initDirectory();
 
-int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
+int Directory_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
 
-int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf);
+int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf);
 
-int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
+int Directory_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
 
-int Directoy_createFile(const char *path, char *filename, struct stat *stbuf);
+int Directory_createFile(const char *path, char *filename, struct stat *stbuf);
 
-int Directoy_deleteFile(const char *path,char *filename,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
+int Directory_deleteFile(const char *path,char *filename,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
 
-int Directoy_readFile(const char *path, char *filename, int offset, char *buf);
+int Directory_readFile(const char *path, char *filename, int offset, char *buf);
 
-int Directoy_writeFile(const char *path, char *filename, int offset, char *buf);
+int Directory_writeFile(const char *path, char *filename, int offset, char *buf);
 
 int convertInodeToStat(struct Inode inode, struct stat s);
 
-void  Directoy_destory();
+void  Directory_destory();
 
 //xing
 // init , destroy, statfs, release,releasdir, symlink, truncate

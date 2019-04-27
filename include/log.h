@@ -39,7 +39,7 @@ typedef int segmentNo;
 
 #define FILENAMESIZE 50
 
-#define BLOCK_NUMBER  4
+#define BLOCK_NUMBER  31
 #define TOTALBLOCK  32
 
 #define THREADSHOLD 3  // cleaning
@@ -76,7 +76,7 @@ struct Block{
 	bool aLive;
 	int  datasize;
 	time_t  modifiedTime;
-	char  data[BLOCK_SIZE];   // size in cache
+	char  data[BLOCK_SIZE-100];   // size in cache
 //	char  *data;   
 	int  offset; 
 };
@@ -106,7 +106,7 @@ struct Segment{
 	struct lData *head;
 	bool used;
 	int currenIndex;
-//	struct Block  dataB[BLOCK_NUMBER];
+//    struct Block  dataB[BLOCK_NUMBER];
 	struct Block *dataB;
 };
 

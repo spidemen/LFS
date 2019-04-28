@@ -110,6 +110,7 @@ struct Segment{
 	struct Block *dataB;
 };
 
+
 // use one segment to hold metadata for file system
 // struct metadata{
 // 	int blocksize;

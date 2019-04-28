@@ -7,29 +7,49 @@
 using namespace std;
 
 
-map<string,vector<string> > FileSystemMap; 
+map<string,vector<pair<string,int> >> FileSystemMap;   // <path/directory, filename>
 
 int inodeSize=144;   // default vaule
 
-int currentinum=1;
 
 
-
-int initDirectory() {
+int initDirectory(int cachesize) {
    
-   initFile(4);
-   cout<<"compile C++ test"<<endl;
-   char buffer[BLOCK_SIZE];
-   if(!File_Read(IFILE, 0, BLOCK_SIZE, buffer)){
+    currentinum=initFile(cachesize);
+    char buf[BLOCK_SIZE-100];
+    FileSystemMap.clear();
+    for(int i=2;i<currentinum;i++){
+      struct Inode node;
+      if(!File_Get(i, &node)){
+        vector<string> tmp;
+        tmp.push_back({node.filename,node.inum});
+        FileSystemMap.insert(node.directory,tmp);
+      }
+    }
+    return 0;
+}
 
-	//	Ifile *file=(Ifile *)buffer;
-//		currentinum=file->data.size();   
-		// for(int i=0;i<file->data.size();i++){
-		// 	cout<<"test";
-		// //	tables.push_back(pair<FileName,inum>(file->data[i].filename,file->data[i].inum));
-		// }
-   }
-   return 0;
+int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf){
+        auto it=FileSystemMap.find(path);
+        if(it!=FileSystemMap.end()){
+            for(auto file: it->second){
+                 if(strcmp(filename,file.first.c_str())==0){
+                    struct Inode node;
+                    struct stat t;
+                    if(!File_Get(i, &node)){
+                       convertInodeToStat(node,t);
+                       stbuf=&t;
+                       return 0;
+                    }
+                 }
+            }
+        }
+
+        return 1;
+
+}
+int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size){
+                        
 }
 
 int convertInodeToStat(struct Inode inode, struct stat s) {
@@ -53,8 +73,20 @@ int convertInodeToStat(struct Inode inode, struct stat s) {
 
 }
 
-int Directory_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size){
-	return 0;
+
+int createFile(const char *path, char *filename, struct stat *stbuf){
+	   char *fullpath;
+	   strcat(fullpath,path);
+	   strcat(fullpath,filename);
+		currentinum++;
+		if(!File_Create(currentinum,0)){
+      File_Naming(currentinum,path,filename);
+			cout<<"test";
+      vector<string> tmp=FileSystemMap.find(path);
+      tmp.push_back({filename,currentinum});
+      FileSystemMap.insert(path,tmp);
+		//	tables.push_back(pair<FileName,inum>(filecreate, currentinum));
+		}
 }
 
 int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf) {
@@ -128,6 +160,16 @@ int test2D() {
 	return 0;
 }
 
+
+void test1(){
+     initDirectory();
+     char *path="/root/foo/bar";
+     char *filename="test.txt";
+     struct stat *stbuf;
+     createFile(path, filename,stbuf);
+     createFile(path, filename,stbuf);
+
+}
 int main(int argc, char *argv[])
 {
 	cout<<"hell World"<<endl;

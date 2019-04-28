@@ -27,8 +27,9 @@ extern "C" {
  	int inum;
  };
 
-extern int initDirectory();
+int currentinum=1;
 
+<<<<<<< HEAD
 int Directory_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
 
 int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf);
@@ -42,6 +43,23 @@ int Directory_deleteFile(const char *path,char *filename,struct stat *stbuf);  /
 int Directory_readFile(const char *path, char *filename, int offset, char *buf);
 
 int Directory_writeFile(const char *path, char *filename, int offset, char *buf);
+=======
+extern int initDirectory(int cachesize);
+
+extern int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
+
+extern int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf);
+
+extern int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
+
+extern int Directoy_createFile(const char *path, char *filename, struct stat *stbuf);
+
+extern int Directoy_deleteFile(const char *path,char *filename,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
+
+extern int Directoy_readFile(const char *path, char *filename, int offset, char *buf);
+
+extern int Directoy_writeFile(const char *path, char *filename, int offset, char *buf);
+>>>>>>> 617d78fc31aa25522f7664fef60803e136ede550
 
 int convertInodeToStat(struct Inode inode, struct stat s);
 

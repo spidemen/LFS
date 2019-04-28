@@ -13,7 +13,53 @@ using namespace std;
 #define TYPE_F 0
 #define TYPE_D 0
 #define SIZEOF_INODE sizeof(struct Inode)
-#define BLOCK_SIZE 1000
+#define BLOCK_SIZE 100
+struct Inode {
+    
+    int inum;           
+    int type = 0;           			// 0 for file, 1 for directory
+    int size = 0;   
+    int numBlocks = 0;              //the size but in blocks     
+    
+    int in_use = 1; 					// true 1, false 0
+    char* atime;                        //last access of file/directory
+    char* mtime;                        //last modification of file/directory
+    char* ctime;                        //last status change
+    char owner = 'u'; 					// u: user, r: root
+    int permissions = 777;
+    int nlink = 1;                      // 1 for file, 2 for directory
+    char group = 'a';
+    int offset;
+
+    struct logAddress Block1Ptr= {
+        .blockNo = 0,
+        .segmentNo = 0
+    };
+    struct logAddress Block2Ptr= {
+        .blockNo = 0,
+        .segmentNo = 0
+    };
+    struct logAddress Block3Ptr= {
+        .blockNo = 0,
+        .segmentNo = 0
+    };
+    struct logAddress Block4Ptr= {
+        .blockNo = 0,
+        .segmentNo = 0
+    };
+    struct logAddress OtherBlocksPtr= {
+        .blockNo = 0,
+        .segmentNo = 0
+    };
+    // struct Block Block1Ptr;
+    // struct Block Block2Ptr;
+    // struct Block Block3Ptr;
+    // struct Block Block4Ptr;
+    // struct Block OtherBlocksPtr;
+
+    char filename[50];
+    char directory[50];
+};
 
 struct Ifile {
     std::vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -51,7 +97,7 @@ int File_Get(int inum, struct Inode *node) {
 	//return 1;
 }
 
-int File_Naming(int num,char *directory,char *filename){
+int File_Naming(int inum,char *directory,char *filename){
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
@@ -330,9 +376,10 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 		printf("buffer2 %s\n", buffer);
 		int bytesLeft = length;
 
-		std::vector<struct logAddress> otherBlocks;
-		// struct logAddress* otherBlocks;
-		// if (numBlocks > 4) logAddress otherBlocks[numBlocks-4];
+		//std::vector<struct logAddress> otherBlocks;
+		struct logAddress otherBlocks[numBlocks];
+		//if (numBlocks > 4) struct logAddress otherBlocks[numBlocks-4];
+		printf("size of otehrBlocksArray: %d, size of logAddress: %d\n", sizeof(otherBlocks), sizeof(logAddress));
 		// Write blocks
 		for (int i=1; i<=numBlocks; i++) {
 			printf(" Loop: i=%d\n",i);
@@ -345,8 +392,9 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 				printf("STARTING ARRAY OF POINTERS...\n");
 				memcpy(writebuf, buffer+j, bytesLeft);
 				if (!Log_Write(inum, 1, bytesLeft, (void *) writebuf, &dataAdd)) {
-					//otherBlocks[i-5]=dataAdd;
-					otherBlocks.push_back(dataAdd);
+					printf("HERE, i-5=%d\n",i-5);
+					otherBlocks[i-5]=dataAdd;
+					//otherBlocks.push_back(dataAdd);
 	 				printf("\n\t---write file section/blockptr:%d, segmentNo=%d  block number=%d \n",i,dataAdd.segmentNo,dataAdd.blockNo);
 				} else {
 					printf("File: write error for section %d, cannot write %s\n", i, writebuf);
@@ -354,12 +402,12 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 
 				if (i == numBlocks) {
 					//We've reached the end, check the array
-					printf("---- Added %d additional blocks\n", otherBlocks.size());
+					printf("---- Added %d additional blocks\n", numBlocks-4); //otherBlocks.size());
 					// Convert otherBlocks vector into void*
 					int sizeOfVector = sizeof(otherBlocks);
 					printf("---- Size of vector (space): %d\n", sizeOfVector);
-					struct logAddress* otherBlocksArray = otherBlocks.data();
-					Log_Write(inum, 1, sizeOfVector, (void *) otherBlocksArray, &dataAdd);
+					//struct logAddress* otherBlocksArray = otherBlocks.data();
+					Log_Write(inum, 1, sizeOfVector, (void *) otherBlocks, &dataAdd);
 
 					//Save the array's pointer
 					fileinode.OtherBlocksPtr = dataAdd;
@@ -522,14 +570,19 @@ int File_Read(int inum, int offset, int length, void * buffer) {
 	}
 	if (numBlocks >= 5) {
 		printf("READING FROM MORE THAN 4 BLOCKS\n");
+		
 		for (int i=5; i<= numBlocks; i++) {
 			int amtToRead5 = length - (i-1)*BLOCK_SIZE;
 			if (amtToRead5 > BLOCK_SIZE) amtToRead5 = BLOCK_SIZE;
-			char content5[amtToRead5];
+
+
+			struct logAddress content5[numBlocks];
+			
 			ladd.blockNo = iptr.OtherBlocksPtr.blockNo;
 			ladd.segmentNo = iptr.OtherBlocksPtr.segmentNo;
-			if(!Log_read(ladd, amtToRead5, content5)) {
-				printf("XING HOW DO I GET THE LOGADDRESSES BACK OUT?");
+			if(!Log_read(ladd, numBlocks*sizeof(logAddress), content5)) {
+				printf("content5: %s %d %d \n\n", content5, content5[0].blockNo, content5[0].segmentNo);
+
 			}
 
 
@@ -706,7 +759,7 @@ void test2F(){
 void test3F(){
 	printf("*******************File layer test 3F simple big write and read ******************************\n");
 	Test_File_Create(3);
-	int size=BLOCK_SIZE*2 -1;   
+	int size=BLOCK_SIZE*5 -1;   
 	char buf[size];
 	for(int i=0;i<(size);i++){
 		buf[i]='a'+i%26;

@@ -58,7 +58,7 @@ struct Inode {
     // struct Block OtherBlocksPtr;
 
     char filename[50];
-    char directory[50];
+    char path[50];
 };
 
 struct Ifile {
@@ -97,7 +97,11 @@ int File_Get(int inum, struct Inode *node) {
 	//return 1;
 }
 
-int File_Naming(int inum,char *directory,char *filename){
+// <<<<<<< HEAD
+// int File_Naming(int inum,char *directory,char *filename){
+// =======
+int File_Naming(int inum, const char *path,char *filename){
+//>>>>>>> f112644d66aaab9eaa8cfed32518749c3acbf4a4
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
@@ -110,7 +114,7 @@ int File_Naming(int inum,char *directory,char *filename){
 			return 2;
 		}
 		printf("Returning the inode %d...\n", inum);
-     	memcpy(IfileArray.data[inum].directory,directory,50);
+     	memcpy(IfileArray.data[inum].path,path,50);
      	memcpy(IfileArray.data[inum].filename,filename,50);
 		return 0;
 	}

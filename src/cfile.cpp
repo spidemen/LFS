@@ -97,11 +97,9 @@ int File_Get(int inum, struct Inode *node) {
 	//return 1;
 }
 
-// <<<<<<< HEAD
-// int File_Naming(int inum,char *directory,char *filename){
-// =======
+
 int File_Naming(int inum, const char *path,char *filename){
-//>>>>>>> f112644d66aaab9eaa8cfed32518749c3acbf4a4
+
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
@@ -578,14 +576,19 @@ int File_Read(int inum, int offset, int length, void * buffer) {
 		for (int i=5; i<= numBlocks; i++) {
 			int amtToRead5 = length - (i-1)*BLOCK_SIZE;
 			if (amtToRead5 > BLOCK_SIZE) amtToRead5 = BLOCK_SIZE;
+			char content5[amtToRead5];
 
-
-			struct logAddress content5[numBlocks];
+			struct logAddress extraBlockLogAdds[numBlocks];
 			
 			ladd.blockNo = iptr.OtherBlocksPtr.blockNo;
 			ladd.segmentNo = iptr.OtherBlocksPtr.segmentNo;
-			if(!Log_read(ladd, numBlocks*sizeof(logAddress), content5)) {
-				printf("content5: %s %d %d \n\n", content5, content5[0].blockNo, content5[0].segmentNo);
+			if(!Log_read(ladd, numBlocks*sizeof(logAddress), extraBlockLogAdds)) {
+				printf("content5 Add: %s %d %d \n\n", extraBlockLogAdds, extraBlockLogAdds[i-5].blockNo, extraBlockLogAdds[i-5].segmentNo);
+				if (!Log_read(extraBlockLogAdds[i-5], amtToRead5, content5)){
+					printf("content5: %s\n", content5);
+					memcpy(buffer+BLOCK_SIZE*(i-1)-offset, content5, amtToRead5);
+				}
+				
 
 			}
 
@@ -957,7 +960,7 @@ void TestGroup() {
 }
 
 
-/*int main(){
+int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
    	initFile(size);
@@ -1035,4 +1038,4 @@ void TestGroup() {
     }
 
 	return 0;
-}*/
+}

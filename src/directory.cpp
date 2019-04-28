@@ -7,7 +7,7 @@
 using namespace std;
 
 
-map<string,vector<string> > *FileSystemMap;   // <path/directory, filename>
+map<string,vector<pair<string,int> >> FileSystemMap;   // <path/directory, filename>
 
 int inodeSize=144;   // default vaule
 
@@ -17,20 +17,42 @@ int initDirectory(int cachesize) {
    
     currentinum=initFile(cachesize);
     char buf[BLOCK_SIZE-100];
-    if(!File_Read(2, 0, BLOCK_SIZE,buf)){
-       FileSystemMap=(map<string,vector<string> > *) buf;
-    } else{
-      cout<<"Fail: get entry for all file "<<endl;
-      return 1;
+    FileSystemMap.clear();
+    for(int i=2;i<currentinum;i++){
+      struct Inode node;
+      if(!File_Get(i, &node)){
+        vector<string> tmp;
+        tmp.push_back({node.filename,node.inum});
+        FileSystemMap.insert(node.directory,tmp);
+      }
     }
     return 0;
 }
 
 int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf){
+        auto it=FileSystemMap.find(path);
+        if(it!=FileSystemMap.end()){
+            for(auto file: it->second){
+                 if(strcmp(filename,file.first.c_str())==0){
+                    struct Inode node;
+                    struct stat t;
+                    if(!File_Get(i, &node)){
+                       convertInodeToStat(node,t);
+                       stbuf=&t;
+                       return 0;
+                    }
+                 }
+            }
+        }
 
-
+        return 1;
 
 }
+int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size){
+                        
+
+}
+
 int convertInodeToStat(struct Inode inode, struct stat s) {
 	s.st_dev = 0;
 	s.st_ino = inode.inum;
@@ -58,10 +80,11 @@ int createFile(const char *path, char *filename, struct stat *stbuf){
 	   strcat(fullpath,filename);
 		currentinum++;
 		if(!File_Create(currentinum,0)){
+      File_Naming(currentinum,path,filename);
 			cout<<"test";
-      vector<string> tmp=FileSystemMap->find(path);
-      tmp.push_back(filename);
-      FileSystemMap->insert(path,tmp);
+      vector<string> tmp=FileSystemMap.find(path);
+      tmp.push_back({filename,currentinum});
+      FileSystemMap.insert(path,tmp);
 		//	tables.push_back(pair<FileName,inum>(filecreate, currentinum));
 		}
 }
@@ -81,7 +104,7 @@ void test1(){
      struct stat *stbuf;
      createFile(path, filename,stbuf);
      createFile(path, filename,stbuf);
-     
+
 }
 int main(int argc, char *argv[])
 {

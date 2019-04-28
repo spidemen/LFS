@@ -51,6 +51,25 @@ int File_Get(int inum, struct Inode *node) {
 	//return 1;
 }
 
+int File_Naming(int num,char *directory,char *filename){
+	int availInodes = IfileArray.data.size();
+	if (inum > availInodes) {
+		// Asking for an Inum that we don't have
+		printf("Error: Inode %d does not exist (out of bounds, %d)\n", inum, availInodes);
+		return 3;
+	} else {
+		if (IfileArray.data[inum].in_use == 0) {
+			// Inode did exist but is no longer in use
+			printf("Error: inode %d has been deleted\n");
+			return 2;
+		}
+		printf("Returning the inode %d...\n", inum);
+     	memcpy(IfileArray.data[inum].directory,directory,50);
+     	memcpy(IfileArray.data[inum].filename,filename,50);
+		return 0;
+	}
+
+}
 int Put_Ifile(struct Inode *ifiledata) {
 	IfileMetadata = *ifiledata;
 	//LFSlog[IFILE_INUM] = *ifile;

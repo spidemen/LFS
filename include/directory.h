@@ -14,7 +14,6 @@ extern "C" {
 #include <stdlib.h>
 #include <flash.h>
 #include  "cfile.h"
-
 #define IFILE 0
 
 #define NAMESIZE 50

@@ -51,7 +51,7 @@ int File_Get(int inum, struct Inode *node) {
 	//return 1;
 }
 
-int File_Naming(int num,char *directory,char *filename){
+int File_Naming(int inum, const char *path,char *filename){
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
@@ -64,7 +64,7 @@ int File_Naming(int num,char *directory,char *filename){
 			return 2;
 		}
 		printf("Returning the inode %d...\n", inum);
-     	memcpy(IfileArray.data[inum].directory,directory,50);
+     	memcpy(IfileArray.data[inum].path,path,50);
      	memcpy(IfileArray.data[inum].filename,filename,50);
 		return 0;
 	}

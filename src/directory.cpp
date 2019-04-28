@@ -1,4 +1,5 @@
 #include "directory.h"
+
 #include <map>
 #include <vector>
 #include <iostream>
@@ -7,7 +8,7 @@
 using namespace std;
 
 
-map<string,vector<pair<string,int> >> FileSystemMap;   // <path/directory, filename>
+map<string,vector<pair<string,int>>> FileSystemMap;   // <path/directory, filename>
 
 int inodeSize=144;   // default vaule
 
@@ -16,14 +17,16 @@ int inodeSize=144;   // default vaule
 int initDirectory(int cachesize) {
    
     currentinum=initFile(cachesize);
-    char buf[BLOCK_SIZE-100];
+    char buf[BLOCK_SIZE];
     FileSystemMap.clear();
     for(int i=2;i<currentinum;i++){
       struct Inode node;
       if(!File_Get(i, &node)){
-        vector<string> tmp;
-        tmp.push_back({node.filename,node.inum});
-        FileSystemMap.insert(node.directory,tmp);
+        vector<pair<string,int>> tmp;
+        string a=node.filename;
+        string b=node.path;
+        tmp.push_back({a,node.inum});
+        FileSystemMap.insert({b,tmp});
       }
     }
     return 0;
@@ -36,7 +39,7 @@ int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbu
                  if(strcmp(filename,file.first.c_str())==0){
                     struct Inode node;
                     struct stat t;
-                    if(!File_Get(i, &node)){
+                    if(!File_Get(file.second, &node)){
                        convertInodeToStat(node,t);
                        stbuf=&t;
                        return 0;
@@ -49,8 +52,14 @@ int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbu
 
 }
 int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size){
-                        
 
+        return 0;     
+
+}
+
+void  Directoy_destory(){
+     
+    // File_destory();
 }
 
 int convertInodeToStat(struct Inode inode, struct stat s) {
@@ -82,9 +91,9 @@ int createFile(const char *path, char *filename, struct stat *stbuf){
 		if(!File_Create(currentinum,0)){
       File_Naming(currentinum,path,filename);
 			cout<<"test";
-      vector<string> tmp=FileSystemMap.find(path);
+      vector<pair<string,int> > tmp=FileSystemMap.find(path)->second;
       tmp.push_back({filename,currentinum});
-      FileSystemMap.insert(path,tmp);
+      FileSystemMap.insert({path,tmp});
 		//	tables.push_back(pair<FileName,inum>(filecreate, currentinum));
 		}
 }
@@ -98,7 +107,7 @@ int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf) {
 
 
 void test1(){
-     initDirectory();
+     initDirectory(4);
      char *path="/root/foo/bar";
      char *filename="test.txt";
      struct stat *stbuf;
@@ -109,26 +118,26 @@ void test1(){
 int main(int argc, char *argv[])
 {
 	cout<<"hell World"<<endl;
-   	initDirectory();
-   	Test_File_Create(1);
-   	//File_Write(1, 0, 5, (void *) "hello");
-   	Show_Ifile_Contents();
+   	initDirectory(4);
+  //  	Test_File_Create(1);
+  //  	//File_Write(1, 0, 5, (void *) "hello");
+  //  	Show_Ifile_Contents();
 
-   	struct Inode in;
-   	struct Inode got = File_Get(1);
-    printf("File got\n");
-    printf("Inum 1==%d: %d %d %c %c %d\n", got.inum, got.permissions, got.nlink, got.owner, got.group, got.size);
+  //  	struct Inode in;
+  //  	struct Inode got = File_Get(1);
+  //   printf("File got\n");
+  //   printf("Inum 1==%d: %d %d %c %c %d\n", got.inum, got.permissions, got.nlink, got.owner, got.group, got.size);
     
-    // File_Get(1, &in);
-    // printf("File got\n");
-    // printf("Inum 1==%d: %d %d %c %c %d\n", in.inum, in.permissions, in.type, in.owner, in.group, in.size);
-    // printf("KNOWN BUG: Calling File_Get and trying print inode.mtime (or any of the times) gives a segfault\n");
-    struct stat mystat;
-    convertInodeToStat(in, mystat);
+  //   // File_Get(1, &in);
+  //   // printf("File got\n");
+  //   // printf("Inum 1==%d: %d %d %c %c %d\n", in.inum, in.permissions, in.type, in.owner, in.group, in.size);
+  //   // printf("KNOWN BUG: Calling File_Get and trying print inode.mtime (or any of the times) gives a segfault\n");
+  //   struct stat mystat;
+  //   convertInodeToStat(in, mystat);
 
-    printf("	  Stat  |  Inode\n");
- 	printf("uid_t: %d   |   %d\n", mystat.st_uid, in.owner);
- 	printf("type:  %d   |   %d\n", mystat.st_mode, in.type);
+  //   printf("	  Stat  |  Inode\n");
+ 	// printf("uid_t: %d   |   %d\n", mystat.st_uid, in.owner);
+ 	// printf("type:  %d   |   %d\n", mystat.st_mode, in.type);
 
 	//  delete segmentCache;
     return 1;

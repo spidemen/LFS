@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-#include "directory.h"
+//#include "directory.h"
 
 // // #include "file.h"
 // // #include  "directory.h"
@@ -27,7 +27,7 @@ static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
 static const char *link_path = "/link";
 
-// TmP32719
+int cacheSize=4;
 
 static int lfs_getattr(const char *path, struct stat *stbuf)
 {
@@ -90,25 +90,7 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
-  //  init("FuseFileSystem",4);
-      initDirectory(4);
-//     printf("*******************Log layer test 1 simple small write and read ****************************** \n");
-// 	char  buf[50]="Hello LFS, welcome to CSC 545 OS class";
-// //	strcat(buf,cat);
-// //	char  *buf="Hello LFS, welcome to CSC 545 OS class";
-// 	inum num=1;
-// 	struct logAddress address;
-// 	if(!Log_Write(num, 1, 40,(void*)buf,&address)){
-// 		char bufR[40];
-// 		if(!Log_read(address, 40,(void *)bufR)){
-// 			printf("return logadress segmentNo= %d  blockNo=%d \n",address.segmentNo,address.blockNo);
-// 			if(strcmp(buf,bufR)!=0){
-// 				printf("Fail:  write string  %s does not match read string %s \n",buf,bufR);
-// 			}else{
-// 				printf("**************Success    test 1 pass*******************************\n ");
-// 			}
-// 		}
-// 	}
+  //    initDirectory(4);
     // if (strcmp(path, hello_path) != 0)
     //     return -ENOENT;
 
@@ -139,7 +121,9 @@ static int lfs_init(const char *path, mode_t mode, struct fuse_file_info *fi)
 
     // cout<<"init function called"<<endl;     
      printf("init function called  src \n");
-     
+     initDirectory(4);
+
+    // Directoy_getAllFiles(path,struct stat *stbuf,int size)
     if (strcmp(path, hello_path) != 0)
         return -ENOENT;
 
@@ -263,8 +247,8 @@ static struct fuse_operations lfs_oper = {
     .setxattr=lfs_setxattr,
     .getxattr=lfs_getxattr,
     .utime= lfs_utime,
-  //  .close= lfs_close,
-    // .mkdir 	= lfs_mkdir,
+  // .close= lfs_close,
+     .mkdir 	= lfs_mkdir,
      .destroy     = lfs_destroy,
      .mknod       = lfs_mknod,
     // .symlink     = lfs_symlink,

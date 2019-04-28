@@ -30,7 +30,7 @@ int currentinum=1;
 
 extern int initDirectory(int cachesize);
 
-extern int Directoy_getAllFiles(const char *path,struct Inode *files,struct stat *stbuf,int size);  // opendir ,readdir
+extern int Directoy_getAllFiles(const char *path,struct stat *stbuf,int size);  // opendir ,readdir
 
 extern int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf);
 

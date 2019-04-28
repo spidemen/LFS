@@ -15,6 +15,7 @@ using namespace std;
 #define SIZEOF_INODE sizeof(struct Inode)
 #define BLOCK_SIZE 50
 
+
 struct Ifile {
     std::vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
 };
@@ -900,82 +901,82 @@ void TestGroup() {
 }
 
 
-/*int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-   	initFile(size);
-   	// struct Inode dummyInode;
-   	// Put_Inode(0, &dummyInode);
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//    	initFile(size);
+//    	// struct Inode dummyInode;
+//    	// Put_Inode(0, &dummyInode);
 
-   	// struct Inode inode0;
-   	// inode0.inum = 1;
-   	// inode0.owner = 'u';
-   	// inode0.group = "aaa";
-   	// inode0.permissions = 777;
-   	// inode0.size = 0;
-   	// Put_Inode(1, &inode0);
-   	// Show_Ifile_Contents();
+//    	// struct Inode inode0;
+//    	// inode0.inum = 1;
+//    	// inode0.owner = 'u';
+//    	// inode0.group = "aaa";
+//    	// inode0.permissions = 777;
+//    	// inode0.size = 0;
+//    	// Put_Inode(1, &inode0);
+//    	// Show_Ifile_Contents();
 
-   	// struct Inode inode1;
-   	// inode1 = Get_Inode(1);
-   	// Put_Inode(1, &inode1);
-   	// struct Inode inode2;
-   	// inode2.inum = 2;
-   	// inode2.owner = 'u';
-   	// inode2.group = "bbb";
-   	// inode2.permissions = 777;
-   	// inode2.size = 0;
-   	// Put_Inode(2, &inode2);
+//    	// struct Inode inode1;
+//    	// inode1 = Get_Inode(1);
+//    	// Put_Inode(1, &inode1);
+//    	// struct Inode inode2;
+//    	// inode2.inum = 2;
+//    	// inode2.owner = 'u';
+//    	// inode2.group = "bbb";
+//    	// inode2.permissions = 777;
+//    	// inode2.size = 0;
+//    	// Put_Inode(2, &inode2);
 
-   	// struct Inode inode3;
-   	// inode3 = Get_Inode(2);
+//    	// struct Inode inode3;
+//    	// inode3 = Get_Inode(2);
 
-   	// struct Inode ifile;
-    // ifile = Get_Ifile();
-    // printf("ifile: %d\n", ifile.size);
+//    	// struct Inode ifile;
+//     // ifile = Get_Ifile();
+//     // printf("ifile: %d\n", ifile.size);
 
 
-   	// Print_Inode(1);
-   	// Print_Inode(2);
+//    	// Print_Inode(1);
+//    	// Print_Inode(2);
 
-   	Test_File_Create(0);
-    Test_File_Create(1);
-    //Print_Inode(1);
-    test1F(); 
+//    	Test_File_Create(0);
+//     Test_File_Create(1);
+//     //Print_Inode(1);
+//     test1F(); 
     
-    // Show_Ifile_Contents();
+//     // Show_Ifile_Contents();
 
-    test2F();
-    test3F(); 
+//     test2F();
+//     test3F(); 
     
-    // // //Overwrite
-    // test4F(); //overwrite original content
-    // test5F(); //concat
-    // //WriteIfileToLog();
+//     // // //Overwrite
+//     // test4F(); //overwrite original content
+//     // test5F(); //concat
+//     // //WriteIfileToLog();
     
-    // test6F(); //read offset
-    // test7F();
-    // struct Inode in;
-    // File_Get(1, in);
-    // printf("File got\n");
-    // printf("%d %d %c %s %d %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
-    // time_t now = time(0);
+//     // test6F(); //read offset
+//     // test7F();
+//     // struct Inode in;
+//     // File_Get(1, in);
+//     // printf("File got\n");
+//     // printf("%d %d %c %s %d %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+//     // time_t now = time(0);
    
-    // in.mtime = ctime(&now);
-    // printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
+//     // in.mtime = ctime(&now);
+//     // printf("%d %d %c  %s   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
 
 
-    // //printf("\n\n\n\n");
-    // Show_Ifile_Contents();
-    // for (int i=1; i<=6; i++) {
-    // 	Print_Inode(i);
-    // }
-    // TestOwner();
-    // TestPermissions();
-    // TestGroup();
-    for (int i=1; i<=3; i++) {
-    	Print_Inode(i);
-    }
+//     // //printf("\n\n\n\n");
+//     // Show_Ifile_Contents();
+//     // for (int i=1; i<=6; i++) {
+//     // 	Print_Inode(i);
+//     // }
+//     // TestOwner();
+//     // TestPermissions();
+//     // TestGroup();
+//     for (int i=1; i<=3; i++) {
+//     	Print_Inode(i);
+//     }
 
-	return 0;
-}*/
+// 	return 0;
+// }

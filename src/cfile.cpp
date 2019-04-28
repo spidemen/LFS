@@ -126,7 +126,11 @@ int Put_Ifile(struct Inode *ifiledata) {
 	return 0;
 }
 
-
+struct Inode initInode(int inum) {
+	struct Inode inode;
+	inode.inum = inum;
+	return inode;
+}
 
 // int Get_Inode(int inum, struct Inode* inode) {
 // 	printf("***GET: get inode %d\n", inum);
@@ -202,8 +206,8 @@ int File_Create(int inum, int type) {
 	if (inum == IFILE_INUM) 
 	{
 		
-		struct Inode dummyInode ;    // DONE -- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
-		dummyInode.inum = IFILE_INUM;
+		struct Inode dummyInode = initInode(inum);    // DONE -- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
+		//dummyInode.inum = IFILE_INUM;
 		dummyInode.type = type;
 		if (type == TYPE_F) dummyInode.nlink = 1;
 		if (type == TYPE_D) dummyInode.nlink = 2;
@@ -242,8 +246,8 @@ int File_Create(int inum, int type) {
 	}
 	else 
 	{
-		struct Inode inode;   // DONE-- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
-		inode.inum = inum;
+		struct Inode inode = initInode(inum);  // DONE-- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
+		//inode.inum = inum;
 		inode.type = type;
 		if (type == TYPE_F) inode.nlink = 1;
 		if (type == TYPE_D) inode.nlink = 2;

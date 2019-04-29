@@ -150,7 +150,7 @@ extern void File_destory();
 extern int Test_File_Create(int inum);
 extern void Show_Ifile_Contents();
 
-extern int File_Naming(int inum,const char *directory,char *filename);   // pass the directory and filename and do update on inode
+extern int File_Naming(int inum,const char *directory,char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
 
   // NOTICE:  test initIfle:  after finish write and restart , remeber to call log_checkPoint function,otherwise there will a lots of bug or just call Log_destory
 #ifdef __cplusplus

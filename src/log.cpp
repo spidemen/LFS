@@ -742,7 +742,7 @@ void test4(){
 	// address.blockNo=32;
 	char buf1[50]="Hello LFS, welcome to CSC 545 OS classa";
     test2(1,address,buf1);
-     Log_CheckPoint(&oldAdrress,&newAdress, 1, 1);
+    Log_CheckPoint(&oldAdrress,&newAdress, 1, 1);
 
 }
 

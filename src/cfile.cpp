@@ -53,7 +53,7 @@ int File_Get(int inum, struct Inode *node) {
 }
 
 
-int File_Naming(int inum, const char *path,char *filename){
+int File_Naming(int inum, const char *path,char *filename,struct stat *stbuf){
 
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {

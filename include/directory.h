@@ -49,10 +49,10 @@ int convertInodeToStat(struct Inode inode, struct stat s);
 void  Directoy_destory();
 
 //xing
-// init , destroy, statfs, release,releasdir, symlink, truncate
+// init , destroy, statfs, release,releasdir, symlink, truncate, mkdir, rmdir, getattr
 
 // Katy
-// fuse --create, chmod, chown, read, open, getattr, link
+// fuse --create, chmod, chown, read, open, link
 
 
 #ifdef __cplusplus

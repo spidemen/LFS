@@ -21,7 +21,7 @@ int initDirectory(int cachesize) {
     FileSystemMap.clear();
     for(int i=2;i<currentinum;i++){
       struct Inode node;
-      if(!File_Get(i, &node)){
+      if(!File_Get(i, &node)&&node.in_use){
         vector<pair<string,int>> tmp;
         string a=node.filename;
         string b=node.path;
@@ -29,6 +29,19 @@ int initDirectory(int cachesize) {
         FileSystemMap.insert({b,tmp});
       }
     }
+
+    // code for test directory 
+    vector<pair<string,int> > tmp;
+    tmp.push_back({"a.txt",3});
+    tmp.push_back({"b.txt",4});
+    FileSystemMap.insert({"/next/",tmp});
+    tmp.clear();
+    // root directory
+    tmp.push_back({"fuse.h",5});
+    tmp.push_back({"log.cpp",6});
+    tmp.push_back({"#next",7});
+    FileSystemMap.insert({"/",tmp});
+
     return 0;
 }
 
@@ -58,11 +71,13 @@ int Directory_getAllFiles(const char *path,struct stat *stbuf,int size){
            auto file=it->second.begin();
            for(int i=0;i<size&&file!=it->second.end();i++){
                 struct stat t;
-                 struct Inode node;
-                if(!File_Get(file->second, &node)){
-                       convertInodeToStat(node,t);
-                       stbuf[i]=t;
-              }
+                struct Inode node;
+                // if(!File_Get(file->second, &node)){
+                //        convertInodeToStat(node,t);
+                //        stbuf[i]=t;
+                //  }
+                 convertInodeToStat(node,t);
+                 stbuf[i]=t;
               file++;
            }
         }
@@ -106,34 +121,42 @@ int Directory_createFile(const char *path, char *filename, struct stat *stbuf){
 	   strcat(fullpath,filename);
 		 currentinum++;
 		if(!File_Create(currentinum,0)){
-      File_Naming(currentinum,path,filename);
+      File_Naming(currentinum,path,filename,stbuf);
 			cout<<"test";
-      vector<pair<string,int> > tmp=FileSystemMap.find(path)->second;
-      tmp.push_back({filename,currentinum});
-      FileSystemMap.insert({path,tmp});
-		//	tables.push_back(pair<FileName,inum>(filecreate, currentinum));
+      auto it=FileSystemMap.find(path);
+      if(it!=FileSystemMap.end()){
+          vector<pair<string,int> > tmp;
+          tmp.push_back({filename,currentinum});
+          FileSystemMap.insert({path,tmp});
+      } else{
+           it->second.push_back({filename,currentinum});
+          // FileSystemMap.insert({path,tmp});
+      }
 		}
+
+    return 0;
 }
 
 
 int Directory_updateFile(const char *path, char *filename, struct stat *stbuf) {
-	return 0;
+	    
+       return 0;
 }
 
 
 
 int Directory_deleteFile(const char *path,char *filename,struct stat *stbuf) {
 	// mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
-	return 0;
+	     return 0;
 } 
 
 int Directory_readFile(const char *path, char *filename, int offset, char *buf) {
-	return 0;
+	     return 0;
 
 }
 
 int Directory_writeFile(const char *path, char *filename, int offset, char *buf){
-	return 0;
+      	return 0;
 }
 
 

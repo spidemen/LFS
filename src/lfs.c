@@ -109,7 +109,7 @@ static int lfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     
     // cout<<"create function called"<<endl;     
     printf("create function called  src\n");
-
+  
     if (strcmp(path, hello_path) != 0)
         return -ENOENT;
 
@@ -312,7 +312,7 @@ static struct fuse_operations lfs_oper = {
       .symlink     = lfs_symlink,
     // .unlink      = lfs_unlink,
        .rmdir       = lfs_rmdir,
-    .rename      = lfs_rename,
+     .rename      = lfs_rename,
     // .link        = lfs_link,
       .chmod       = lfs_chmod,
       .chown       = lfs_chown,

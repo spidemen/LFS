@@ -32,7 +32,7 @@ int initDirectory(int cachesize) {
     return 0;
 }
 
-int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf){
+int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf){
         auto it=FileSystemMap.find(path);
         if(it!=FileSystemMap.end()){
             for(auto file: it->second){
@@ -51,7 +51,7 @@ int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbu
         return 1;
 
 }
-int Directoy_getAllFiles(const char *path,struct stat *stbuf,int size){
+int Directory_getAllFiles(const char *path,struct stat *stbuf,int size){
         auto it=FileSystemMap.find(path);
         if(it!=FileSystemMap.end()){
            size=it->second.size();
@@ -67,10 +67,9 @@ int Directoy_getAllFiles(const char *path,struct stat *stbuf,int size){
            }
         }
         return 0;     
-
 }
 
-void  Directoy_destory(){
+void  Directory_destory(){
      
     // File_destory();
 }
@@ -100,7 +99,8 @@ int convertInodeToStat(struct Inode inode, struct stat s) {
 
 }
 
-int createFile(const char *path, char *filename, struct stat *stbuf){
+
+int Directory_createFile(const char *path, char *filename, struct stat *stbuf){
 	   char *fullpath;
 	   strcat(fullpath,path);
 	   strcat(fullpath,filename);
@@ -116,12 +116,53 @@ int createFile(const char *path, char *filename, struct stat *stbuf){
 }
 
 
+int Directory_updateFile(const char *path, char *filename, struct stat *stbuf) {
+	return 0;
+}
 
-int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf) {
 
+
+int Directory_deleteFile(const char *path,char *filename,struct stat *stbuf) {
+	// mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
+	return 0;
+} 
+
+int Directory_readFile(const char *path, char *filename, int offset, char *buf) {
+	return 0;
 
 }
 
+int Directory_writeFile(const char *path, char *filename, int offset, char *buf){
+	return 0;
+}
+
+
+int test1D() {
+	printf("************* Begin Test1D: create a new file ****************\n");
+	char* path = "test1/";
+	char* fname = "testfile1";
+	struct stat* stbuf;
+	printf("Creating file %s %s (inum: %d)\n", path, fname, currentinum);
+	if (Directory_createFile(path, fname, stbuf)) {
+		printf("***Error: Directory_createFile -- test1D creating testfile1****\n");
+		return 1;
+	}
+	Show_Ifile_Contents();
+	printf("************* End Test1D: create a new file ****************\n");
+	return 0;
+
+}
+int test2D() {
+	char* path = "test2/";
+	char* filename = "testfile2";
+	struct stat* stbuf;
+	if (Directory_getOneFile(path, filename, stbuf)) {
+		printf("Error: Directoy_getOneFile\n");
+		return 1;
+	}
+
+	return 0;
+}
 
 
 void test1(){
@@ -129,34 +170,23 @@ void test1(){
      char *path="/root/foo/bar";
      char *filename="test.txt";
      struct stat *stbuf;
-     createFile(path, filename,stbuf);
-     createFile(path, filename,stbuf);
+   //  createFile(path, filename,stbuf);
+   //  createFile(path, filename,stbuf);
 
 }
+
+
 // int main(int argc, char *argv[])
 // {
-// 	  cout<<"hell World"<<endl;
+// 	cout<<"hell World"<<endl;
+  
+//  	printf("Passed test1\n");
 //    	initDirectory(4);
 //   //  	Test_File_Create(1);
 //   //  	//File_Write(1, 0, 5, (void *) "hello");
 //   //  	Show_Ifile_Contents();
 
-//   //  	struct Inode in;
-//   //  	struct Inode got = File_Get(1);
-//   //   printf("File got\n");
-//   //   printf("Inum 1==%d: %d %d %c %c %d\n", got.inum, got.permissions, got.nlink, got.owner, got.group, got.size);
-    
-//   //   // File_Get(1, &in);
-//   //   // printf("File got\n");
-//   //   // printf("Inum 1==%d: %d %d %c %c %d\n", in.inum, in.permissions, in.type, in.owner, in.group, in.size);
-//   //   // printf("KNOWN BUG: Calling File_Get and trying print inode.mtime (or any of the times) gives a segfault\n");
-//   //   struct stat mystat;
-//   //   convertInodeToStat(in, mystat);
-
-//   //   printf("	  Stat  |  Inode\n");
-//  	// printf("uid_t: %d   |   %d\n", mystat.st_uid, in.owner);
-//  	// printf("type:  %d   |   %d\n", mystat.st_mode, in.type);
-
 // 	//  delete segmentCache;
 //     return 1;
 // }
+

@@ -59,8 +59,8 @@ OBJDIRECTORY=directory.o cfile.o log.o flash.o
 TESTS=testCase.C log.C flash.C
 OBJTEST=testCase.o  file.o log.o flash.o 
 
-LFSCKS=lfsck.C log.C flash.C
-OBJLFSCK= lfsck.o log.o flash.o
+LFSCKS=lfsck.C log.C flash.C cfile.cpp
+OBJLFSCK= lfsck.o log.o flash.o cfile.o
 
 TLFS=lfs.C log.C file.C flash.C
 OBJFLS=lfs.o log.o flash.o

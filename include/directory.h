@@ -30,19 +30,19 @@ int currentinum=1;
 
 extern int initDirectory(int cachesize);
 
-extern int Directoy_getAllFiles(const char *path,struct stat *stbuf,int size);  // opendir ,readdir
+extern int Directory_getAllFiles(const char *path,struct stat *stbuf,int size);  // opendir ,readdir
 
-extern int Directoy_getOneFile(const char *path, const char *filename,struct stat *stbuf);
+extern int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf);
 
-extern int Directoy_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
+extern int Directory_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
 
-extern int Directoy_createFile(const char *path, char *filename, struct stat *stbuf);
+extern int Directory_createFile(const char *path, char *filename, struct stat *stbuf);
 
-extern int Directoy_deleteFile(const char *path,char *filename,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
+extern int Directory_deleteFile(const char *path,char *filename,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
 
-extern int Directoy_readFile(const char *path, char *filename, int offset, char *buf);
+extern int Directory_readFile(const char *path, char *filename, int offset, char *buf);
 
-extern int Directoy_writeFile(const char *path, char *filename, int offset, char *buf);
+extern int Directory_writeFile(const char *path, char *filename, int offset, char *buf);
 
 int convertInodeToStat(struct Inode inode, struct stat s);
 

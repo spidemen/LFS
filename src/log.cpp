@@ -179,16 +179,16 @@ int Log_GetIfleAddress(struct logAddress *Adrress,int size){
 	 }
 	 return 0;
 }
-int  Log_destory(){
-	struct logAddress *oldAdrress,*newaddress;
+int  Log_destroy(){
+	struct logAddress oldAdrress,newaddress;
 	segmentCache->currenIndex=BLOCK_NUMBER;
 	char buf[50]="Hello LFS, welcome to CSC 545 OS classf";
-    Log_Write(0, 1, 50,(void*)buf,oldAdrress);   // write segment to disk
+    Log_Write(0, 1, 50,(void*)buf,&oldAdrress);   // write segment to disk
 
 	
-	memcpy(oldAdrress,pmetadata->checkPointRegion,sizeof(struct logAddress)*1);
-	memcpy(newaddress,pmetadata->checkPointRegion,sizeof(struct logAddress)*1);
-	Log_CheckPoint(oldAdrress,newaddress, 1, 1);		// checkpoint
+	memcpy(&oldAdrress,&pmetadata->checkPointRegion[0],sizeof(struct logAddress)*1);
+	memcpy(&newaddress,&pmetadata->checkPointRegion[0],sizeof(struct logAddress)*1);
+	Log_CheckPoint(&oldAdrress,&newaddress, 1, 1);		// checkpoint
 
 	return 0;
 
@@ -493,7 +493,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		logAddress1->segmentNo=segmentCache->summary->segmentNo;
 		logAddress1->blockNo=generateBlockNo;
 
-	//	printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
+	 printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n",logAddress1->segmentNo,logAddress1->blockNo,segmentCache->currenIndex-1);
 		return 0;
 
 		

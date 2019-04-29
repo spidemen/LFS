@@ -19,9 +19,6 @@
 
 //#include "directory.h"
 
-// // #include "file.h"
-// // #include  "directory.h"
-// #include "flash.h"
 
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello";
@@ -54,12 +51,12 @@ static int lfs_getattr(const char *path, struct stat *stbuf)
         stbuf->st_nlink = 1;
         stbuf->st_size = strlen(hello_path);
         stbuf->st_ino = 17;
-    } else{
-        stbuf->st_mode = S_IFREG | 0644;
-		stbuf->st_nlink = 1;
+    } else if(strcmp(path, "/file54") == 0) {
+        stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
 		stbuf->st_size = 1024;
     }
-   //    res = -ENOENT;
+     else    res = -ENOENT;
 
     return res;
 }
@@ -68,17 +65,23 @@ static int lfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                          off_t offset, struct fuse_file_info *fi)
 {
     printf("read dir function being called \n");
-    (void) offset;
+  //  (void) offset;
     (void) fi;
+     int nextoffset=0;
     filler( buf, ".", NULL, 0 ); // Current Directory
-	filler( buf, "..", NULL, 0 ); // Parent Directory
+   //   nextoffset+=((24+strlen(".")+7)&~7);
+	if(filler( buf, "..", NULL, nextoffset)) return 0; // Parent Directory
     
     filler(buf, hello_path + 1, NULL, 0);
     filler(buf, link_path + 1, NULL, 0);
-
+   //  nextoffset+=((24+strlen("..")+7)&~7);
     if (strcmp(path, "/") == 0){
-        filler( buf, "file54", NULL, 0 );
-		filler( buf, "file349", NULL, 0 );
+        if(filler( buf, "file54", NULL, nextoffset)) return 0;
+        //   nextoffset+=((24+strlen("file54")+7)&~7);
+		// if(filler( buf, "file349", NULL, nextoffset )) return 0;
+  //        nextoffset+=((24+strlen("file349")+7)&~7);
+  //       if(filler( buf, "offsettest", NULL, nextoffset)) return 0;
+      //  if(filler( buf, "offsettest1", NULL, offset+3 ))  return 0;
     }
 
     return 0;
@@ -122,8 +125,9 @@ static int lfs_init(const char *path, mode_t mode, struct fuse_file_info *fi)
     // cout<<"init function called"<<endl;     
      printf("init function called  src \n");
      initDirectory(4);
-
-    // Directoy_getAllFiles(path,struct stat *stbuf,int size)
+     // int size=0;
+     // struct stat stbuf[100];
+     // Directoy_getAllFiles(path,stbuf,size);
     if (strcmp(path, hello_path) != 0)
         return -ENOENT;
 
@@ -235,6 +239,61 @@ static int lfs_mknod(const char* path, mode_t mode, dev_t rdev){
    printf(" mknod function was called \n");
    return 0;
 }
+static int lfs_mkdir(const char* path, mode_t mode){
+    printf("mkdir called .................\n");
+       //   int res; 
+
+       // res = mkdir(path, mode); 
+       // if (res == -1) 
+       //        return -errno; 
+    return 0;
+}
+
+static int  lfs_rmdir(const char* path){
+
+    printf(" rmdir was called \n");
+    return 0;
+}
+
+int lfs_statfs (const char* path, struct statvfs* stbuf){
+     printf(" stafs function was called \n");
+     return 0;
+}
+static int lfs_opendir(const char* path, struct fuse_file_info* fi){
+    printf(" opendir function was called \n ");
+     return 0;
+}
+static int  lfs_chmod(const char* path, mode_t mode){
+     printf(" chmod function was called \n ");
+     return 0;
+}
+
+static int lfs_poll(const char* path, struct fuse_file_info* fi, struct fuse_pollhandle* ph, unsigned* reventsp){
+    printf(" poll funciton was called \n ");
+    return 0;
+
+} 
+static int  lfs_ioctl(const char* path, int cmd, void* arg, struct fuse_file_info* fi, unsigned int flags, void* data){
+    printf("ioctl function was called \n ");
+    return 0;
+}
+static int  lfs_bmap(const char* path, size_t blocksize, uint64_t* blockno){
+    printf("lfs_bmap function was called \n ");
+    return 0;
+}
+ static int lfs_lock(const char* path, struct fuse_file_info* fi, int cmd, struct flock* locks){
+
+    printf("lock function was called \n ");
+    return 0;
+ }
+ static int lfs_rename(const char* from, const char* to){
+     printf("lock function was called \n ");
+    return 0;
+  }
+ static int  lfs_symlink(const char* to, const char* from){
+      printf("symlink function was called \n ");
+      return 0;
+   }
 static struct fuse_operations lfs_oper = {
 
     .getattr	= lfs_getattr,
@@ -247,34 +306,29 @@ static struct fuse_operations lfs_oper = {
     .setxattr=lfs_setxattr,
     .getxattr=lfs_getxattr,
     .utime= lfs_utime,
-  // .close= lfs_close,
-     .mkdir 	= lfs_mkdir,
+      .mkdir 	= lfs_mkdir,
      .destroy     = lfs_destroy,
      .mknod       = lfs_mknod,
-    // .symlink     = lfs_symlink,
+      .symlink     = lfs_symlink,
     // .unlink      = lfs_unlink,
-    // .rmdir       = lfs_rmdir,
-    // .rename      = lfs_rename,
+       .rmdir       = lfs_rmdir,
+    .rename      = lfs_rename,
     // .link        = lfs_link,
-     // .chmod       = lfs_chmod,
+      .chmod       = lfs_chmod,
       .chown       = lfs_chown,
       .truncate    = lfs_truncate,
      .ftruncate   = lfs_ftruncate,
-    //.create      = dir_create,
-    //.open        = dir_open,
-    //.read        = dir_read,
       .write       = lfs_write,
-    // .statfs      = lfs_statfs,
-    // .release     = lfs_release,
-    // .opendir     = lfs_opendir,
+      .statfs      = lfs_statfs,
+      .opendir     = lfs_opendir,
      .release  = lfs_release,
     //.fsync       = dir_fsync,
      .flush       = lfs_flush,
     //.fsyncdir    = dir_fsyncdir,
-    //.lock        = dir_lock,
-    //.bmap        = dir_bmap,
-    //.ioctl       = dir_ioctl,
-    //.poll        = dir_poll,
+     .lock        = lfs_lock,
+      .bmap        = lfs_bmap,
+     .ioctl       = lfs_ioctl,
+     .poll        = lfs_poll,
      
 };
 

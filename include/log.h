@@ -133,7 +133,7 @@ extern int Log_free(struct logAddress logAddress1,u_int length);
 extern int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress);
 extern int Log_CheckPoint(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize);
 extern int Log_GetIfleAddress(struct logAddress *Adrress,int size);
-extern int  Log_destory();
+extern int  Log_destroy();
 #ifdef __cplusplus
 }
 #endif

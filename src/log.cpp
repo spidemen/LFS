@@ -50,7 +50,7 @@ struct metadata{
 	int currentSegmentNumber;
 	char filename[FILENAMESIZE];
 	time_t  checkPiontTime;
-	int checkPointsize;
+	int checkPointsize=0;
 	SegmentUsageTable segmentUsageTable[MAX_SEGMENT];
 	int segementUsageSize=0;
 	
@@ -173,7 +173,7 @@ bool DoesFileExist (char *filename) {
 int Log_GetIfleAddress(struct logAddress *Adrress,int size){
 	 memcpy(Adrress,pmetadata->checkPointRegion,sizeof(struct logAddress)*size);
 	 size=pmetadata->checkPointsize;
-	 if(size=0) {
+	 if(size==0) {
 	 	cout<<"checkpoint address error: No any checkpoint, check...."<<endl;
 	 	return 1;
 	 }
@@ -181,9 +181,9 @@ int Log_GetIfleAddress(struct logAddress *Adrress,int size){
 }
 int  Log_destroy(){
 	struct logAddress oldAdrress,newaddress;
-	segmentCache->currenIndex=BLOCK_NUMBER;
+	segmentCache->currenIndex=BLOCK_NUMBER;   // reset current Index so that write segment to disk
 	char buf[50]="Hello LFS, welcome to CSC 545 OS classf";
-    Log_Write(0, 1, 50,(void*)buf,&oldAdrress);   // write segment to disk
+    Log_Write(0, 1, 50,(void*)buf,&oldAdrress);   // write segment data to disk
 
 	
 	memcpy(&oldAdrress,&pmetadata->checkPointRegion[0],sizeof(struct logAddress)*1);
@@ -591,7 +591,7 @@ int Log_read(struct logAddress logAddress1, u_int length, void * buffer){
       	   				 }
       	   				if(i<=BLOCK_NUMBER-1){
 			      	   		if(length<=BLOCK_SIZE){
-			      	   		//	printf("i=%d   content  %s\n",i,pdata[i].data );
+			      	   			printf("i=%d   content  %s\n",i,pdata[i].data );
 		      		 			memcpy(buffer,pdata[i].data,length);
 		      				 }else{
 		      					memcpy(buffer,&pdata[i],length);
@@ -746,13 +746,30 @@ void test4(){
 
 }
 
+
+void test5(){
+
+	char buf[50]="Destory test";
+	logAddress address;
+	Log_Write(1, 1, 50,(void*)buf,&address);
+	Log_destroy();
+
+}
+void test6(){
+	logAddress address;
+	address.segmentNo=1;
+	address.blockNo=1;
+	char bufR[50];
+	Log_read(address, 50,(void *)bufR);
+	cout<<"after destory  content "<<bufR<<endl;
+}
 //  int main(int argc, char *argv[])
 //  {
 	
 // 	 printf(" hello log layer \n");
 //       init("FuseFileSystem",4);
 //  //   test1("test hello world");
-// 	   test4();
+// 	   test6();
 
 //    //    test2(3);
 //   //    test4();

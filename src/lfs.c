@@ -25,38 +25,31 @@ static const char *hello_path = "/hello";
 static const char *link_path = "/link";
 
 int cacheSize=4;
+char allFileName[40][10];
 
 static int lfs_getattr(const char *path, struct stat *stbuf)
 {
     printf("getattr function test src test2....path= %s \n",path);
     int res = 0;
     memset(stbuf, 0, sizeof(struct stat));
-
-    stbuf->st_uid = getuid(); // The owner of the file/directory is the user who mounted the filesystem
-	stbuf->st_gid = getgid(); // The group of the file/directory is the same as the group of the user who mounted the filesystem
-	stbuf->st_atime = time( NULL ); // The last "a"ccess of the file/directory is right now
-	stbuf->st_mtime = time( NULL ); // The last "m"odification of the file/directory is right now
-
-    if (strcmp(path, "/") == 0) {
-        stbuf->st_mode = S_IFDIR | 0777;
-        stbuf->st_nlink = 2;
-        stbuf->st_ino = 3;
-    } else if (strcmp(path, hello_path) == 0) {
-        stbuf->st_mode = S_IFREG | 0777;
-        stbuf->st_nlink = 1;
-        stbuf->st_size = strlen(hello_str);
-        stbuf->st_ino = 17;
-    } else if (strcmp(path, link_path) == 0) {
-        stbuf->st_mode = S_IFLNK | 0777;
-        stbuf->st_nlink = 1;
-        stbuf->st_size = strlen(hello_path);
-        stbuf->st_ino = 17;
-    } else if(strcmp(path, "/file54") == 0) {
-        stbuf->st_mode = S_IFDIR | 0777;
-		stbuf->st_nlink = 2;
-		stbuf->st_size = 1024;
+    int num;
+    int types=Directory_Types(path,stbuf,&num);
+    if(types==0){
+         res = -ENOENT;
     }
-     else    res = -ENOENT;
+    else if(types==2){  // directory
+        stbuf->st_ino = 3;
+    } else if(types==3){  // file
+        stbuf->st_size = 300;
+        stbuf->st_ino = 17;
+    } else if(types==4){  // link;
+        stbuf->st_ino = 17;
+    } else{
+        stbuf->st_mode = S_IFREG | 07;
+        stbuf->st_nlink = 1;
+  //      stbuf->st_size = 500;
+        stbuf->st_ino = 17;
+    }
 
     return res;
 }
@@ -65,24 +58,35 @@ static int lfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                          off_t offset, struct fuse_file_info *fi)
 {
     printf("read dir function being called \n");
-  //  (void) offset;
     (void) fi;
      int nextoffset=0;
-    filler( buf, ".", NULL, 0 ); // Current Directory
-   //   nextoffset+=((24+strlen(".")+7)&~7);
-	if(filler( buf, "..", NULL, nextoffset)) return 0; // Parent Directory
-    
-    filler(buf, hello_path + 1, NULL, 0);
-    filler(buf, link_path + 1, NULL, 0);
-   //  nextoffset+=((24+strlen("..")+7)&~7);
-    if (strcmp(path, "/") == 0){
-        if(filler( buf, "file54", NULL, nextoffset)) return 0;
-        //   nextoffset+=((24+strlen("file54")+7)&~7);
-		// if(filler( buf, "file349", NULL, nextoffset )) return 0;
-  //        nextoffset+=((24+strlen("file349")+7)&~7);
-  //       if(filler( buf, "offsettest", NULL, nextoffset)) return 0;
-      //  if(filler( buf, "offsettest1", NULL, offset+3 ))  return 0;
+     int size;
+     struct stat stbuf[10];
+     memset(allFileName,0,400);
+    if(Directory_getAllFiles(path,stbuf,&size,allFileName)){
+        return  -ENOENT;
+    } else{
+        for(int i=0;i<size;i++){
+          printf("fuse get filename = %s\n", allFileName[i]);
+          filler(buf,allFileName[i],&stbuf[i], 0);
+        }
     }
+
+ //    filler( buf, ".", NULL, 0 ); // Current Directory
+ //   //   nextoffset+=((24+strlen(".")+7)&~7);
+	// if(filler( buf, "..", NULL, 0)) return 0; // Parent Directory
+    
+ //    filler(buf, hello_path + 1, NULL, 0);
+ //    filler(buf, link_path + 1, NULL, 0);
+ //   //  nextoffset+=((24+strlen("..")+7)&~7);
+ //    if (strcmp(path, "/") == 0){
+ //        if(filler( buf, "file54", NULL, 0)) return 0;
+ //        //   nextoffset+=((24+strlen("file54")+7)&~7);
+	// 	// if(filler( buf, "file349", NULL, nextoffset )) return 0;
+ //  //        nextoffset+=((24+strlen("file349")+7)&~7);
+ //  //       if(filler( buf, "offsettest", NULL, nextoffset)) return 0;
+ //      //  if(filler( buf, "offsettest1", NULL, offset+3 ))  return 0;
+ //    }
 
     return 0;
 }
@@ -93,7 +97,6 @@ static int lfs_open(const char *path, struct fuse_file_info *fi)
 
     // cout<<"open file function called "<<endl;     
     printf("open file function called  src\n");
-  //    initDirectory(4);
     // if (strcmp(path, hello_path) != 0)
     //     return -ENOENT;
 
@@ -125,14 +128,11 @@ static int lfs_init(const char *path, mode_t mode, struct fuse_file_info *fi)
     // cout<<"init function called"<<endl;     
      printf("init function called  src \n");
      initDirectory(4);
-     // int size=0;
-     // struct stat stbuf[100];
-     // Directoy_getAllFiles(path,stbuf,size);
-    if (strcmp(path, hello_path) != 0)
-        return -ENOENT;
+    // if (strcmp(path, hello_path) != 0)
+    //     return -ENOENT;
 
-    if ((fi->flags & 3) != O_RDONLY)
-        return -EACCES;
+    // if ((fi->flags & 3) != O_RDONLY)
+    //     return -EACCES;
 
     return 0;
 }
@@ -147,34 +147,43 @@ static int lfs_read(const char *path, char *buf, size_t size, off_t offset,
     (void) fi;
     printf("read function was being called \n");
 
-    char file54Text[] = "Hello World From File54!";
-	char file349Text[] = "Hello World From File349!";
-	char *selectedText = NULL;
-    if ( strcmp( path, "/file54" ) == 0 ){
-        size=strlen( selectedText ) - offset;
-		selectedText = file54Text;
-     printf(" string %s  size=%d \n",selectedText,size);
-        memcpy( buf, selectedText + offset, size );
-    }
-	else if ( strcmp( path, "/file349" ) == 0 ){
-        size=strlen( selectedText ) - offset;
-		selectedText = file349Text;
-        memcpy( buf, selectedText + offset, size );
-    }
-    else  if(strcmp(path, hello_path) == 0){
-        len = strlen(hello_str);
-        if (offset < len) {
-            if (offset + size > len)
-                size = len - offset;
-            memcpy(buf, hello_str + offset, size);
-        } else
-        size = 0;
-    } else  
-    if(strcmp(path, hello_path) != 0)
-        return -ENOENT;
+     Directory_readFile(path, offset, size, buf);
+ //    char file54Text[] = "Hello World From File54!";
+	// char file349Text[] = "Hello World From File349!";
+	// char *selectedText = NULL;
+ //    if ( strcmp( path, "/file54" ) == 0 ){
+ //        size=strlen( selectedText ) - offset;
+	// 	selectedText = file54Text;
+ //     printf(" string %s  size=%d \n",selectedText,size);
+ //        memcpy( buf, selectedText + offset, size );
+ //    }
+	// else if ( strcmp( path, "/file349" ) == 0 ){
+ //        size=strlen( selectedText ) - offset;
+	// 	selectedText = file349Text;
+ //        memcpy( buf, selectedText + offset, size );
+ //    }
+ //    else  if(strcmp(path, hello_path) == 0){
+ //        len = strlen(hello_str);
+ //        if (offset < len) {
+ //            if (offset + size > len)
+ //                size = len - offset;
+ //            memcpy(buf, hello_str + offset, size);
+ //        } else
+ //        size = 0;
+ //    } else  
+ //    if(strcmp(path, hello_path) != 0)
+ //        return -ENOENT;
    
     return size;
 }
+
+static int lfs_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi){
+    printf("write function was called \n");
+
+    Directory_writeFile(path, offset, size,buf);
+    return size;
+}
+
 
 static int lfs_readlink(const char *path, char *buf, size_t size)
 {
@@ -187,6 +196,8 @@ static int lfs_readlink(const char *path, char *buf, size_t size)
 
     return 0;
 }
+
+
 
 static int  lfs_truncate(const char* path, off_t size){
        printf("trucate function was called \n");
@@ -209,10 +220,10 @@ static int lfs_utime(const char *path, struct utimbuf *ubuf){
     printf(" untime function was called \n");
     return 0;
 }
-static int lfs_write(const char* path, const char *buf, size_t size, off_t offset, struct fuse_file_info* fi){
-    printf("write function was called \n");
-    return size;
-}
+
+
+
+
 void lfs_destroy(void* private_data){
     printf("destory function was called\n ");
     return ;
@@ -241,10 +252,7 @@ static int lfs_mknod(const char* path, mode_t mode, dev_t rdev){
 }
 static int lfs_mkdir(const char* path, mode_t mode){
     printf("mkdir called .................\n");
-       //   int res; 
-
-       // res = mkdir(path, mode); 
-       // if (res == -1) 
+    Directory_EntyUpdate(path,1);  // add entry
        //        return -errno; 
     return 0;
 }
@@ -252,6 +260,7 @@ static int lfs_mkdir(const char* path, mode_t mode){
 static int  lfs_rmdir(const char* path){
 
     printf(" rmdir was called \n");
+    Directory_EntyUpdate(path,2);  // remove entry
     return 0;
 }
 
@@ -261,7 +270,8 @@ int lfs_statfs (const char* path, struct statvfs* stbuf){
 }
 static int lfs_opendir(const char* path, struct fuse_file_info* fi){
     printf(" opendir function was called \n ");
-     return 0;
+    return Directory_Open(path);
+    
 }
 static int  lfs_chmod(const char* path, mode_t mode){
      printf(" chmod function was called \n ");
@@ -294,6 +304,10 @@ static int  lfs_bmap(const char* path, size_t blocksize, uint64_t* blockno){
       printf("symlink function was called \n ");
       return 0;
    }
+ static int   lfs_unlink(const char* path){
+     printf("unlink function was called \n ");
+    return 0;
+ }
 static struct fuse_operations lfs_oper = {
 
     .getattr	= lfs_getattr,
@@ -310,7 +324,7 @@ static struct fuse_operations lfs_oper = {
      .destroy     = lfs_destroy,
      .mknod       = lfs_mknod,
       .symlink     = lfs_symlink,
-    // .unlink      = lfs_unlink,
+      .unlink      = lfs_unlink,
        .rmdir       = lfs_rmdir,
      .rename      = lfs_rename,
     // .link        = lfs_link,

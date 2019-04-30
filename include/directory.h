@@ -54,7 +54,7 @@ extern int Directory_writeFile(const char *path, int offset, int size,char *buf)
 
 int convertInodeToStat(struct Inode inode, struct stat s);
 
-void  Directoy_destory();
+void  Directory_Destroy();
 
 int InitStat(struct stat *stbuf);
 //xing

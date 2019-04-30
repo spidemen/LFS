@@ -235,7 +235,12 @@ int File_Create(int inum, int type) {
 		
 	}
 	else 
-	{
+	{	
+		printf("inum %d   ifilearray.data.size %d\n", inum, IfileArray.data.size());
+		if (inum < IfileArray.data.size()) {
+			printf("ERROR: File_Create -- inum %d already exists.\n", inum);
+			return 1; 
+		}
 		struct Inode inode = initInode(inum);  // DONE-- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		//inode.inum = inum;
 		inode.type = type;
@@ -710,12 +715,12 @@ void WriteIfileToLog() {
 }
 
 
-int File_Destroy(){
+void File_Destroy(){
 	//TODO
 	//WriteIfileToLog();
 	//Make a checkpoint
 	//Log_Destroy();
-	return 0;
+	return;
 }
 
 int Change_Permissions(int inum, int permissions) {
@@ -957,45 +962,6 @@ void test7F() {
 		Show_Ifile_Contents();
 	}
 }
-// void WriteIfileToLog() {
-// 	printf("Begin writing ifile to log...\n");
-	
-// 	logAddress oldAdd;
-// 	logAddress newAdd;
-// 	void* content = &IfileArray; //.data.data();
-
-// 	int oldSize = 1;
-// 	int newSize = sizeof(content);
-	
-// 	if (!Log_Write(IFILE_INUM, 0, newSize, (void *) content, &newAdd)) {
-// 		printf("Wrote Ifile to block %d , segment %d\n", newAdd.blockNo, newAdd.segmentNo);
-// 	}
-
-
-
-// 	struct Ifile IfileArray2; 
-// 	void *rcontents[newSize];
-// 	Log_read(newAdd, newSize, rcontents);
-// 	printf("Log_read completed, size: %d, read in %u\n", newSize, rcontents);
-// 	memcpy(&IfileArray2, rcontents, newSize); //sizeof(struct Ifile));
-
-// 	int numFiles = IfileArray.data.size();
-// 	printf("Size of IfileArray2: %d\n", numFiles);
-	
-// 	for (int i=0; i<numFiles; i++) {
-// 		struct Inode in = IfileArray2.data[i];
-// 		printf("%d %d %c  %c   %7d  %s", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime);
-// 	}
-
-// 	// printf("Call Log_recordIfile \n");
-// 	// newSize = numFiles;
-// 	// if(!Log_recordIfile( &oldAdd, &newAdd, oldSize, newSize)){
-// 	// 	printf("Saved Ifile to block %d, segment %d\n", newAdd.blockNo, newAdd.segmentNo);
-// 	// }
-
-
-// 	return;
-// }
 
 void TestPermissions() {
 	int inum = 3;
@@ -1052,7 +1018,7 @@ int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
    	initFile(size);
-   	Test_File_Create(0);
+    Test_File_Create(1);
     Test_File_Create(1);
     //Print_Inode(1);
     test1F(); 

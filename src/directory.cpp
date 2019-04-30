@@ -361,10 +361,10 @@ int Directory_EntyUpdate(const char *path, int type)
   return 1;
 }
 
-void Directory_destory()
+void Directory_Destroy()
 {
 
-  // File_destory();
+  // File_Destroy();
 }
 
 int InitStat(struct stat *stbuf)
@@ -402,6 +402,37 @@ int convertInodeToStat(struct Inode inode, struct stat s)
   s.st_ctime = (time_t)inode.ctime;
   s.st_blksize = BLOCK_SIZE;
   s.st_blocks = inode.numBlocks;
+}
+
+int convertStatToInode(struct stat s, struct Inode in) {
+    in.inum = s.st_ino;
+    //s.st_dev = 0;
+    s.st_ino = inode.inum;
+    if (s.st_mode = S_IFDIR) { //dir
+        in.type = 1;
+        in.n_link = 2;
+    } else {
+        in.type = 0;
+        in.n_link = 1;
+    }
+    // if(strcmp(inode.filename,".")==0)
+    //   s.st_nlink = 2;  //  directory
+    // else 
+    //   s.st_nlink = 1;   // file 
+
+    in.owner = (char) s.st_uid;
+    in.group = (char) s.st_gid;
+
+    //s.st_rdev = 0; //If file is character or block special
+    in.size = (int) s.st_size;
+    in.atime = (char *) s.st_atime;
+    in.mtime = (char *) s.st_mtime;
+    in.ctime = (char *) s.st_ctime;
+
+    //s.st_blksize = BLOCK_SIZE;
+    in.numBlocks = s.st_blocks;
+    return 0;
+
 }
 
 int Directory_createFile(const char *path, char *filename, struct stat *stbuf)

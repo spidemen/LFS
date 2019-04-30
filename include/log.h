@@ -127,12 +127,22 @@ struct Segment{
 
 // for now, just put all the function here, later on will put all of them into a class
 extern int init(char *fileSystemName,int cachesize);
+
 extern int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddress *logAddress1);
+
 extern int Log_read(struct logAddress logAddress1, u_int length, void * buffer);
+
 extern int Log_free(struct logAddress logAddress1,u_int length);
+
 extern int Log_writeDeadBlock(inum num,struct logAddress oldAddress,struct logAddress newAddress);
+/*******
+ both old and new logadress are Ifile logAdree, it can be more than one, so the size is the number of logadress ifile 
+ which means number of block points of Ifle
+*****/
 extern int Log_CheckPoint(struct logAddress *oldAdrress,struct logAddress *newAdress, int  oldSize, int newSize);
+
 extern int Log_GetIfleAddress(struct logAddress *Adrress,int size);
+
 extern int  Log_destroy();
 #ifdef __cplusplus
 }

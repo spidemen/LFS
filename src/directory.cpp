@@ -161,7 +161,7 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
           InitStat(stbuf);
           stbuf->st_mode = S_IFREG | 0774;
           stbuf->st_nlink = 1;
-          int numSize = it2.second;
+          int numSize = it2.second; //first is filename, second is inum
           memcpy(num, &numSize, sizeof(int));
           return TYPE_FILE; // file
         }
@@ -537,6 +537,12 @@ void test2(){
     struct stat *stbuf;
     Directory_createFile("/a.txt", stbuf);
     Directory_writeFile("/a.txt", 0, 6, "hello");
+    int inum = 1;
+    Change_Permissions(inum, "666");
+    Inode in;
+    File_Get(inum, &in);
+    struct stat s;
+    convertInodeToStat(&in, &s);
    //  currentinum++;
    //  char buf[40]="hello";
    // File_Create(currentinum, 0);  // add directory

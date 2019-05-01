@@ -190,7 +190,7 @@ int Log_GetIfleAddress(struct logAddress *Adrress, int size)
 	if (size == 0)
 	{
 		cout << "checkpoint address error: No any checkpoint, check...." << endl;
-		return 1;
+		return 0; //Katy KEEP 0 IF NONE EXISTS
 	}
 	return size;
 }
@@ -211,7 +211,7 @@ int Log_destroy()
 // there are two different way to do clean, one just directly clean dead segment, other way based on costbenefit rate
 int Log_writeDeadBlock(inum num, struct logAddress oldAddress, struct logAddress newAddress)
 {
-
+	cout << "Attempt to clean segment " << oldAddress.segmentNo << endl;
 	auto it = segmentUsageTable.find(oldAddress.segmentNo);
 	if (it != segmentUsageTable.end())
 	{

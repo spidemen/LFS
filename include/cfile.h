@@ -10,6 +10,8 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include  "log.h"
 
 #define INODE_SIZE 144
@@ -22,17 +24,18 @@ struct Inode {
 
     int inum;           
     int type = 0;           			// 0 for file, 1 for directory, 2 link, 3 special file
-    int size = 0;   
+    off_t size;   
     int numBlocks = 0;              //the size but in blocks     
     
     int in_use = 1; 					// true 1, false 0
-    char* atime;                        //last access of file/directory
-    char* mtime;                        //last modification of file/directory
-    char* ctime;                        //last status change
-    char owner = 'u'; 					// u: user, r: root
-    char* permissions = "777";
+    time_t atime;                        //last access of file/directory
+    time_t mtime;                        //last modification of file/directory
+    time_t ctime;                        //last status change
+    uid_t owner; 	
+    gid_t group;			
+    mode_t permissions; 
     int nlink = 1;                      // 1 for file, 2 for directory
-    char group = 'a';
+    
     int offset;
 
     struct logAddress Block1Ptr= {
@@ -100,15 +103,16 @@ extern int File_Get(int inum, struct Inode *node);  // 0 success  2: deleted fil
 extern void File_Destroy();
 
 extern int Test_File_Create(int inum);
+extern int Test_File_Write(int inum);
 extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
 //extern  int convertInodeToStat(int num, struct stat *s);
 extern  int convertInodeToStat(struct Inode* inode, struct stat *stbuf);
 
-extern int Change_Permissions(int inum, char* permissions);
-extern int Change_Owner(int inum, char owner);
-extern int Change_Group(int inum, char group, int groupLength);
+extern int Change_Permissions(int inum, mode_t permissions);
+extern int Change_Owner(int inum, uid_t owner);
+extern int Change_Group(int inum, gid_t group);
 
   // NOTICE:  test initIfle:  after finish write and restart , remeber to call log_checkPoint function,otherwise there will a lots of bug or just call Log_destory
 #ifdef __cplusplus

@@ -135,7 +135,6 @@ static int lfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 static int lfs_init(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 
-    // cout<<"init function called"<<endl;
     printf("init function called  src \n");
     initDirectory(4);
     // if (strcmp(path, hello_path) != 0)
@@ -157,31 +156,6 @@ static int lfs_read(const char *path, char *buf, size_t size, off_t offset,
     printf("read function was being called \n");
 
     Directory_readFile(path, offset, size, buf);
-    //    char file54Text[] = "Hello World From File54!";
-    // char file349Text[] = "Hello World From File349!";
-    // char *selectedText = NULL;
-    //    if ( strcmp( path, "/file54" ) == 0 ){
-    //        size=strlen( selectedText ) - offset;
-    // 	selectedText = file54Text;
-    //     printf(" string %s  size=%d \n",selectedText,size);
-    //        memcpy( buf, selectedText + offset, size );
-    //    }
-    // else if ( strcmp( path, "/file349" ) == 0 ){
-    //        size=strlen( selectedText ) - offset;
-    // 	selectedText = file349Text;
-    //        memcpy( buf, selectedText + offset, size );
-    //    }
-    //    else  if(strcmp(path, hello_path) == 0){
-    //        len = strlen(hello_str);
-    //        if (offset < len) {
-    //            if (offset + size > len)
-    //                size = len - offset;
-    //            memcpy(buf, hello_str + offset, size);
-    //        } else
-    //        size = 0;
-    //    } else
-    //    if(strcmp(path, hello_path) != 0)
-    //        return -ENOENT;
 
     return size;
 }
@@ -216,49 +190,14 @@ static int lfs_chown(const char *path, uid_t uid, gid_t gid)
     printf("chown function was called \n");
     return 0;
 }
-static int lfs_setxattr(const char *path, const char *name, const char *value, size_t size, int flags)
-{
-    printf("set attar function was called \n");
-    return 0;
-}
-static int lfs_getxattr(const char *path, const char *name, char *value, size_t size)
-{
-    printf(" get x attr function was called \n");
-    return 0;
-}
-static int lfs_utime(const char *path, struct utimbuf *ubuf)
-{
-    printf(" untime function was called \n");
-    return 0;
-}
 
 void lfs_destroy(void *private_data)
 {
     printf("destory function was called\n ");
     return;
 }
-// static void lfs_close(){
-//     printf("close function was called \n");
-//    // return 0;
-// }
-static int lfs_release(const char *path, struct fuse_file_info *fi)
-{
-    printf("release function was called \n ");
 
-    return 0;
-}
-static int lfs_flush(const char *path, struct fuse_file_info *fi)
-{
-    printf(" flush function was called \n");
 
-    return 0;
-}
-
-static int lfs_ftruncate(const char *path, off_t size)
-{
-    printf(" ftruncate function was called \n");
-    return 0;
-}
 static int lfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
     printf(" mknod function was called \n");
@@ -298,6 +237,70 @@ static int lfs_chmod(const char *path, mode_t mode)
     return 0;
 }
 
+static int lfs_rename(const char *from, const char *to)
+{
+    printf("renme function was called \n ");
+    
+    return 0;
+}
+
+static int lfs_release(const char *path, struct fuse_file_info *fi)
+{
+    printf("release function was called \n ");
+
+    return 0;
+}
+static int lfs_flush(const char *path, struct fuse_file_info *fi)
+{
+    printf(" flush function was called \n");
+
+    return 0;
+}
+
+static int lfs_ftruncate(const char *path, off_t size)
+{
+    printf(" ftruncate function was called \n");
+    return 0;
+}
+
+static int lfs_lock(const char *path, struct fuse_file_info *fi, int cmd, struct flock *locks)
+{
+
+    printf("lock function was called \n ");
+    return 0;
+}
+
+static int lfs_symlink(const char *to, const char *from)
+{
+    printf("symlink function was called \n ");
+    return 0;
+}
+static int lfs_unlink(const char *path)
+{
+    printf("unlink function was called \n ");
+    Directory_EntyUpdate(path, 3); // remove file
+    return 0;
+}
+static int  lfs_link(const char* from, const char* to){
+    printf("Link  from  %s  to  %d \n",from, to);
+    return 0;
+  }
+
+  static int lfs_setxattr(const char *path, const char *name, const char *value, size_t size, int flags)
+{
+    printf("set attar function was called \n");
+    return 0;
+}
+static int lfs_getxattr(const char *path, const char *name, char *value, size_t size)
+{
+    printf(" get x attr function was called \n");
+    return 0;
+}
+static int lfs_utime(const char *path, struct utimbuf *ubuf)
+{
+    printf(" untime function was called \n");
+    return 0;
+}
 static int lfs_poll(const char *path, struct fuse_file_info *fi, struct fuse_pollhandle *ph, unsigned *reventsp)
 {
     printf(" poll funciton was called \n ");
@@ -311,29 +314,6 @@ static int lfs_ioctl(const char *path, int cmd, void *arg, struct fuse_file_info
 static int lfs_bmap(const char *path, size_t blocksize, uint64_t *blockno)
 {
     printf("lfs_bmap function was called \n ");
-    return 0;
-}
-static int lfs_lock(const char *path, struct fuse_file_info *fi, int cmd, struct flock *locks)
-{
-
-    printf("lock function was called \n ");
-    return 0;
-}
-static int lfs_rename(const char *from, const char *to)
-{
-    printf("renme function was called \n ");
-    
-    return 0;
-}
-static int lfs_symlink(const char *to, const char *from)
-{
-    printf("symlink function was called \n ");
-    return 0;
-}
-static int lfs_unlink(const char *path)
-{
-    printf("unlink function was called \n ");
-    Directory_EntyUpdate(path, 3); // remove file
     return 0;
 }
 static struct fuse_operations lfs_oper = {
@@ -355,7 +335,7 @@ static struct fuse_operations lfs_oper = {
     .unlink = lfs_unlink,
     .rmdir = lfs_rmdir,
     .rename = lfs_rename,
-    // .link        = lfs_link,
+     .link        = lfs_link,
     .chmod = lfs_chmod,
     .chown = lfs_chown,
     .truncate = lfs_truncate,

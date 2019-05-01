@@ -151,7 +151,7 @@ extern void File_Destroy();
 extern int Test_File_Create(int inum);
 extern void Show_Ifile_Contents();
 
-extern int File_Naming(int inum,const char *directory,char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
+extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
 
 extern  int convertInodeToStat(int num, struct stat *s);
 

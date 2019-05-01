@@ -425,6 +425,7 @@ int Directory_readFile(const char *path, int offset, int size, char *buf)
   int num;
   if (Directory_Types(path, &stbuf, &num) == TYPE_FILE)
   { // file
+    size=size>1024?800:size;
     cout << "debug  directory  read |" << buf << " num=" << num << " size =" << size << " offset=" << offset << endl;
     File_Read(num, offset, size, buf);
   }
@@ -542,18 +543,18 @@ void test2(){
    //  File_Write(currentinum,0,6,buf);
 }
 
-int main(int argc, char *argv[])
-{
-	cout<<"hell World"<<endl;
+// int main(int argc, char *argv[])
+// {
+// 	cout<<"hell World"<<endl;
 
-   	printf("Passed test1\n");
-   	// initDirectory(4);
-    // test1();
-    test2();
-  //  	Test_File_Create(1);
-  //  	//File_Write(1, 0, 5, (void *) "hello");
-  //  	Show_Ifile_Contents();
+//    	printf("Passed test1\n");
+//    	// initDirectory(4);
+//     // test1();
+//     test2();
+//   //  	Test_File_Create(1);
+//   //  	//File_Write(1, 0, 5, (void *) "hello");
+//   //  	Show_Ifile_Contents();
 
-	//  delete segmentCache;
-    return 1;
-}
+// 	//  delete segmentCache;
+//     return 1;
+// }

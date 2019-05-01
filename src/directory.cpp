@@ -534,12 +534,12 @@ void test1()
 void test2(){
     initDirectory(4);
     struct stat *stbuf;
-    // Directory_createFile("/a.txt", stbuf);
-    // Directory_writeFile("/a.txt", 0, 6, "hello");
-    currentinum++;
-    char buf[40]="hello";
-   File_Create(currentinum, 0);  // add directory
-    File_Write(currentinum,0,6,buf);
+    Directory_createFile("/a.txt", stbuf);
+    Directory_writeFile("/a.txt", 0, 6, "hello");
+   //  currentinum++;
+   //  char buf[40]="hello";
+   // File_Create(currentinum, 0);  // add directory
+   //  File_Write(currentinum,0,6,buf);
 }
 
 int main(int argc, char *argv[])

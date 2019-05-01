@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/stat.h>
 #include <iostream>
 #include <ctime>
 #include "../include/cfile.h"
@@ -10,8 +11,10 @@ using namespace std;
 
 #define GLOBAL_INUM 0
 #define IFILE_INUM 0
-#define TYPE_F 0
-#define TYPE_D 1
+#define TYPE_F 3 //3, was 0 //KATY possible issue but I think I checked all uses?
+#define TYPE_D 2 //2, was 1
+#define TYPE_L 4 //4, was 2
+
 #define SIZEOF_INODE sizeof(struct Inode)
 #define SEGMENT_THRESHOLD 3
 #define ARRAY_SIZE 4
@@ -26,16 +29,9 @@ struct IfileWrite {
     int size;
 };
 
-//struct Ifile LFSlog[1]; //representing writing the ifile's metadata
-struct Inode IfileMetadata; //representing writing files to the ifile
 struct Ifile IfileArray;
 struct IfileWrite IfileWrite; 
 
-
-struct Inode Get_Ifile() {
-	return IfileMetadata;
-	//return LFSlog[IFILE_INUM];
-}
 
 int File_Get(int inum, struct Inode *node) {
 	int availInodes = IfileArray.data.size();
@@ -80,13 +76,7 @@ int File_Naming(int inum, const char *path, const char *filename,struct stat *st
 	}
 
 }
-int Put_Ifile(struct Inode *ifiledata) {
-	IfileMetadata = *ifiledata;
-	//LFSlog[IFILE_INUM] = *ifile;
-	//printf("**PUT: New contents of ifile: \n");
-	//Show_Ifile_Contents();
-	return 0;
-}
+
 
 struct Inode initInode(int inum) {
 	struct Inode inode;
@@ -94,47 +84,23 @@ struct Inode initInode(int inum) {
 	return inode;
 }
 
-// int Get_Inode(int inum, struct Inode* inode) {
-// 	printf("***GET: get inode %d\n", inum);
-// 	struct Inode ifile = Get_Ifile();
-// 	printf("ifile size: %d\n", ifile.size);
-// 	if (inum <= 10) {
-// 		printf("---- got this inum %d for inode %d\n", IfileArray.data[inum].inum, inum);
-// 		inode = &(IfileArray.data[inum]);
-// 	} else {
-// 		printf("Error: cannot get inum %d from ifile (size %d)\n", inum, 10 );
-// 		//return 1;
-// 	}
-// 	// if (inum <= 10) {
-// 	// 	printf("---- got this inum %d for inode %d\n", ifile.data[inum].inum, inum);
-// 	// 	return ifile.data[inum];
-// 	// } else {
-// 	// 	printf("Error: cannot get inum %d from ifile (size %d)\n", inum, 10 );
-// 	// 	//return 1;
-// 	// }
-// 	return 0;
-// }
+
 
 int Put_Inode(int inum, struct Inode* iptr) {
-	struct Inode ifile = Get_Ifile();  // Get_Ifile function do not need paras
 	if (inum < IfileArray.data.size()) {
 		IfileArray.data[inum] = *iptr;
 	} else {
 		IfileArray.data.push_back(*iptr);
 	}
-	ifile.size = IfileArray.data.size();// - 1;
 	IfileWrite.size = IfileArray.data.size();
-	Put_Ifile(&ifile);
 
 	printf("Putting inode %d data, block %d seg %d\n", iptr->inum, iptr->Block1Ptr.blockNo, iptr->Block1Ptr.segmentNo);
-	//ifile.data[inum] = *iptr;
+
 	return 0;
 }
 
 void Show_Ifile_Contents() {
 	printf("############ start Show_Ifile_Contents ############\n");
- 	//struct Ifile ifile = Get_Ifile();
- 	//struct Inode ifile = Get_Ifile();
 	printf("Ifile contents (%d): \n", IfileArray.data.size());
     for (int i=1; i<IfileArray.data.size(); i++) {
         //struct Inode thisInode = ifile->data[i];
@@ -159,10 +125,21 @@ void Show_Ifile_Contents() {
     printf("############ end Show_Ifile_Contents ############\n");
 	return;
 }
+// buf must have at least 10 bytes
+void strmode(mode_t mode, char * buf) {
+  const char chars[] = "rwxrwxrwx";
+  for (size_t i = 0; i < 9; i++) {
+    buf[i] = (mode & (1 << (8-i))) ? chars[i] : '-';
+  }
+  buf[9] = '\0';
+}
 
 void Print_Inode(int inum) {
 	struct Inode in = IfileArray.data[inum];
-	printf("%d %d %c %c  %7d  %s %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
+	char buffer[10];
+	mode_t k = strtoul(in.permissions, NULL, 8);
+	strmode(k, buffer);
+	printf("%s %d %c %c  %7d  %s %s\n", buffer, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
 }
 
 
@@ -183,15 +160,18 @@ void WriteIfle(){
     	writeTest.data[i%ARRAY_SIZE]=IfileArray.data[i];
         if(i%ARRAY_SIZE==(ARRAY_SIZE-1)){
            // writeTest.size=4;
+        	printf("Checkpoint: index i=%d writing to ckpt\n", i);
         	writeTest.size= IfileArray.data.size();
            Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &tmp);
            newAdd[startIndex++]=tmp;
            //Log_GetIfleAddress(&oldAdd, oldsize);
            oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
    		   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
+   		   
     	   memset(&writeTest,0,sizeof(IfileWrite));
         }
     }
+    cout << "  Number of times parts of Ifle were written "<< startIndex<< " oldsize"<<oldsize<<endl;
    
    writeTest.size= IfileArray.data.size();//(i)%4;
    cout<<"  "<<sizeof(struct Inode)<<"  debug ifile size "<<IfileArray.data.size()<<"   "<<writeTest.size<<endl;
@@ -214,8 +194,6 @@ int File_Create(int inum, int type) {
 		cout << " ~~~~Ifile size (in blocks) " <<ifilesize <<endl;
 		if (Log_GetIfleAddress(&ifileAdd[0], 1) == 0){
 			// None exists
-			struct Inode metadata = Get_Ifile();
-			metadata.Block1Ptr = ifileAdd[0];
 			printf("##Creating new ifile at block %d, segment %d\n", ifileAdd[0].blockNo, ifileAdd[0].segmentNo);
 		} 
 		else {
@@ -228,17 +206,16 @@ int File_Create(int inum, int type) {
 		     	struct IfileWrite *tmpifile;
 		     	tmpifile=(struct IfileWrite *)ifilecontents;
 
-			 	IfileMetadata.size = tmpifile->size;
 			 	cout<<" read Ifile size "<<tmpifile->size<<endl;
 		     	for(int i=0;i<tmpifile->size;i++){ //KATY only works if i<4
 		     		if (i%ARRAY_SIZE == ARRAY_SIZE-1)
 		     		cout<<"degug Read Ifle  inum="<<tmpifile->data[i].inum<<" owner "<<tmpifile->data[i].owner<<endl;
 		     		IfileArray.data.push_back(tmpifile->data[i]);
 		     		printf("pushed back %d\n",i);
-		     	}
-		     	printf("done reading %d inodes\n", IfileArray.data.size());
-		     	Show_Ifile_Contents();
+		     	}	
 	      	}
+	      	printf("done reading %d inodes\n", IfileArray.data.size());
+		     	
 			return 0;
 		}
 		struct Inode dummyInode = initInode(inum);    // DONE -- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
@@ -273,9 +250,6 @@ int File_Create(int inum, int type) {
 		memcpy(&rinode, rcontents, sizeof(struct Inode));
 		printf("Rinode (wrote and read inode)----%d, %d, %c, %s\n", rinode.inum, rinode.in_use, rinode.owner, rinode.atime);
 		
-		//Write the metadata of the ifile
-		//LFSlog[IFILE_INUM] = ifile; //delete this, use above line
-
 		Put_Inode(inum, &dummyInode);
 
 		printf("     IFile %d created at block %d  segment %d\n", inum, logAdd.blockNo, logAdd.segmentNo);
@@ -323,8 +297,6 @@ int File_Create(int inum, int type) {
 		memcpy(&rinode, rcontents, sizeof(inode));
 		printf("Rinode (wrote and read inode)----%d, %d, %c, %s\n", rinode.inum, rinode.in_use, rinode.owner, rinode.atime);
 	
-
-		// Update ifile metadata
 		Put_Inode(inum, &inode);
 		printf("    We put inode %d and so size of Ifile is %d\n", inum, IfileArray.data.size());
 		if (logAdd.segmentNo % SEGMENT_THRESHOLD == 0) {
@@ -355,7 +327,6 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 	printf(" -- Inode info: inum %d at block %d  segment %d\n", fileinode.inum, fileinode.Block1Ptr.blockNo, fileinode.Block1Ptr.segmentNo);
 	printf(" --      file size: %d\n", fileinode.size);
 	int rsize = fileinode.size;
-	struct Inode ifile = Get_Ifile();
 	
 	struct logAddress pRead = fileinode.Block1Ptr;
 	printf("logAddress to read from: block %d   segment %d\n", pRead.blockNo, pRead.segmentNo);
@@ -769,44 +740,67 @@ void File_Destroy(){
 	return;
 }
 
-int convertInodeToStat(struct Inode inode, struct stat* s)
-{
-  s->st_dev = 0;
-  s->st_ino = inode.inum;
-  if (inode.type)
-  { //dir
-    s->st_mode = S_IFDIR;
-  }
-  else
-  {
-    s->st_mode = S_IFMT;
-  }
-  if (strcmp(inode.filename, ".") == 0)
-    s->st_nlink = 2; //  directory
-  else
-    s->st_nlink = 1; // file
 
-  s->st_uid = (uid_t)inode.owner;
-  s->st_gid = (gid_t)((u_int)inode.group);
-  s->st_rdev = 0; //If file is character or block special
-  s->st_size = (off_t)inode.size;
-  s->st_atime = (time_t)inode.atime;
-  s->st_mtime = (time_t)inode.mtime;
-  s->st_ctime = (time_t)inode.ctime;
-  s->st_blksize = BLOCK_SIZE;
-  s->st_blocks = inode.numBlocks;
+
+int convertInodeToStat(struct Inode* inode, struct stat* s)
+{
+	s->st_ino = inode->inum;
+	
+    //http://pubs.opengroup.org/onlinepubs/007908799/xsh/sysstat.h.html
+	unsigned long mode = strtoul(inode->permissions, NULL, 8);
+	if (mode == S_IRWXU) { //dir 
+	  s->st_mode = S_IRWXU; //rwx by owner
+	} else if (mode == S_IRUSR) { 
+	  s->st_mode = S_IRUSR; // r-- by owner
+	} else if (mode == S_IWUSR) {
+	  s->st_mode = S_IWUSR; // -w- by owner
+	} else if (mode == S_IXUSR) { 
+	  s->st_mode = S_IXUSR; // --x by owner
+	} else if (mode == S_IRWXG) { 
+	  s->st_mode = S_IRWXG; // rwx by group
+	} else if (mode == S_IRGRP) {
+	  s->st_mode = S_IRGRP; // r-- by group
+	} else if (mode == S_IWGRP) { 
+	  s->st_mode = S_IWGRP; // -w- by group
+	} else if (mode == S_IXGRP) { 
+	  s->st_mode = S_IXGRP; // --x by group
+	} else if (mode == S_IRWXO) { 
+	  s->st_mode = S_IRWXO; // rwx by other
+	} else if (mode == S_IROTH) { 
+	  s->st_mode = S_IROTH; // r-- by other
+	} else if (mode == S_IWOTH) { 
+	  s->st_mode = S_IWOTH; // -w- by others
+	} else if (mode == S_IXOTH) { 
+	  s->st_mode = S_IXOTH; // --x by others
+	} else if (mode == S_ISUID) { 
+	  s->st_mode = S_ISUID; // set-user-ID on execution
+	} else if (mode == S_ISGID) { 
+	  s->st_mode = S_ISGID; // set-group-ID on execution
+	} else if (mode == S_ISVTX) { 
+	  s->st_mode = S_ISVTX; // on directories, restricted dletion flag
+	}
+	printf("%lu %s %d\n", mode, inode->permissions, s->st_mode);
+	
+
+	if (inode->type == TYPE_D) {
+		s->st_nlink = 2; //  directory
+	} else {
+		s->st_nlink = 1; // file
+	}
+
+	s->st_uid = (uid_t) inode->owner;
+	s->st_gid = (gid_t)((u_int)inode->group);
+	//s->st_rdev = 0; //If file is character or block special
+	s->st_size = inode->size;
+	s->st_atime = (time_t)inode->atime;
+	s->st_mtime = (time_t)inode->mtime;
+	s->st_ctime = (time_t)inode->ctime;
+	s->st_blksize = BLOCK_SIZE;
+	s->st_blocks = (int) inode->numBlocks;
 }
 
-int Change_Permissions(int inum, int permissions) {
-	// struct Inode fileinode = Get_Inode(inum);
+int Change_Permissions(int inum, char* permissions) {
 
-	// // Update the inode data
-	// fileinode.permissions = permissions;
-
-	// // Write the inode data
-	// struct Ifile write_ifile = Get_Ifile();
-	// write_ifile.data[inum] = fileinode;
-	// Put_Ifile(&write_ifile);
 	struct Inode inode = IfileArray.data[inum];
 	inode.permissions = permissions;
 	IfileArray.data[inum] = inode;
@@ -814,15 +808,7 @@ int Change_Permissions(int inum, int permissions) {
 }
 
 int Change_Owner(int inum, char owner) {
-	// struct Inode fileinode = Get_Inode(inum);
-	
-	// // Update the inode data
-	// fileinode.owner = owner;
 
-	// // Write the inode data
-	// struct Ifile write_ifile = Get_Ifile();
-	// write_ifile.data[inum] = fileinode;
-	// Put_Ifile(&write_ifile);
 	struct Inode inode = IfileArray.data[inum];
 	inode.owner = owner;
 	IfileArray.data[inum] = inode;
@@ -830,16 +816,7 @@ int Change_Owner(int inum, char owner) {
 }
 
 int Change_Group(int inum, char group, int groupLength) {
-	// printf("Group: %s \n", group);
-	// struct Inode fileinode = Get_Inode(inum);
-	
-	// // Update the inode data
-	// fileinode.group = group;
 
-	// // Write the inode data
-	// struct Ifile write_ifile = Get_Ifile();
-	// write_ifile.data[inum] = fileinode;
-	// Put_Ifile(&write_ifile);
 	struct Inode inode = IfileArray.data[inum];
 	inode.group = group;
 	IfileArray.data[inum] = inode;
@@ -856,15 +833,6 @@ int Test_File_Create(int inum) {
 	} else {
 		printf("FAILED -- File Create of inum %d\n", inum);
 	}
-
-	//struct Ifile* ifile = &(LFSlog[0]); 
-	// struct Ifile ifile = Get_Ifile();
-	// printf("Ifile contents (%d): \n", ifile.size);
- //    for (int i=0; i<ifile.size; i++) {
- //        //struct Inode thisInode = ifile->data[i];
- //        struct Inode thisInode = ifile.data[i];
- //        printf("inum: %d has data at block %d and seg %d \n", thisInode.inum, thisInode.Block1Ptr.blockNo, thisInode.Block1Ptr.segmentNo);
- //    }
     printf("############ end Test_File_Create %d ############\n",inum);
 	return 0;
 }
@@ -884,7 +852,12 @@ int initFile(int size) {
 
     // Create the Ifile 
     File_Create(IFILE_INUM, TYPE_F);
-    printf("Ifile re-established with size %d\n", IfileArray.data.size());
+    if (IfileArray.data.size() == 1) {
+		printf("Ifile initialized with size %d\n", IfileArray.data.size());
+    
+    } else {
+    	printf("Ifile re-established with size %d\n", IfileArray.data.size());
+    }
     Show_Ifile_Contents();
 	return 0;
 }
@@ -1051,12 +1024,12 @@ void test7F() {
 
 void test8F() {
 	printf("**************File layer test 8F checkpoint ************\n");
-	Show_Ifile_Contents();
+	
 	int num=IfileArray.data.size();
 	File_Create(num, TYPE_F);
 	char* buffer = "test checkpoint";
 	File_Write(num, 0, 16, (void*)buffer);
-	Change_Permissions(1, 771);
+	Change_Permissions(1, "771");
 	char* directory = "dir/";
 	char* filename = "fname";
 	struct stat* stbuf;
@@ -1091,7 +1064,7 @@ void test10F() {
 	printf("***********Test 10F: File_Get ************\n");
 	Inode in;
 	File_Get(1, &in);
-	printf("%d %d %c %c  %7d  %s %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
+	printf("%d %s %c %c  %7d  %s %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
 	Print_Inode(1);
 	printf("^^^^ If match, then File_Get works properly\n");
 	return;
@@ -1148,16 +1121,16 @@ void test6Destroy(){
 
 void TestPermissions() {
 	int inum = 3;
-	int permissions = 771;
+	char* permissions = "771";
 	Change_Permissions(inum, permissions);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
 
 	struct Inode inode = IfileArray.data[inum];//Get_Inode(inum);
-	if (inode.permissions != permissions) {
-		printf("Fail: old permissions were not changed (old: %d, new: %d).\n ", inode.permissions, permissions);
+	if (strcmp(inode.permissions, permissions)) {
+		printf("Fail: old permissions were not changed (old: %s, new: %s).\n ", inode.permissions, permissions);
 	} else {
-		printf("************* Success   TestPermissions pass (%d == %d) **********\n", inode.permissions, permissions);
+		printf("************* Success   TestPermissions pass (%s == %s) **********\n", inode.permissions, permissions);
 	}
 	return;
 }
@@ -1195,11 +1168,7 @@ void TestGroup() {
 	return;
 }
 
-// read and write Ifile test
-// 
-//struct Ifile IfileArray;
-// struct IfileWrite IfileWrite; 
-//
+
 void test10(){
   //  initFile(4);
     struct IfileWrite writeTest;
@@ -1245,9 +1214,14 @@ void test11(){
 void test12(){
 	File_Create(1, TYPE_F);
 	struct Inode inode = IfileArray.data[1];
-	printf("Got Inode %d   %");
-	struct stat* s;
-	convertInodeToStat(inode, s);
+	printf("Got Inode %d \n", inode.inum);
+	Print_Inode(1);
+	inode.permissions = "4"; //448
+	struct stat s;
+	convertInodeToStat(&inode, &s);
+	printf("Inode has been converted.\n");
+	Print_Inode(1);
+	return;
 }
 
 int main(){
@@ -1257,20 +1231,18 @@ int main(){
 
   	//Show_Ifile_Contents();
   	//test4F();
-
   	//test12();
   	//test3F();
    	// test9F();
-   	//test7F(); -- Dead segment
+   	//test7F(); //-- Dead segment
    	//test10F();
    	//test4Destroy();
 
    	//test5Destroy();
    	//test6Destroy();
 
-     //test8F(); -- recover ifile
+     test8F(); //-- recover ifile
   	 //test10();
     //	test11();
-    test12();
 }
 

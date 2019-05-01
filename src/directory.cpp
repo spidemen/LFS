@@ -161,7 +161,7 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
           InitStat(stbuf);
           stbuf->st_mode = S_IFREG | 0774;
           stbuf->st_nlink = 1;
-          int numSize = it2.second;
+          int numSize = it2.second; //first is filename, second is inum
           memcpy(num, &numSize, sizeof(int));
           return TYPE_FILE; // file
         }

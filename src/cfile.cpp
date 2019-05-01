@@ -187,7 +187,7 @@ void WriteIfle(){
            Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &tmp);
            newAdd[startIndex++]=tmp;
            //Log_GetIfleAddress(&oldAdd, oldsize);
-           oldsize = Log_GetIfleAddress(&ifileAdd[0], oldsize);
+           oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
    		   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
     	   memset(&writeTest,0,sizeof(IfileWrite));
         }
@@ -199,7 +199,7 @@ void WriteIfle(){
    Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &newAddress);
    newAdd[startIndex++]=newAddress;
    //Log_GetIfleAddress(&oldAdd, oldsize);
-   oldsize = Log_GetIfleAddress(&ifileAdd[0], oldsize);
+   oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
    Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
 
 }
@@ -769,32 +769,32 @@ void File_Destroy(){
 	return;
 }
 
-int convertInodeToStat(struct Inode inode, struct stat s)
+int convertInodeToStat(struct Inode inode, struct stat* s)
 {
-  s.st_dev = 0;
-  s.st_ino = inode.inum;
+  s->st_dev = 0;
+  s->st_ino = inode.inum;
   if (inode.type)
   { //dir
-    s.st_mode = S_IFDIR;
+    s->st_mode = S_IFDIR;
   }
   else
   {
-    s.st_mode = S_IFMT;
+    s->st_mode = S_IFMT;
   }
   if (strcmp(inode.filename, ".") == 0)
-    s.st_nlink = 2; //  directory
+    s->st_nlink = 2; //  directory
   else
-    s.st_nlink = 1; // file
+    s->st_nlink = 1; // file
 
-  s.st_uid = (uid_t)inode.owner;
-  s.st_gid = (gid_t)((u_int)inode.group);
-  s.st_rdev = 0; //If file is character or block special
-  s.st_size = (off_t)inode.size;
-  s.st_atime = (time_t)inode.atime;
-  s.st_mtime = (time_t)inode.mtime;
-  s.st_ctime = (time_t)inode.ctime;
-  s.st_blksize = BLOCK_SIZE;
-  s.st_blocks = inode.numBlocks;
+  s->st_uid = (uid_t)inode.owner;
+  s->st_gid = (gid_t)((u_int)inode.group);
+  s->st_rdev = 0; //If file is character or block special
+  s->st_size = (off_t)inode.size;
+  s->st_atime = (time_t)inode.atime;
+  s->st_mtime = (time_t)inode.mtime;
+  s->st_ctime = (time_t)inode.ctime;
+  s->st_blksize = BLOCK_SIZE;
+  s->st_blocks = inode.numBlocks;
 }
 
 int Change_Permissions(int inum, int permissions) {
@@ -1244,10 +1244,10 @@ void test11(){
 
 void test12(){
 	File_Create(1, TYPE_F);
-	struct Inode inode;
-//	File_Get(1, inode);
-//	printf("Got Inode %d   %")
-	int convertInodeToStat(struct Inode inode, struct stat s);
+	struct Inode inode = IfileArray.data[1];
+	printf("Got Inode %d   %");
+	struct stat* s;
+	convertInodeToStat(inode, s);
 }
 
 int main(){
@@ -1266,10 +1266,11 @@ int main(){
    	//test4Destroy();
 
    	//test5Destroy();
-   	test6Destroy();
+   	//test6Destroy();
 
      //test8F(); -- recover ifile
   	 //test10();
     //	test11();
+    test12();
 }
 

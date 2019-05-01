@@ -82,7 +82,7 @@ int initDirectory(int cachesize)
   // tmp.push_back({"#next", 7});
    FileSystemMap.insert({"/", tmp});
 
-   File_Create(currentinum, 1);  // add directory
+ //  File_Create(currentinum, 1);  // add directory
    testD3();
    File_Create(currentinum, TYPE_DIRECTORY);  // add directory KATY
    // struct Inode rootinode;
@@ -128,22 +128,24 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
   {
     InitStat(stbuf); // test code, later will use File_Get can covert inode into stat
    
-    stbuf->st_mode = S_IFDIR | 0700;
-    stbuf->st_nlink = 2;
-    auto it1 = it->second.begin(); // alway make "." stay on the front of vector
-    if (it1->first == ".")
-    {
-      int numSize = it1->second;
-      memcpy(num, &numSize, sizeof(int));
+    // stbuf->st_mode = S_IFDIR | 0700;
+    // stbuf->st_nlink = 2;
+    for(auto it1:it->second){
+      if (it1.first == ".")
+      {
+        int numSize = it1.second;
+        memcpy(num, &numSize, sizeof(int));
 
-      // struct Inode node; 
-      // if (!File_Get(numSize, &node)) {
-      //     convertInodeToStat(&node, stbuf);
-      // } else { 
-      //   printf("Error: Directory_Types - calling File_Get\n"); 
-      // }
+        struct Inode node; 
+        if (!File_Get(numSize, &node)) {
+            convertInodeToStat(&node, stbuf);
+        } else { 
+          printf("Error: Directory_Types - calling File_Get\n"); 
+        }
+         return TYPE_DIRECTORY; // directory
+      }
     }
-    return TYPE_DIRECTORY; // directory
+   
   }
   else
   {

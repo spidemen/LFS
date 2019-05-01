@@ -824,12 +824,10 @@ int File_Free(int inum) {
 }
 
 
-
 void File_Destroy(){
 	//TODO
-	//WriteIfileToLog();
-	//Make a checkpoint
-	//Log_Destroy();
+	WriteIfle();
+	Log_destroy();
 	return;
 }
 
@@ -1121,6 +1119,21 @@ void test10F() {
 	return;
 }
 
+
+void test5Destroy(){
+	File_Create(1, 1);
+	File_Write(1, 0, 5, (void*) "katy");
+	File_Destroy();
+	return;
+}
+
+void test6Destroy(){
+	char buf[5];
+	File_Read(1, 0, 5, buf);
+	printf("After destroy content %s\n", buf);
+	return;
+}
+
 void TestPermissions() {
 	int inum = 3;
 	int permissions = 771;
@@ -1221,9 +1234,11 @@ int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
   	initFile(size);
-  	test3F();
+  	//test3F();
    	// test9F();
    	// test10F();
+   	test5Destroy();
+   	test6Destroy();
 
     // Print_Inode(1);
     //test1F(); 

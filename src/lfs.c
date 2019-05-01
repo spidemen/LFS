@@ -121,12 +121,13 @@ static int lfs_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 
     // cout<<"create function called"<<endl;
     printf("create function called  src\n");
+    struct stat stbuf;
+    Directory_createFile(path,&stbuf);
+    // if (strcmp(path, hello_path) != 0)
+    //     return -ENOENT;
 
-    if (strcmp(path, hello_path) != 0)
-        return -ENOENT;
-
-    if ((fi->flags & 3) != O_RDONLY)
-        return -EACCES;
+    // if ((fi->flags & 3) != O_RDONLY)
+    //     return -EACCES;
 
     return 0;
 }

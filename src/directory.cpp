@@ -43,9 +43,9 @@ int initDirectory(int cachesize)
       FileSystemMap.insert({b, tmp});
     }
   }
-
+   currentinum++;
   // // code for test directory
-  // vector<pair<string, int>> tmp;
+   vector<pair<string, int>> tmp;
   // tmp.push_back({"a.txt", 11});
   // tmp.push_back({"b.txt", 4});
   // tmp.push_back({"-link", 9});
@@ -53,13 +53,13 @@ int initDirectory(int cachesize)
   // FileSystemMap.insert({"/next", tmp});
   // tmp.clear();
   // // root directory
-  // tmp.push_back({".", 10});
+   tmp.push_back({".", currentinum});
   // tmp.push_back({"fuse.h", 2});
   // tmp.push_back({"log.cpp", 3});
   // // tmp.push_back({"hello",8});
   // tmp.push_back({"#next", 7});
-  // FileSystemMap.insert({"/", tmp});
-  // File_Create(2, 1);
+   FileSystemMap.insert({"/", tmp});
+   File_Create(currentinum, 1);  // add directory
   // File_Create(3, 1);
 
   return 0;
@@ -376,85 +376,30 @@ int InitStat(struct stat *stbuf)
   return 1;
 }
 
-int convertInodeToStat(struct Inode inode, struct stat s)
-{
-  s.st_dev = 0;
-  s.st_ino = inode.inum;
-  if (inode.type)
-  { //dir
-    s.st_mode = S_IFDIR;
-  }
-  else
-  {
-    s.st_mode = S_IFMT;
-  }
-  if (strcmp(inode.filename, ".") == 0)
-    s.st_nlink = 2; //  directory
-  else
-    s.st_nlink = 1; // file
-
-  s.st_uid = (uid_t)inode.owner;
-  s.st_gid = (gid_t)((u_int)inode.group);
-  s.st_rdev = 0; //If file is character or block special
-  s.st_size = (off_t)inode.size;
-  s.st_atime = (time_t)inode.atime;
-  s.st_mtime = (time_t)inode.mtime;
-  s.st_ctime = (time_t)inode.ctime;
-  s.st_blksize = BLOCK_SIZE;
-  s.st_blocks = inode.numBlocks;
-}
-
-int convertStatToInode(struct stat s, struct Inode in) {
-    in.inum = s.st_ino;
-    //s.st_dev = 0;
-    s.st_ino = in.inum;
-    if (s.st_mode = S_IFDIR) { //dir
-        in.type = 1;
-        in.nlink = 2;
-    } else {
-        in.type = 0;
-        in.nlink = 1;
-    }
-    // if(strcmp(inode.filename,".")==0)
-    //   s.st_nlink = 2;  //  directory
-    // else 
-    //   s.st_nlink = 1;   // file 
-
-    in.owner = (char) s.st_uid;
-    in.group = (char) s.st_gid;
-
-    //s.st_rdev = 0; //If file is character or block special
-    in.size = (int) s.st_size;
-    in.atime = (char *) s.st_atime;
-    in.mtime = (char *) s.st_mtime;
-    in.ctime = (char *) s.st_ctime;
-
-    //s.st_blksize = BLOCK_SIZE;
-    in.numBlocks = s.st_blocks;
-    return 0;
-
-}
 
 int Directory_createFile(const char *path, struct stat *stbuf)
 {
-  char *fullpath;
-  strcat(fullpath, path);
-  strcat(fullpath, filename);
+  
+  string path1,filename;
+  SplitPath(path,path1,filename);
   currentinum++;
-  if (!File_Create(currentinum, 0))
+  if (!File_Create(currentinum, 0))   // 0-file , 1-entry  directory
   {
-    File_Naming(currentinum, path, filename, stbuf);
-    cout << "test";
-    auto it = FileSystemMap.find(path);
+    File_Naming(currentinum, path1.c_str(), filename.c_str(), stbuf);
+    auto it = FileSystemMap.find(path1);
     if (it != FileSystemMap.end())
     {
-      vector<pair<string, int>> tmp;
+      vector<pair<string, int>> tmp=it->second;
       tmp.push_back({filename, currentinum});
-      FileSystemMap.insert({path, tmp});
+      FileSystemMap.erase(it);
+      FileSystemMap.insert({path1, tmp});
+      cout<<" create a new file  inum="<<currentinum<<endl;
     }
     else
     {
-      it->second.push_back({filename, currentinum});
+       cout<<" Error: directory not exit, please first make a directory "<<path1<<endl;
+       return 1;
+     // it->second.push_back({filename, currentinum});
       // FileSystemMap.insert({path,tmp});
     }
   }
@@ -518,22 +463,22 @@ int Directory_writeFile(const char *path, int offset, int size, char *buf)
   return 0;
 }
 
-int test1D()
-{
-  printf("************* Begin Test1D: create a new file ****************\n");
-  char *path = "test1/";
-  char *fname = "testfile1";
-  struct stat *stbuf;
-  printf("Creating file %s %s (inum: %d)\n", path, fname, currentinum);
-  if (Directory_createFile(path, fname, stbuf))
-  {
-    printf("***Error: Directory_createFile -- test1D creating testfile1****\n");
-    return 1;
-  }
-  Show_Ifile_Contents();
-  printf("************* End Test1D: create a new file ****************\n");
-  return 0;
-}
+// int test1D()
+// {
+//   printf("************* Begin Test1D: create a new file ****************\n");
+//   char *path = "test1/";
+//   char *fname = "testfile1";
+//   struct stat *stbuf;
+//   printf("Creating file %s %s (inum: %d)\n", path, fname, currentinum);
+//   if (Directory_createFile(path, fname, stbuf))
+//   {
+//     printf("***Error: Directory_createFile -- test1D creating testfile1****\n");
+//     return 1;
+//   }
+//   Show_Ifile_Contents();
+//   printf("************* End Test1D: create a new file ****************\n");
+//   return 0;
+// }
 int test2D()
 {
   char *path = "test2/";
@@ -586,17 +531,29 @@ void test1()
   cout << filetype << "  inum=" << size << endl;
 }
 
-// int main(int argc, char *argv[])
-// {
-// 	cout<<"hell World"<<endl;
+void test2(){
+    initDirectory(4);
+    struct stat *stbuf;
+    // Directory_createFile("/a.txt", stbuf);
+    // Directory_writeFile("/a.txt", 0, 6, "hello");
+    currentinum++;
+    char buf[40]="hello";
+   File_Create(currentinum, 0);  // add directory
+    File_Write(currentinum,0,6,buf);
+}
 
-//    	printf("Passed test1\n");
-//    	initDirectory(4);
-//     test1();
-//   //  	Test_File_Create(1);
-//   //  	//File_Write(1, 0, 5, (void *) "hello");
-//   //  	Show_Ifile_Contents();
+int main(int argc, char *argv[])
+{
+	cout<<"hell World"<<endl;
 
-// 	//  delete segmentCache;
-//     return 1;
-// }
+   	printf("Passed test1\n");
+   	// initDirectory(4);
+    // test1();
+    test2();
+  //  	Test_File_Create(1);
+  //  	//File_Write(1, 0, 5, (void *) "hello");
+  //  	Show_Ifile_Contents();
+
+	//  delete segmentCache;
+    return 1;
+}

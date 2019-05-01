@@ -184,14 +184,15 @@ int init(char *fileSystemName, int cachesize = 4)
 
 int Log_GetIfleAddress(struct logAddress *Adrress, int size)
 {
-	memcpy(Adrress, pmetadata->checkPointRegion, sizeof(struct logAddress) * size);
+	memcpy(Adrress, pmetadata->checkPointRegion, sizeof(struct logAddress) * (size));
+//	memcpy(size,&pmetadata->checkPointsize,sizeof(int));
 	size = pmetadata->checkPointsize;
 	if (size == 0)
 	{
 		cout << "checkpoint address error: No any checkpoint, check...." << endl;
 		return 1;
 	}
-	return 0;
+	return size;
 }
 int Log_destroy()
 {
@@ -203,7 +204,7 @@ int Log_destroy()
 	memcpy(&oldAdrress, &pmetadata->checkPointRegion[0], sizeof(struct logAddress) * 1);
 	memcpy(&newaddress, &pmetadata->checkPointRegion[0], sizeof(struct logAddress) * 1);
 	Log_CheckPoint(&oldAdrress, &newaddress, 1, 1); // checkpoint
-
+	cout<<" Ifile  segmentNo "<<newaddress.segmentNo<<"  blockNo= "<<newaddress.blockNo<<endl;
 	return 0;
 }
 // cleanning , every write deadblock to check whether segment neeed to clean based on costbenefit rate

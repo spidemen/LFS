@@ -201,7 +201,7 @@ void WriteIfileToLog() {
 	int newSize = BLOCK_SIZE - 200; //sizeof(IfileWrite);
 	void* content = &(tempIwrite);
 	
-	if (!Log_Write(IFILE_INUM, 0, newSize, &tempIwrite, &newAdd)) {
+	if (!Log_Write(IFILE_INUM, 0, newSize, tempIwrite, &newAdd)) {
 		printf("Wrote Ifile to block %d , segment %d\n", newAdd.blockNo, newAdd.segmentNo);
 	}
 
@@ -220,7 +220,7 @@ void WriteIfileToLog() {
 	//memcpy(&iwrite, rcontent, newSize);
 	struct IfileWrite* iwrite = (struct IfileWrite *)malloc(sizeof(struct IfileWrite));
 	printf("Size of IfileWrite: %d    size of newSize%d\n", sizeof(struct IfileWrite), newSize);
-	memcpy(&iwrite, rcontent, sizeof(struct IfileWrite*));
+	memcpy(&iwrite, rcontent, sizeof(struct IfileWrite));
 	//iwrite = (struct IfileWrite*) rcontent;
 	printf("iwrite.size = %d\n", (int) iwrite->size);
 
@@ -239,6 +239,7 @@ void WriteIfileToLog() {
 	// 	printf("Saved Ifile to block %d, segment %d\n", newAdd.blockNo, newAdd.segmentNo);
 	// }
 	struct logAddress oldAddress;
+	//int tmpGet;
 	Log_GetIfleAddress(&oldAddress, 1);
 	struct logAddress newAddress = newAdd;
 	printf("oldAddres: %d %d  newAddress: %d %d  \n", oldAddress.blockNo, oldAddress.segmentNo, newAddress.blockNo, newAddress.segmentNo);
@@ -253,6 +254,42 @@ void WriteIfileToLog() {
 	
 	
 	return;
+}
+
+
+
+void WriteIfle(){
+	struct IfileWrite writeTest;
+    int i;
+    int arraySize=0;
+    if(IfileArray.data.size()%6==0){
+    	arraySize=IfileArray.data.size();
+    }else{
+    	arraySize=IfileArray.data.size()+1;
+    }
+    logAddress *newAdd=(struct logAddress *) malloc(sizeof(struct logAddress)*arraySize);
+    int startIndex=0;
+    int oldsize=1;
+     logAddress tmp,oldAdd;
+    for(i=0;i<IfileArray.data.size();i++){
+    	writeTest.data[i%6]=IfileArray.data[i];
+        if(i%6==0){
+  
+            writeTest.size=6;
+           Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &tmp);
+           newAdd[startIndex++]=tmp;
+           Log_GetIfleAddress(&oldAdd, oldsize);
+   		   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
+    	   memset(&writeTest,0,sizeof(IfileWrite));
+        }
+    }
+   writeTest.size=i%6;
+   logAddress newAddress;
+   Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &newAddress);
+   newAdd[startIndex++]=newAddress;
+   Log_GetIfleAddress(&oldAdd, oldsize);
+   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
+
 }
 
 int File_Create(int inum, int type) {
@@ -1025,9 +1062,9 @@ void test8F() {
 	File_Naming(1, directory, filename, stbuf);
 
 	Print_Inode(1);
-	WriteIfileToLog();
-
-//	Log_destroy();
+//	WriteIfileToLog();
+ 	WriteIfle();
+	Log_destroy();
 
 	return;
 }
@@ -1115,7 +1152,7 @@ void TestGroup() {
 // struct IfileWrite IfileWrite; 
 //
 void test10(){
-   initFile(size);
+  //  initFile(4);
     struct IfileWrite writeTest;
     test8F();
     int i;
@@ -1144,14 +1181,14 @@ void test11(){
 	init("FuseFileSystem",4);  
 	logAddress newAdd;
 	newAdd.segmentNo=1;
-	newAdd.blockNo=5;
+	newAdd.blockNo=4;
    char ifilecontents[BLOCK_SIZE-100];
    memset(ifilecontents,0,BLOCK_SIZE-100);
    Log_read(newAdd, BLOCK_SIZE-100, ifilecontents);
    cout<<" ifle  segmentNo="<<newAdd.segmentNo<<"  blockNo="<<newAdd.blockNo<<endl;
 
    struct IfileWrite *tmp=(struct IfileWrite *)ifilecontents;
-   for(int i=0;i<tmp->size;i++){
+   for(int i=0;i<4;i++){
    	  cout<<"read inode "<<i<<"  group "<<tmp->data[i].group<<" inum="<<tmp->data[i].inum<<endl;
    }
 }
@@ -1159,14 +1196,14 @@ void test11(){
 int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
-  // 	initFile(size);
+  	initFile(size);
    	// test9F();
    	// test10F();
 
     // Print_Inode(1);
     //test1F(); 
-   // test8F();
+    test8F();
   // 	test10();
-    	test11();
+    //	test11();
 }
 

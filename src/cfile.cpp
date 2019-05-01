@@ -186,7 +186,8 @@ void WriteIfle(){
         	writeTest.size= IfileArray.data.size();
            Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &tmp);
            newAdd[startIndex++]=tmp;
-           Log_GetIfleAddress(&oldAdd, oldsize);
+           //Log_GetIfleAddress(&oldAdd, oldsize);
+           oldsize = Log_GetIfleAddress(&ifileAdd[0], oldsize);
    		   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
     	   memset(&writeTest,0,sizeof(IfileWrite));
         }
@@ -197,7 +198,8 @@ void WriteIfle(){
    logAddress newAddress;
    Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &newAddress);
    newAdd[startIndex++]=newAddress;
-   Log_GetIfleAddress(&oldAdd, oldsize);
+   //Log_GetIfleAddress(&oldAdd, oldsize);
+   oldsize = Log_GetIfleAddress(&ifileAdd[0], oldsize);
    Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
 
 }
@@ -1096,6 +1098,40 @@ void test10F() {
 }
 
 
+// cleanning and recovery test
+// void test4Destroy()
+// {
+// 	Test_File_Creat(1);
+// 	Test_File_Write(1);
+// 	WriteIfle();
+// 	//Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+
+// 	// cleaning test
+// 	int num = 1;
+// 	logAddress oldAddress, newAdress;
+// 	int count = 0;
+// 	for (auto it : segmentUsageTable)
+// 	{
+// 		oldAddress.segmentNo = it.first;
+// 		for (int i = 0; i < it.second.blocksByteSize; i++)
+// 		{
+// 			pair<int, int> tmp = it.second.blocksByte[i];
+// 			oldAddress.blockNo = tmp.first;
+// 			if (tmp.first % 10 != 0)
+// 				Log_writeDeadBlock(num, oldAddress, oldAddress);
+// 		}
+// 		count++;
+// 		if (count > 2)
+// 			break;
+// 	}
+// 	//char buf1[50] = "Hello LFS, welcome to CSC 545 OS classa";
+// 	Test_File_Create(2);
+// 	Test_File_Write(2);
+// 	test2(1, address, buf1);
+// 	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+// }
+
+
 void test5Destroy(){
 	File_Create(1, 1);
 	File_Write(1, 0, 5, (void*) "katy");
@@ -1225,14 +1261,14 @@ int main(){
   	//test12();
   	//test3F();
    	// test9F();
-   	test7F();
+   	//test7F(); -- Dead segment
    	//test10F();
-   	//test5Destroy();
-   	//test6Destroy();
+   	//test4Destroy();
 
-    // Print_Inode(1);
-    //test1F(); 
-     //test8F();
+   	//test5Destroy();
+   	test6Destroy();
+
+     //test8F(); -- recover ifile
   	 //test10();
     //	test11();
 }

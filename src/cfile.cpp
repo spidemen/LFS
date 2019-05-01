@@ -551,8 +551,8 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 	fileinode.atime = timestring;
 
 	// Write the inode data
-	Put_Inode(inum, &fileinode);
-	//IfileArray.data[inum] = fileinode;
+	Put_Inode(inum, &fileinode); //KATY the segment fault line
+	//IfileArray.data[inum] = fileinode;S
 
 
 	printf("We Put_Inode for inum %d at block %d and segment %d \n", inum, fileinode.Block1Ptr.blockNo, fileinode.Block1Ptr.segmentNo);

@@ -100,6 +100,7 @@ extern int File_Get(int inum, struct Inode *node);  // 0 success  2: deleted fil
 extern void File_Destroy();
 
 extern int Test_File_Create(int inum);
+extern int Test_File_Write(int inum);
 extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode

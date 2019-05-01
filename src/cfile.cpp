@@ -34,6 +34,7 @@ struct IfileWrite IfileWrite;
 
 
 int File_Get(int inum, struct Inode *node) {
+	//printf(" File get %d from Ifile of size %d\n", inum, IfileArray.data.size());
 	int availInodes = IfileArray.data.size();
 	if (inum > availInodes) {
 		// Asking for an Inum that we don't have
@@ -45,7 +46,6 @@ int File_Get(int inum, struct Inode *node) {
 			printf("Error: inode %d has been deleted\n");
 			return 2;
 		}
-		printf("Returning the inode %d...\n", inum);
 		memcpy(node,&IfileArray.data[inum],sizeof(struct Inode));
 	//	return IfileArray.data[inum];
 		return 0;
@@ -70,8 +70,11 @@ int File_Naming(int inum, const char *path, const char *filename,struct stat *st
 			return 2;
 		}
 		printf("Returning the inode %d...\n", inum);
+
      	memcpy(IfileArray.data[inum].path,path,50);
      	memcpy(IfileArray.data[inum].filename,filename,50);
+
+   		cout << "Named file: " << IfileArray.data[inum].path << " " << IfileArray.data[inum].filename <<endl;
 		return 0;
 	}
 
@@ -759,7 +762,7 @@ int convertInodeToStat(struct Inode* inode, struct stat* s)
 	s->st_mode = mode;
 	char buf[10];
 	strmode((mode_t) mode, buf); 
-	printf("Stat permissions (%s): %s\n", inode->permissions, buf);
+	//printf("Stat permissions (%s): %s\n", inode->permissions, buf);
 
 	if (inode->type == TYPE_D) { 
 		s->st_nlink = 2; //  directory
@@ -838,7 +841,8 @@ int initFile(int size) {
     	printf("Ifile re-established with size %d\n", IfileArray.data.size());
     }
     Show_Ifile_Contents();
-	return 0;
+
+	return IfileArray.data.size()-1;
 }
 
 
@@ -1223,26 +1227,26 @@ void simple2(){
 
 }
 
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-  	initFile(size);
-  	//simple1();
-  //	simple2();
-  	//Show_Ifile_Contents();
-  	//test4F();
-  	//test12(); //--convert i to s
-  	//test3F();
-   	// test9F();
-   	//test7F(); //-- Dead segment
-   	//test10F();
-   	//test4Destroy();
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//   	initFile(size);
+//   	//simple1();
+//   //	simple2();
+//   	//Show_Ifile_Contents();
+//   	//test4F();
+//   	//test12(); //--convert i to s
+//   	//test3F();
+//    	// test9F();
+//    	//test7F(); //-- Dead segment
+//    	//test10F();
+//    	//test4Destroy();
 
-   	//test5Destroy();
-   	//test6Destroy();
+//    	//test5Destroy();
+//    	//test6Destroy();
 
-     test8F(); //-- recover ifile
-  	 //test10();
-    //	test11();
-}
+//      test8F(); //-- recover ifile
+//   	 //test10();
+//     //	test11();
+// }
 

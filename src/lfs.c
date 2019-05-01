@@ -194,6 +194,7 @@ static int lfs_chown(const char *path, uid_t uid, gid_t gid)
 void lfs_destroy(void *private_data)
 {
     printf("destory function was called\n ");
+    Directory_Destroy();
     return;
 }
 

@@ -723,6 +723,34 @@ void File_Destroy(){
 	return;
 }
 
+int convertInodeToStat(struct Inode inode, struct stat s)
+{
+  s.st_dev = 0;
+  s.st_ino = inode.inum;
+  if (inode.type)
+  { //dir
+    s.st_mode = S_IFDIR;
+  }
+  else
+  {
+    s.st_mode = S_IFMT;
+  }
+  if (strcmp(inode.filename, ".") == 0)
+    s.st_nlink = 2; //  directory
+  else
+    s.st_nlink = 1; // file
+
+  s.st_uid = (uid_t)inode.owner;
+  s.st_gid = (gid_t)((u_int)inode.group);
+  s.st_rdev = 0; //If file is character or block special
+  s.st_size = (off_t)inode.size;
+  s.st_atime = (time_t)inode.atime;
+  s.st_mtime = (time_t)inode.mtime;
+  s.st_ctime = (time_t)inode.ctime;
+  s.st_blksize = BLOCK_SIZE;
+  s.st_blocks = inode.numBlocks;
+}
+
 int Change_Permissions(int inum, int permissions) {
 	// struct Inode fileinode = Get_Inode(inum);
 
@@ -810,7 +838,7 @@ int initFile(int size) {
 
     // Create the Ifile 
     File_Create(IFILE_INUM, TYPE_F);
-	return 2;
+	return IfileArray.data.size()-1;
 }
 
 
@@ -1122,10 +1150,19 @@ void test11(){
    }
 }
 
+void test12(){
+	File_Create(1, TYPE_F);
+	struct Inode inode;
+	File_Get(1, inode);
+	printf("Got Inode %d   %")
+	int convertInodeToStat(struct Inode inode, struct stat s);
+}
+
 int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
   	initFile(size);
+  	test12();
   	//test3F();
    	// test9F();
    	// test10F();
@@ -1134,7 +1171,7 @@ int main(){
 
     // Print_Inode(1);
     //test1F(); 
-      test8F();
+    //  test8F();
   //	test10();
     //	test11();
 }

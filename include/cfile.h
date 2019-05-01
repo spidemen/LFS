@@ -104,7 +104,12 @@ extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
 
-extern  int convertInodeToStat(int num, struct stat *s);
+//extern  int convertInodeToStat(int num, struct stat *s);
+extern  int convertInodeToStat(struct Inode* inode, struct stat *stbuf);
+
+extern int Change_Permissions(int inum, char* permissions);
+extern int Change_Owner(int inum, char owner);
+extern int Change_Group(int inum, char group, int groupLength);
 
   // NOTICE:  test initIfle:  after finish write and restart , remeber to call log_checkPoint function,otherwise there will a lots of bug or just call Log_destory
 #ifdef __cplusplus

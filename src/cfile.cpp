@@ -145,7 +145,7 @@ void Print_Inode(int inum) {
 
 void WriteIfle(){
 	struct IfileWrite writeTest;
-    int i;
+    int i=0;
     int arraySize=0;
     if(IfileArray.data.size()%ARRAY_SIZE==0){
     	arraySize=IfileArray.data.size();
@@ -160,28 +160,34 @@ void WriteIfle(){
     	writeTest.data[i%ARRAY_SIZE]=IfileArray.data[i];
         if(i%ARRAY_SIZE==(ARRAY_SIZE-1)){
            // writeTest.size=4;
-        	printf("Checkpoint: index i=%d writing to ckpt\n", i);
-        	writeTest.size= IfileArray.data.size();
+        	writeTest.size= ARRAY_SIZE;
+        	printf("Checkpoint: index i=%d writing to ckpt size %d \n", i,writeTest.size);
            Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &tmp);
+          cout<<" Ifilw write  "<<startIndex+1<<"segmentNo ="<<tmp.segmentNo<<" blockNo "<<tmp.blockNo<<endl;
            newAdd[startIndex++]=tmp;
            //Log_GetIfleAddress(&oldAdd, oldsize);
            oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
-   		   Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
-   		   
+           Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
+  
     	   memset(&writeTest,0,sizeof(IfileWrite));
         }
-    }
-    cout << "  Number of times parts of Ifle were written "<< startIndex<< " oldsize"<<oldsize<<endl;
-   
-   writeTest.size= IfileArray.data.size();//(i)%4;
-   cout<<"  "<<sizeof(struct Inode)<<"  debug ifile size "<<IfileArray.data.size()<<"   "<<writeTest.size<<endl;
+
+    } 
+
+   if(i%ARRAY_SIZE!=0){
+    writeTest.size= IfileArray.data.size()%ARRAY_SIZE;//(i)%4;
+ 
    logAddress newAddress;
    Log_Write(IFILE_INUM, 0, BLOCK_SIZE-100, &writeTest, &newAddress);
+    cout<<" Ifilw write "<<startIndex+1<<" segmentNo ="<<newAddress.segmentNo<<" blockNo "<<newAddress.blockNo<<endl;
    newAdd[startIndex++]=newAddress;
    //Log_GetIfleAddress(&oldAdd, oldsize);
-   oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
+ 
    Log_CheckPoint(&oldAdd,newAdd,oldsize,startIndex);
+   oldsize = Log_GetIfleAddress(&oldAdd, oldsize);
 
+   cout << "after  Number of times parts of Ifle were written "<< startIndex<< " oldsize"<<oldsize<<endl;
+  }
 }
 
 int File_Create(int inum, int type) {
@@ -208,15 +214,17 @@ int File_Create(int inum, int type) {
 
 			 	cout<<" read Ifile size "<<tmpifile->size<<endl;
 		     	for(int i=0;i<tmpifile->size;i++){ //KATY only works if i<4
-		     		if (i%ARRAY_SIZE == ARRAY_SIZE-1)
+		     		//if (i%ARRAY_SIZE == ARRAY_SIZE-1)
 		     		cout<<"degug Read Ifle  inum="<<tmpifile->data[i].inum<<" owner "<<tmpifile->data[i].owner<<endl;
 		     		IfileArray.data.push_back(tmpifile->data[i]);
 		     		printf("pushed back %d\n",i);
 		     	}	
 	      	}
 	      	printf("done reading %d inodes\n", IfileArray.data.size());
-		     	
-			return 0;
+		     
+
+		     // write Ifle 	
+		  	return 0;
 		}
 		struct Inode dummyInode = initInode(inum);    // DONE -- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		//dummyInode.inum = IFILE_INUM;
@@ -1200,15 +1208,30 @@ void test12(){
 	Print_Inode(1);
 	return;
 }
+void simple1(){
+	struct logAddress oldAddress, newAddress;
+	Log_CheckPoint(&oldAddress, &newAddress, 1,1);
+	struct logAddress *newone = (struct logAddress *)malloc(sizeof(logAddress)*2);
+	Log_CheckPoint(&newAddress, newone, 1, 2);
+	cout<<"before checkpoint size "<<Log_GetIfleAddress(newone, 1)<<endl;
+}
+
+void simple2(){
+	struct logAddress oldAddress, newAddress;
+	logAddress *newone=(struct logAddress *)malloc(sizeof(logAddress)*3);
+	cout<<"checkpoint size "<<Log_GetIfleAddress(newone, 1)<<endl;
+
+}
 
 int main(){
 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
 	int size = 4;
   	initFile(size);
-
+  	//simple1();
+  //	simple2();
   	//Show_Ifile_Contents();
   	//test4F();
-  	test12(); //--convert i to s
+  	//test12(); //--convert i to s
   	//test3F();
    	// test9F();
    	//test7F(); //-- Dead segment
@@ -1218,7 +1241,7 @@ int main(){
    	//test5Destroy();
    	//test6Destroy();
 
-     //test8F(); //-- recover ifile
+     test8F(); //-- recover ifile
   	 //test10();
     //	test11();
 }

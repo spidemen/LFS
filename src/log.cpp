@@ -59,7 +59,7 @@ struct metadata
 	pair<int, bool> blocksStatus[MAX_BLOCK]; // state of each block alive or dead
 	int blocksStatusSize = 0;
 	int reUsedTable[MAX_SEGMENT / 10];
-	struct logAddress checkPointRegion[10];
+	struct logAddress checkPointRegion[20];
 	int reUsedTableSize = 0;
 };
 
@@ -176,7 +176,7 @@ int init(char *fileSystemName, int cachesize = 4)
 			printf("init blocksize per sector %d   segment size (blocks) %d  startsector =%d \n", blocksize, pmetadata->segmentsize, startsector);
 			printf(" BLOCKSIXE= %d   BLOCKNUMBER=%d\n", BLOCK_SIZE, BLOCK_NUMBER);
 			cout << " current sector =" << startsector << "  current blockNo=" << generateBlockNo << " currentSement=" << pmetadata->currentSegmentNumber << endl;
-			cout << "usage table size =" << pmetadata->segementUsageSize << "   blocksStatus size =" << pmetadata->blocksStatusSize << endl;
+			cout << "usage table size =" << pmetadata->segementUsageSize << "   blocksStatus size =" << pmetadata->blocksStatusSize <<" checkpointsize="<<pmetadata->checkPointsize<< endl;
 		}
 	}
 	return 1;
@@ -184,7 +184,7 @@ int init(char *fileSystemName, int cachesize = 4)
 
 int Log_GetIfleAddress(struct logAddress *Adrress, int size)
 {
-	memcpy(Adrress, pmetadata->checkPointRegion, sizeof(struct logAddress) * (size));
+	memcpy(Adrress, pmetadata->checkPointRegion, sizeof(struct logAddress) * (pmetadata->checkPointsize));
 //	memcpy(size,&pmetadata->checkPointsize,sizeof(int));
 	size = pmetadata->checkPointsize;
 	if (size == 0)
@@ -196,15 +196,16 @@ int Log_GetIfleAddress(struct logAddress *Adrress, int size)
 }
 int Log_destroy()
 {
-	struct logAddress oldAdrress, newaddress;
+	struct logAddress newaddress;
 	segmentCache->currenIndex = BLOCK_NUMBER; // reset current Index so that write segment to disk
-	char buf[50] = "Hello LFS, welcome to CSC 545 OS classf";
-	Log_Write(0, 1, 50, (void *)buf, &oldAdrress); // write segment data to disk
-
-	memcpy(&oldAdrress, &pmetadata->checkPointRegion[0], sizeof(struct logAddress) * 1);
-	memcpy(&newaddress, &pmetadata->checkPointRegion[0], sizeof(struct logAddress) * 1);
-	Log_CheckPoint(&oldAdrress, &newaddress, 1, 1); // checkpoint
-	cout<<" Ifile  segmentNo "<<newaddress.segmentNo<<"  blockNo= "<<newaddress.blockNo<<endl;
+	char buf[50] = "write live data to the flash";
+	Log_Write(0, 1, 50, (void *)buf, &newaddress); // write segment data to disk
+    struct logAddress *newOne=(struct logAddress*)malloc(sizeof(struct logAddress)*(pmetadata->checkPointsize));
+    struct logAddress *oldOne=(struct logAddress*)malloc(sizeof(struct logAddress)*(pmetadata->checkPointsize));
+	memcpy(oldOne, pmetadata->checkPointRegion, sizeof(struct logAddress) * pmetadata->checkPointsize);
+	memcpy(newOne, pmetadata->checkPointRegion, sizeof(struct logAddress) *pmetadata->checkPointsize);
+	Log_CheckPoint(oldOne,newOne, pmetadata->checkPointsize, pmetadata->checkPointsize); // checkpoint
+	cout<<"Destory Write Last live data to flash  segmentNo "<<newaddress.segmentNo<<"  blockNo= "<<newaddress.blockNo<<endl;
 	return 0;
 }
 // cleanning , every write deadblock to check whether segment neeed to clean based on costbenefit rate
@@ -412,7 +413,7 @@ int Log_CheckPoint(struct logAddress *oldAdrress, struct logAddress *newAdress, 
 		}
 		else
 		{
-			cout << "Success checkpoint time " << time(NULL) << endl;
+			cout << "Success checkpoint time " << time(NULL) <<"totalErase "<<totalErase<< endl;
 			return 0;
 		}
 	}
@@ -603,15 +604,16 @@ int Log_read(struct logAddress logAddress1, u_int length, void *buffer)
 
 		char *block = NULL;
 		int i;
-		for (i = 0; i < N; i++)
+		for (i = 0; i < BLOCK_NUMBER; i++)
 		{
 			if (p.dataB[i].blockNo == logAddress1.blockNo)
 			{
+			//	cout<<"debug log read segmentNo "<<p.dataB[i].segmentNo<<" blockNo "<<p.dataB[i].blockNo<<endl;
 				block = p.dataB[i].data;
 				break;
 			}
 		}
-		if (i <= N - 1)
+		if (i <= BLOCK_NUMBER - 1)
 		{
 
 			printf("find segment %d in the queue  blockNo=%d  i=%d \n", logAddress1.segmentNo, p.dataB[i].blockNo, i);

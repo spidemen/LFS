@@ -536,6 +536,12 @@ void test2(){
     struct stat *stbuf;
     Directory_createFile("/a.txt", stbuf);
     Directory_writeFile("/a.txt", 0, 6, "hello");
+    int inum = 1;
+    Change_Permissions(inum, "666");
+    Inode in;
+    File_Get(inum, &in);
+    struct stat s;
+    convertInodeToStat(&in, &s);
    //  currentinum++;
    //  char buf[40]="hello";
    // File_Create(currentinum, 0);  // add directory

@@ -52,16 +52,15 @@ extern int Directory_readFile(const char *path, int offset, int size, char *buf)
 
 extern int Directory_writeFile(const char *path, int offset, int size,char *buf);
 
-int convertInodeToStat(struct Inode inode, struct stat s);
 
 void  Directory_Destroy();
 
 int InitStat(struct stat *stbuf);
 //xing
-// init , destroy, statfs, release,releasdir, symlink, truncate, mkdir, rmdir, getattr
+// init , destroy, statfs, release,releasdir, symlink, truncate, mkdir, rmdir, getattr.chmod. chmod
 
 // Katy
-// fuse --create, chmod, chown, read, open, link
+// fuse --create, , read, open, link
 
 
 #ifdef __cplusplus

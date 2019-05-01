@@ -243,6 +243,7 @@ void lfs_destroy(void *private_data)
 static int lfs_release(const char *path, struct fuse_file_info *fi)
 {
     printf("release function was called \n ");
+
     return 0;
 }
 static int lfs_flush(const char *path, struct fuse_file_info *fi)
@@ -280,7 +281,9 @@ static int lfs_rmdir(const char *path)
 
 int lfs_statfs(const char *path, struct statvfs *stbuf)
 {
+    
     printf(" stafs function was called \n");
+
     return 0;
 }
 static int lfs_opendir(const char *path, struct fuse_file_info *fi)
@@ -317,7 +320,8 @@ static int lfs_lock(const char *path, struct fuse_file_info *fi, int cmd, struct
 }
 static int lfs_rename(const char *from, const char *to)
 {
-    printf("lock function was called \n ");
+    printf("renme function was called \n ");
+    
     return 0;
 }
 static int lfs_symlink(const char *to, const char *from)

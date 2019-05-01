@@ -31,7 +31,7 @@ int initDirectory(int cachesize)
   currentinum = initFile(cachesize);
   char buf[BLOCK_SIZE];
   FileSystemMap.clear();
-  for (int i = 2; i < currentinum; i++)
+  for (int i = 1; i < currentinum; i++)
   {
     struct Inode node;
     if (!File_Get(i, &node) && node.in_use)
@@ -44,23 +44,23 @@ int initDirectory(int cachesize)
     }
   }
 
-  // code for test directory
-  vector<pair<string, int>> tmp;
-  tmp.push_back({"a.txt", 11});
-  tmp.push_back({"b.txt", 4});
-  tmp.push_back({"-link", 9});
-  tmp.push_back({".", 9});
-  FileSystemMap.insert({"/next", tmp});
-  tmp.clear();
-  // root directory
-  tmp.push_back({".", 10});
-  tmp.push_back({"fuse.h", 2});
-  tmp.push_back({"log.cpp", 3});
-  // tmp.push_back({"hello",8});
-  tmp.push_back({"#next", 7});
-  FileSystemMap.insert({"/", tmp});
-  File_Create(2, 1);
-  File_Create(3, 1);
+  // // code for test directory
+  // vector<pair<string, int>> tmp;
+  // tmp.push_back({"a.txt", 11});
+  // tmp.push_back({"b.txt", 4});
+  // tmp.push_back({"-link", 9});
+  // tmp.push_back({".", 9});
+  // FileSystemMap.insert({"/next", tmp});
+  // tmp.clear();
+  // // root directory
+  // tmp.push_back({".", 10});
+  // tmp.push_back({"fuse.h", 2});
+  // tmp.push_back({"log.cpp", 3});
+  // // tmp.push_back({"hello",8});
+  // tmp.push_back({"#next", 7});
+  // FileSystemMap.insert({"/", tmp});
+  // File_Create(2, 1);
+  // File_Create(3, 1);
 
   return 0;
 }
@@ -407,13 +407,13 @@ int convertInodeToStat(struct Inode inode, struct stat s)
 int convertStatToInode(struct stat s, struct Inode in) {
     in.inum = s.st_ino;
     //s.st_dev = 0;
-    s.st_ino = inode.inum;
+    s.st_ino = in.inum;
     if (s.st_mode = S_IFDIR) { //dir
         in.type = 1;
-        in.n_link = 2;
+        in.nlink = 2;
     } else {
         in.type = 0;
-        in.n_link = 1;
+        in.nlink = 1;
     }
     // if(strcmp(inode.filename,".")==0)
     //   s.st_nlink = 2;  //  directory
@@ -435,7 +435,7 @@ int convertStatToInode(struct stat s, struct Inode in) {
 
 }
 
-int Directory_createFile(const char *path, char *filename, struct stat *stbuf)
+int Directory_createFile(const char *path, struct stat *stbuf)
 {
   char *fullpath;
   strcat(fullpath, path);

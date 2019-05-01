@@ -153,6 +153,8 @@ extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
 
+extern  int convertInodeToStat(int num, struct stat *s);
+
   // NOTICE:  test initIfle:  after finish write and restart , remeber to call log_checkPoint function,otherwise there will a lots of bug or just call Log_destory
 #ifdef __cplusplus
 }

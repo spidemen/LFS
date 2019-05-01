@@ -1193,17 +1193,18 @@ void test11(){
    }
 }
 
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-  	initFile(size);
-   	// test9F();
-   	// test10F();
 
-    // Print_Inode(1);
-    //test1F(); 
-    test8F();
-  // 	test10();
-    //	test11();
-}
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//   	initFile(size);
+//    	// test9F();
+//    	// test10F();
+
+//     // Print_Inode(1);
+//     //test1F(); 
+//     test8F();
+//   // 	test10();
+//     //	test11();
+// }
 

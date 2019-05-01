@@ -748,41 +748,12 @@ int convertInodeToStat(struct Inode* inode, struct stat* s)
 	
     //http://pubs.opengroup.org/onlinepubs/007908799/xsh/sysstat.h.html
 	unsigned long mode = strtoul(inode->permissions, NULL, 8);
-	if (mode == S_IRWXU) { //dir 
-	  s->st_mode = S_IRWXU; //rwx by owner
-	} else if (mode == S_IRUSR) { 
-	  s->st_mode = S_IRUSR; // r-- by owner
-	} else if (mode == S_IWUSR) {
-	  s->st_mode = S_IWUSR; // -w- by owner
-	} else if (mode == S_IXUSR) { 
-	  s->st_mode = S_IXUSR; // --x by owner
-	} else if (mode == S_IRWXG) { 
-	  s->st_mode = S_IRWXG; // rwx by group
-	} else if (mode == S_IRGRP) {
-	  s->st_mode = S_IRGRP; // r-- by group
-	} else if (mode == S_IWGRP) { 
-	  s->st_mode = S_IWGRP; // -w- by group
-	} else if (mode == S_IXGRP) { 
-	  s->st_mode = S_IXGRP; // --x by group
-	} else if (mode == S_IRWXO) { 
-	  s->st_mode = S_IRWXO; // rwx by other
-	} else if (mode == S_IROTH) { 
-	  s->st_mode = S_IROTH; // r-- by other
-	} else if (mode == S_IWOTH) { 
-	  s->st_mode = S_IWOTH; // -w- by others
-	} else if (mode == S_IXOTH) { 
-	  s->st_mode = S_IXOTH; // --x by others
-	} else if (mode == S_ISUID) { 
-	  s->st_mode = S_ISUID; // set-user-ID on execution
-	} else if (mode == S_ISGID) { 
-	  s->st_mode = S_ISGID; // set-group-ID on execution
-	} else if (mode == S_ISVTX) { 
-	  s->st_mode = S_ISVTX; // on directories, restricted dletion flag
-	}
-	printf("%lu %s %d\n", mode, inode->permissions, s->st_mode);
-	
+	s->st_mode = mode;
+	char buf[10];
+	strmode((mode_t) mode, buf); 
+	printf("Stat permissions (%s): %s\n", inode->permissions, buf);
 
-	if (inode->type == TYPE_D) {
+	if (inode->type == TYPE_D) { 
 		s->st_nlink = 2; //  directory
 	} else {
 		s->st_nlink = 1; // file
@@ -1216,8 +1187,14 @@ void test12(){
 	struct Inode inode = IfileArray.data[1];
 	printf("Got Inode %d \n", inode.inum);
 	Print_Inode(1);
-	inode.permissions = "4"; //448
+	inode.permissions = "000"; 
 	struct stat s;
+	convertInodeToStat(&inode, &s);
+	inode.permissions = "666"; 
+	convertInodeToStat(&inode, &s);
+	inode.permissions = "777"; 
+	convertInodeToStat(&inode, &s);
+	inode.permissions = "5"; 
 	convertInodeToStat(&inode, &s);
 	printf("Inode has been converted.\n");
 	Print_Inode(1);
@@ -1231,7 +1208,7 @@ int main(){
 
   	//Show_Ifile_Contents();
   	//test4F();
-  	//test12();
+  	test12(); //--convert i to s
   	//test3F();
    	// test9F();
    	//test7F(); //-- Dead segment
@@ -1241,7 +1218,7 @@ int main(){
    	//test5Destroy();
    	//test6Destroy();
 
-     test8F(); //-- recover ifile
+     //test8F(); //-- recover ifile
   	 //test10();
     //	test11();
 }

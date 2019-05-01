@@ -240,7 +240,7 @@ static int lfs_chmod(const char *path, mode_t mode)
 static int lfs_rename(const char *from, const char *to)
 {
     printf("renme function was called \n ");
-    
+    Directory_EntryRename(from,to,0);  
     return 0;
 }
 

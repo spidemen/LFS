@@ -15,7 +15,6 @@ using namespace std;
 //                   eg {"#next",7} directory next  {"-a",8}  link a
 map<string, vector<pair<string, int>>> FileSystemMap; // <path/directory, filename>
 
-int inodeSize = 144; // default vaule
 
 #define TYPE_FILE 3
 #define TYPE_DIRECTORY 2
@@ -24,6 +23,8 @@ int inodeSize = 144; // default vaule
 char allFileName[40][10];
 
 struct stat stbuf;
+void testD3();
+int SplitPath(const char *path, string &Entrypath, string &filename);
 
 int initDirectory(int cachesize)
 {
@@ -37,10 +38,27 @@ int initDirectory(int cachesize)
     if (!File_Get(i, &node) && node.in_use)
     {
       vector<pair<string, int>> tmp;
-      string a = node.filename;
-      string b = node.path;
-      tmp.push_back({a, node.inum});
-      FileSystemMap.insert({b, tmp});
+      string a = node.path;
+      string b = node.filename;
+      auto it=FileSystemMap.find(a);
+      if(it!=FileSystemMap.end()){
+        tmp=it->second;
+      }
+      // parent directory
+      if(b=="."){
+          string path1,filename;
+         SplitPath(a.c_str(),path1,filename);
+          vector<pair<string, int>> tmpParent;
+          auto it2=FileSystemMap.find(path1);
+          if(it2!=FileSystemMap.end()){  // parent directory exit
+               tmpParent=it2->second;
+               filename="#"+filename;
+               tmpParent.push_back({filename, node.inum});
+                FileSystemMap[path1]=tmpParent;
+          }
+      }
+      tmp.push_back({b,node.inum});
+      FileSystemMap[a]=tmp;
     }
   }
    currentinum++;
@@ -54,43 +72,18 @@ int initDirectory(int cachesize)
   // tmp.clear();
   // // root directory
    tmp.push_back({".", currentinum});
-  // tmp.push_back({"fuse.h", 2});
+    tmp.push_back({"fuse.h", 2});
   // tmp.push_back({"log.cpp", 3});
   // // tmp.push_back({"hello",8});
   // tmp.push_back({"#next", 7});
    FileSystemMap.insert({"/", tmp});
    File_Create(currentinum, 1);  // add directory
+    testD3();
   // File_Create(3, 1);
 
   return 0;
 }
 
-int Directory_getOneFile(const char *path, const char *filename, struct stat *stbuf, char *filenameReturn)
-{
-  auto it = FileSystemMap.find(path);
-  if (it != FileSystemMap.end())
-  {
-    for (auto file : it->second)
-    {
-      if (strcmp(filename, file.first.c_str()) == 0)
-      {
-        struct Inode node;
-        struct stat t;
-        // if(!File_Get(file.second, &node)){
-        //    convertInodeToStat(node,t);
-        //    stbuf=&t;
-        //    strcat(filenameReturn,file.first.c_str());
-        //    return 0;
-        // }
-        //    strcat(filenameReturn,file.first.c_str());
-        memcpy(filenameReturn, file.first.c_str(), 10);
-        return 0;
-      }
-    }
-  }
-
-  return 1;
-}
 
 int SplitPath(const char *path, string &Entrypath, string &filename)
 {
@@ -106,7 +99,7 @@ int SplitPath(const char *path, string &Entrypath, string &filename)
     Entrypath = tmp.substr(0, position);
   }
   filename = tmp.substr(position + 1);
-  cout << "path =" << Entrypath << " filename =" << filename << endl;
+  cout << "Split path =" << Entrypath << " filename =" << filename << endl;
   return 0;
 }
 
@@ -155,7 +148,7 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
     {
       for (auto it2 : it->second)
       {
-        //    cout<<"iteration   &"<<path1<<"&   "<<it2.first<<endl;
+           cout<<"iteration   &"<<path1<<"&   "<<it2.first<<endl;
         if (strcmp(it2.first.c_str(), filename.c_str()) == 0)
         {
           InitStat(stbuf);
@@ -284,7 +277,9 @@ int Directory_EntyUpdate(const char *path, int type)
     {                          // delete directory
       FileSystemMap.erase(it); // delete directory
       // need to call File_Free
-
+       int num;
+      Directory_Types(path, &stbuf, &num);
+      //File_Free(num)
       auto it2 = FileSystemMap.find(path1); // directory from parents
       filename = "#" + filename;
       if (it2 != FileSystemMap.end())
@@ -311,25 +306,25 @@ int Directory_EntyUpdate(const char *path, int type)
   else
   { // entry not exit in table
     if (type == 1)
-    { // add  directory
+    {                       // add  directory
       vector<pair<string, int>> tmp;
       currentinum++;
-      tmp.push_back({".", 12}); // later use currentinum for num
+      tmp.push_back({".", currentinum}); // later use currentinum for num
       FileSystemMap.insert({path, tmp});
-      //     File_Create(10, 1);
+      // File_Create(currentinum, TYPE_D);
       // parent directoy
       auto it2 = FileSystemMap.find(path1);
       if (it2 != FileSystemMap.end())
       {
         filename = "#" + filename;
-        it2->second.push_back({filename, 12});
+        it2->second.push_back({filename, currentinum});
       }
-      cout << "debug  path=" << path1 << "& filename=" << filename << "&" << endl;
+   //   cout << "debug  path=" << path1 << "& filename=" << filename << "&" << endl;
       cout << " Add entry " << path << endl;
       return 1;
     }
     else if (type == 2)
-    { // delete directory
+    {                       // delete directory
       cout << " Error: directory not exit delete " << endl;
       return 0;
     }
@@ -348,18 +343,99 @@ int Directory_EntyUpdate(const char *path, int type)
             FileSystemMap.erase(it2);
             FileSystemMap.insert({path1, tmp});
             //need to call File_Free
-
+             int num;
+            Directory_Types(path, &stbuf, &num);
+            //File_Free(num)
             cout << "delete file  " << path << "   " << it3->first << endl;
             break;
           }
           it3++;
         }
-      }
-      return 0;
-    }
-  }
+      } 
+   }
+ }
+ 
   return 1;
 }
+
+int Directory_EntryRename(const char *from,const char *to , int type)
+{
+  auto it = FileSystemMap.find(from);
+  string path1, filename;
+  string tmpTo=to;
+  SplitPath(from, path1, filename);
+  if (it != FileSystemMap.end()){   // exit
+       if(type==TYPE_DIRECTORY||type==0){     //
+          vector<pair<string, int>>tmp = it->second;
+          FileSystemMap.erase(it);
+          FileSystemMap.insert({to, tmp});            // update entry
+        // need to call File_Naming
+        int num;
+        Directory_Types(from, &stbuf, &num);
+    //    File_Naming(num, path1.c_str(), filename.c_str(), stbuf);
+        auto it2 = FileSystemMap.find(path1); // directory from parents
+        filename = "#" + filename;
+        if (it2 != FileSystemMap.end())
+        {
+          vector<pair<string, int>> tmp = it2->second;
+          vector<pair<string, int>>::iterator it3 = tmp.begin();
+          while (it3 != tmp.end())
+          {
+            //   cout<<path1<<"& "<<it3->first<<"   &"<<filename<<endl;
+            if (strcmp(it3->first.c_str(), filename.c_str()) == 0)
+            {
+              path1="";
+              filename="";
+              SplitPath(to, path1, filename);
+              filename = "#" + filename;
+              it3->first=filename;
+              tmp.erase(it3);
+              tmp.push_back({filename,it3->second});
+              FileSystemMap[path1]=tmp;
+              // FileSystemMap.erase(it2);
+              // FileSystemMap.insert({path1, tmp});
+              cout << "update entry  " << from << " to  " << it3->first << endl;
+              return 1;
+          //    break;
+            }
+            it3++;
+          }
+        }
+      return 1;
+    }
+  } else{     // entry not exit
+      auto it2 = FileSystemMap.find(path1); //  file or link
+      if (it2 != FileSystemMap.end())
+      {
+        vector<pair<string, int>> tmp = it2->second;
+        vector<pair<string, int>>::iterator it3 = tmp.begin();
+        while (it3 != tmp.end())
+        {
+          if (strcmp(it3->first.c_str(), filename.c_str()) == 0)
+          {
+             //update entry
+            filename="";
+            SplitPath(to, path1, filename);
+            tmp.erase(it3);
+            tmp.push_back({filename,it3->second});
+            FileSystemMap[path1]=tmp;
+            // FileSystemMap.erase(it2);
+            // FileSystemMap.insert({path1, tmp});
+            //need to call File_Free
+            int num;
+            Directory_Types(from, &stbuf, &num);
+           //    File_Naming(num, path1.c_str(), filename.c_str(), stbuf);
+            cout << "update file  " << it3->first << "   " << filename << endl;
+            return 1;
+        //    break;
+          }
+          it3++;
+        }
+      } 
+  }
+     return 0;
+}
+
 
 void Directory_Destroy()
 {
@@ -407,16 +483,10 @@ int Directory_createFile(const char *path, struct stat *stbuf)
   return 0;
 }
 
-int Directory_updateFile(const char *path, char *filename, struct stat *stbuf)
-{
-
-  return 0;
-}
-
 int Directory_deleteFile(const char *path, struct stat *stbuf)
 {
   // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
-  return 0;
+    return 0;
 }
 
 int Directory_readFile(const char *path, int offset, int size, char *buf)
@@ -480,24 +550,10 @@ int Directory_writeFile(const char *path, int offset, int size, char *buf)
 //   printf("************* End Test1D: create a new file ****************\n");
 //   return 0;
 // }
-int test2D()
-{
-  char *path = "test2/";
-  char *filename = "testfile2";
-  struct stat *stbuf;
-  char *filenameReturn;
-  if (Directory_getOneFile(path, filename, stbuf, filenameReturn))
-  {
-    printf("Error: Directoy_getOneFile\n");
-    return 1;
-  }
 
-  return 0;
-}
 
 void test1()
 {
-  initDirectory(4);
   //  char *path="/root/foo/bar";
   char *filename = "test.txt";
   struct stat stbuf[10];
@@ -524,16 +580,52 @@ void test1()
   //  createFile(path, filename,stbuf);
   //  createFile(path, filename,stbuf);
   Directory_EntyUpdate("/test", 1);
-  Directory_EntyUpdate("/test", 1);
-  int filetype = Directory_Types("/test", stbuf, &size);
+  int filetype = Directory_Types("/next/s", stbuf, &size);
   cout << filetype << "  inum=" << size << endl;
-  Directory_EntyUpdate("/test", 2);
-  filetype = Directory_Types("/test", stbuf, &size);
-  cout << filetype << "  inum=" << size << endl;
+  // Directory_EntryRename("/test", "/update.h",TYPE_DIRECTORY);
+  // // vector<pair<string, int>> tmp;
+  // // tmp.push_back({"update...", 2});
+  // // char *test="/";
+  // // FileSystemMap[test]=tmp;
+  
+  // filetype = Directory_Types("/updatej", stbuf, &size);
+  // cout << filetype << "  inum=" << size << endl;
+}
+// init test
+void testD3(){
+
+vector<pair<string,string> > pathtest={{"/next","."},{"/next","c.txt"},{"/next/next","."},{"/next/next","d.txt"}};
+    int count=0;
+    for(int i=0;i<pathtest.size();i++){
+      vector<pair<string, int>> tmp;
+      string a = pathtest[i].first;
+      string b = pathtest[i].second;
+      auto it=FileSystemMap.find(a);
+      if(it!=FileSystemMap.end()){
+        tmp=it->second;
+      }
+      // parent directory
+      string path1,filename;
+      SplitPath(a.c_str(),path1,filename);
+
+      if(b=="."){
+        cout<<"debug Directory "<<a<<"    "<<b<<endl;
+          vector<pair<string, int>> tmpParent;
+          auto it2=FileSystemMap.find(path1);
+          if(it2!=FileSystemMap.end()){  // parent directory exit
+               tmpParent=it2->second;
+               filename="#"+filename;
+               tmpParent.push_back({filename,count++});
+                FileSystemMap[path1]=tmpParent;
+          }
+      }
+      tmp.push_back({b, count++});
+      FileSystemMap[a]=tmp;
+    }
 }
 
 void test2(){
-    initDirectory(4);
+   
     struct stat *stbuf;
     Directory_createFile("/a.txt", stbuf);
     Directory_writeFile("/a.txt", 0, 6, "hello");
@@ -552,11 +644,12 @@ void test2(){
 // int main(int argc, char *argv[])
 // {
 // 	cout<<"hell World"<<endl;
-
+  
 //    	printf("Passed test1\n");
-//    	// initDirectory(4);
+//     initDirectory(4);
 //     // test1();
-//     test2();
+//     testD3();
+//     test1();
 //   //  	Test_File_Create(1);
 //   //  	//File_Write(1, 0, 5, (void *) "hello");
 //   //  	Show_Ifile_Contents();

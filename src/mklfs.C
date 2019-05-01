@@ -12,7 +12,7 @@ using namespace std;
 
 //char *filename="FuseFileSystem";
 int totalsectors=SUPERBLOCK;
-int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=1000,int flashSizeInsegment=100){
+int createMklfs(char * filename,int blocksize,int segmentsize=32,int wearlimit=10000,int flashSizeInsegment=100){
       int totalblock=(blocksize*segmentsize*flashSizeInsegment)/16;
       int flag=Flash_Create(filename, wearlimit,totalblock);
       if(flag) {

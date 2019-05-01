@@ -199,7 +199,19 @@ int Log_destroy()
 	struct logAddress newaddress;
 	segmentCache->currenIndex = BLOCK_NUMBER; // reset current Index so that write segment to disk
 	char buf[50] = "write live data to the flash";
-	Log_Write(0, 1, 50, (void *)buf, &newaddress); // write segment data to disk
+	u_int blocks;
+	Flash f = Flash_Open(filename, FLASH_ASYNC, &blocks);
+	int tmp_startSector=startsector;
+	while(Log_Write(0, 1, 50, (void *)buf, &newaddress)) {
+		int segmentNo = segmentCache->summary->segmentNo;
+		int segmentStartSector = (segmentNo)*segmentCache->summary->totalBlock * blocksize;
+		int startblock = segmentStartSector / FLASH_SECTORS_PER_BLOCK;
+		int totalErase = (segmentCache->summary->totalBlock * blocksize) / FLASH_SECTORS_PER_BLOCK;
+		Flash_Erase(f, startblock, totalErase);
+		startsector=tmp_startSector;
+
+	}; // write segment data to disk
+	Flash_Close(f);
     struct logAddress *newOne=(struct logAddress*)malloc(sizeof(struct logAddress)*(pmetadata->checkPointsize));
     struct logAddress *oldOne=(struct logAddress*)malloc(sizeof(struct logAddress)*(pmetadata->checkPointsize));
 	memcpy(oldOne, pmetadata->checkPointRegion, sizeof(struct logAddress) * pmetadata->checkPointsize);
@@ -284,7 +296,7 @@ int Log_writeDeadBlock(inum num, struct logAddress oldAddress, struct logAddress
 		}
 		// chose high rate segment to clean , ThreadShould --1 for cost benefit clean
 		//  cout<<"costBenefitTable size ="<<costBenefitTable.size()<<" rate="<<it->second.costBenefitRate<<"  biggest rate "<<costBenefitTable.begin()->first<<endl;
-		if (segmentUsageTable.size() > 1 && it->second.costBenefitRate == costBenefitTable.begin()->first)
+		if (segmentUsageTable.size() > 3 && it->second.costBenefitRate == costBenefitTable.begin()->first)
 		{
 
 			auto exitSegment = reUsedTable.find(it->second.segmentNo);
@@ -910,6 +922,8 @@ void test8(){
 	cout<<"size of segment ="<<sizeof(struct SegmentUsageTable)<<endl;
 
 }
+
+
 //  int main(int argc, char *argv[])
 //  {
 

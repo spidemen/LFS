@@ -1223,26 +1223,27 @@ void simple2(){
 
 }
 
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-  	initFile(size);
-  	//simple1();
-  //	simple2();
-  	//Show_Ifile_Contents();
-  	//test4F();
-  	//test12(); //--convert i to s
-  	//test3F();
-   	// test9F();
-   	//test7F(); //-- Dead segment
-   	//test10F();
-   	//test4Destroy();
 
-   	//test5Destroy();
-   	//test6Destroy();
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//   	initFile(size);
+//   	//simple1();
+//   //	simple2();
+//   	//Show_Ifile_Contents();
+//   	//test4F();
+//   	//test12(); //--convert i to s
+//   	//test3F();
+//    	// test9F();
+//    	//test7F(); //-- Dead segment
+//    	//test10F();
+//    	//test4Destroy();
 
-     test8F(); //-- recover ifile
-  	 //test10();
-    //	test11();
-}
+//    	//test5Destroy();
+//    	//test6Destroy();
+
+//      test8F(); //-- recover ifile
+//   	 //test10();
+//     //	test11();
+// }
 

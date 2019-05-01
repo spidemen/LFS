@@ -34,13 +34,13 @@ extern int initDirectory(int cachesize);
 
 extern int Directory_getAllFiles(const char *path,struct stat *stbuf,int *size,char allFileName[40][10]);  // opendir ,readdir
 
-extern int Directory_getOneFile(const char *path, const char *filename,struct stat *stbuf,char *filenameReturn);
-
 extern int Directory_Types(const char *path,struct stat *stbuf,int *num);  // return 2--directory, 3-file, 4-link
 
-extern int Directory_updateFile(const char *path, char *filename, struct stat *stbuf); // write 
+extern int Directory_updateFile(const char *path, struct stat *stbuf); // write 
 
-extern int Directory_EntyUpdate(const char *path,int type);				// 1- add entry, 2-remove entry   only work directory
+extern int Directory_EntryRename(const char *from,const char *to , int type);   //type 0 - both directory and file  , TYPE_DRECITORY, TYPE_FILE
+
+extern int Directory_EntyUpdate(const char *path,int type);				//type 1- add entry, 2-remove entry   only work directory
 
 extern int Directory_Open(const char *path);  // 0 success, -1 fail	
 
@@ -57,10 +57,10 @@ void  Directory_Destroy();
 
 int InitStat(struct stat *stbuf);
 //xing
-// init , destroy, statfs, release,releasdir, symlink, truncate, mkdir, rmdir, getattr.chmod. chmod
+// init , destroy, statfs, release,releasdir, symlink, truncate, mkdir, rmdir, getattr, rename
 
 // Katy
-// fuse --create, , read, open, link
+// fuse --create,  read, open, link,blocks
 
 
 #ifdef __cplusplus

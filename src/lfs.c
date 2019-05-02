@@ -188,7 +188,7 @@ static int lfs_truncate(const char *path, off_t size)
 static int lfs_chown(const char *path, uid_t uid, gid_t gid)
 {
     printf("chown function was called \n");
-    
+
     return 0;
 }
 
@@ -203,6 +203,7 @@ void lfs_destroy(void *private_data)
 static int lfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
     printf(" mknod function was called \n");
+    
     return 0;
 }
 static int lfs_mkdir(const char *path, mode_t mode)
@@ -236,6 +237,8 @@ static int lfs_opendir(const char *path, struct fuse_file_info *fi)
 static int lfs_chmod(const char *path, mode_t mode)
 {
     printf(" chmod function was called \n ");
+    Directory_Permission(path,mode);
+
     return 0;
 }
 
@@ -274,7 +277,7 @@ static int lfs_lock(const char *path, struct fuse_file_info *fi, int cmd, struct
 
 static int lfs_symlink(const char *to, const char *from)
 {
-    printf("symlink function was called \n ");
+    printf("symlink function was called from %s  to %s \n ", from, to);
     return 0;
 }
 static int lfs_unlink(const char *path)

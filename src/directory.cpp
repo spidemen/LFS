@@ -419,18 +419,18 @@ int Directory_EntryRename(const char *from,const char *to , int type)
           if (strcmp(it3->first.c_str(), filename.c_str()) == 0)
           {
              //update entry
-            filename="";
-            SplitPath(to, path1, filename);
+            string filename1="";
+            SplitPath(to, path1, filename1);
             tmp.erase(it3);
-            tmp.push_back({filename,it3->second});
+            tmp.push_back({filename1,it3->second});
             FileSystemMap[path1]=tmp;
             // FileSystemMap.erase(it2);
             // FileSystemMap.insert({path1, tmp});
             //need to call File_Free
             int num;
-            Directory_Types(from, &stbuf, &num);
-           //    File_Naming(num, path1.c_str(), filename.c_str(), stbuf);
-            cout << "update file  " << it3->first << "   " << filename << endl;
+            Directory_Types(to, &stbuf, &num);
+            File_Naming(num, path1.c_str(), filename1.c_str(), &stbuf);
+            cout << "update file  " << filename << "   " << filename1 << endl;
             return 1;
         //    break;
           }
@@ -490,10 +490,19 @@ int Directory_createFile(const char *path, struct stat *stbuf)
   return 0;
 }
 
+
+int  Directory_Permission(const char *path, mode_t mode){
+
+      int num;
+      Directory_Types(path, &stbuf, &num);   
+      Change_Permissions(num, mode); 
+      return 0;
+}
+
 int Directory_deleteFile(const char *path, struct stat *stbuf)
 {
   // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
-
+     
     return 0;
 }
 
@@ -503,7 +512,7 @@ int Directory_readFile(const char *path, int offset, int size, char *buf)
   int num;
   if (Directory_Types(path, &stbuf, &num) == TYPE_FILE)
   { // file
-    size=size>1024?800:size;
+    size=size>1024?500:size;  // hardcode for test
     cout << "debug  directory  read |" << buf << " num=" << num << " size =" << size << " offset=" << offset << endl;
     File_Read(num, offset, size, buf);
   }

@@ -224,7 +224,7 @@ int Log_destroy()
 // there are two different way to do clean, one just directly clean dead segment, other way based on costbenefit rate
 int Log_writeDeadBlock(inum num, struct logAddress oldAddress, struct logAddress newAddress)
 {
-	cout << "Attempt to clean segment " << oldAddress.segmentNo << endl;
+//	cout << "Attempt to clean segment " << oldAddress.segmentNo << endl;
 	auto it = segmentUsageTable.find(oldAddress.segmentNo);
 	if (it != segmentUsageTable.end())
 	{
@@ -295,8 +295,8 @@ int Log_writeDeadBlock(inum num, struct logAddress oldAddress, struct logAddress
 			}
 		}
 		// chose high rate segment to clean , ThreadShould --1 for cost benefit clean
-		//  cout<<"costBenefitTable size ="<<costBenefitTable.size()<<" rate="<<it->second.costBenefitRate<<"  biggest rate "<<costBenefitTable.begin()->first<<endl;
-		if (segmentUsageTable.size() > 3 && it->second.costBenefitRate == costBenefitTable.begin()->first)
+	//  cout<<"segmentNo ="<<oldAddress.segmentNo<<" rate="<<it->second.costBenefitRate<<"  biggest rate "<<costBenefitTable.begin()->first<<endl;
+		if (segmentUsageTable.size() > 5 && it->second.costBenefitRate == costBenefitTable.begin()->first)
 		{
 
 			auto exitSegment = reUsedTable.find(it->second.segmentNo);
@@ -503,10 +503,10 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 					p1.used = true;
 					if (MRA[N - 1].used)
 					{ // update cache
-						free(MRA[0].dataB);
-						MRA[0].dataB = NULL;
-						free(MRA[0].summary);
-						MRA[0].summary = NULL;
+						// free(MRA[0].dataB);
+						// MRA[0].dataB = NULL;
+						// free(MRA[0].summary);
+						// MRA[0].summary = NULL;
 						//	cout<<"free segment "<<MRA[0].summary->segmentNo<<endl;
 						for (int i = 1; i < N; i++)
 						{
@@ -532,7 +532,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 					segmentCache->summary->aliveByte = 0;
 					//     segmentCache->summary->blocksByte.clear();
 
-					cout << "Sector point: Success Finish write flash. current " << startsector << " totalSector=" << totalSector << endl;
+					cout << "Sector point: Success Finish write flash. current " << startsector << " totalSector=" << totalSector << "SegmentNo ="<<segmentCache->summary->segmentNo-1<<endl;
 				}
 
 				free(tmp);
@@ -574,7 +574,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 	logAddress1->segmentNo = segmentCache->summary->segmentNo;
 	logAddress1->blockNo = generateBlockNo;
 
-	printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n", logAddress1->segmentNo, logAddress1->blockNo, segmentCache->currenIndex - 1);
+//	printf(" logadress segmentNo= %d  blockNo=%d  blockIndex=%d \n", logAddress1->segmentNo, logAddress1->blockNo, segmentCache->currenIndex - 1);
 	return 0;
 }
 int Log_read(struct logAddress logAddress1, u_int length, void *buffer)
@@ -779,6 +779,63 @@ int Log_free(struct logAddress logAddress1, u_int length)
 
 
 
+
+void test1(char *cat)
+{
+	//	printf("*******************Log layer test 1 simple small write and read ****************************** \n");
+	char buf[50] = "Hello LFS, welcome to CSC 545 OS class";
+	strcat(buf, cat);
+	//	char  *buf="Hello LFS, welcome to CSC 545 OS class";
+	inum num = 1;
+	struct logAddress address;
+	if (!Log_Write(num, 1, 50, (void *)buf, &address))
+	{
+		//	cout<<"buf ="<<buf<<">"<<endl;
+		char bufR[50];
+		if (!Log_read(address, 50, (void *)bufR))
+		{
+		//	printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
+			if (strcmp(buf, bufR) != 0)
+			{
+				printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
+			}
+			else
+			{
+				//		printf("**************Success    test 1 pass*******************************\n ");
+			}
+		}
+	}
+}
+
+void test2(int b, struct logAddress address, char *buf)
+{
+	char buf1[1];
+	for (int i = 0; i <= b * BLOCK_NUMBER; i++)
+	{
+		buf1[0] = 'a' + (i % 26);
+		test1(buf1);
+	}
+	// struct logAddress address;
+	// address.segmentNo=2;
+	// address.blockNo=32;
+	// char *buf="Hello LFS, welcome to CSC 545 OS classf";
+	char bufR[50];
+	if (!Log_read(address, 50, (void *)bufR))
+	{
+	//	printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
+		if (strcmp(buf, bufR) != 0)
+		{
+			printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
+		}
+		else
+		{
+			printf("**************Success    test 1 pass*******************************\n ");
+		}
+	}
+}
+
+
+
 // cleanning and recovery test
 void test4()
 {
@@ -787,7 +844,7 @@ void test4()
 	address.segmentNo = 2;
 	address.blockNo = 32;
 	char buf[50] = "Hello LFS, welcome to CSC 545 OS classf";
-//	test2(10, address, buf);
+	test2(5, address, buf);
 	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
 	// cleaning test
 	int num = 1;
@@ -800,13 +857,34 @@ void test4()
 		{
 			pair<int, int> tmp = it.second.blocksByte[i];
 			oldAddress.blockNo = tmp.first;
-			if (tmp.first % 10 != 0)
+			if (tmp.first % 8 != 0)
 				Log_writeDeadBlock(num, oldAddress, oldAddress);
 		}
 		count++;
-		if (count > 2)
+		if (count > 4)
 			break;
 	}
+
+	test2(10, address, buf);
+    Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+
+	for (auto it : segmentUsageTable)
+	{
+		 if(count>5){
+			oldAddress.segmentNo = it.first;
+			for (int i = 0; i < it.second.blocksByteSize; i++)
+			{
+				pair<int, int> tmp = it.second.blocksByte[i];
+				oldAddress.blockNo = tmp.first;
+				if (tmp.first % 8 != 0)
+					Log_writeDeadBlock(num, oldAddress, oldAddress);
+			}
+	    }
+		count++;
+		if (count > 19)
+			break;
+	}
+
 	//    segmentCache->currenIndex=BLOCK_NUMBER;
 	//    Log_Write(num, 1, 50,(void*)buf,&oldAddress);
 	//    u_int blocks=100;
@@ -818,7 +896,7 @@ void test4()
 	// address.blockNo=32;
 	char buf1[50] = "Hello LFS, welcome to CSC 545 OS classa";
 //	test2(1, address, buf1);
-	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+	
 }
 
 //  int main(int argc, char *argv[])
@@ -827,9 +905,9 @@ void test4()
 // 	 printf(" hello log layer \n");
 //       init("FuseFileSystem",4);
 //  //   test1("test hello world");
-// 	   test8();
+// 	//   test8();
 
 //    //    test2(3);
-//   //    test4();
+//       test4();
 //     return 1;
 // }

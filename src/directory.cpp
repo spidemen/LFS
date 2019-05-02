@@ -20,6 +20,7 @@ map<string, vector<pair<string, int>>> FileSystemMap; // <path/directory, filena
 #define TYPE_DIRECTORY 2
 #define TYPE_LINK 4
 
+
 char allFileName[40][10];
 
 struct stat stbuf;
@@ -84,7 +85,7 @@ int initDirectory(int cachesize)
 
    File_Create(currentinum, 1);  // add directory
    testD3();
-   File_Create(currentinum, TYPE_DIRECTORY);  // add directory KATY
+   File_Create(currentinum, 2);  // add directory KATY
    // struct Inode rootinode;
    // struct stat rootstat;
    // File_Get(currentinum, &rootinode);
@@ -126,22 +127,22 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
   auto it = FileSystemMap.find(path);
   if (it != FileSystemMap.end())
   {
-    InitStat(stbuf); // test code, later will use File_Get can covert inode into stat
+    // InitStat(stbuf); // test code, later will use File_Get can covert inode into stat
    
-    stbuf->st_mode = S_IFDIR | 0700;
-    stbuf->st_nlink = 2;
+    // stbuf->st_mode = S_IFDIR | 0700;
+    // stbuf->st_nlink = 2;
     auto it1 = it->second.begin(); // alway make "." stay on the front of vector
     if (it1->first == ".")
     {
       int numSize = it1->second;
       memcpy(num, &numSize, sizeof(int));
 
-      // struct Inode node; 
-      // if (!File_Get(numSize, &node)) {
-      //     convertInodeToStat(&node, stbuf);
-      // } else { 
-      //   printf("Error: Directory_Types - calling File_Get\n"); 
-      // }
+      
+      if (!convertInodeToStat(numSize, stbuf)) {
+          printf("Copied over inode %d data to stbuf\n", numSize);
+      } else { 
+        printf("Error: Directory_Types - calling File_Get\n"); 
+      }
     }
     return TYPE_DIRECTORY; // directory
   }
@@ -170,14 +171,13 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
         if (strcmp(it2.first.c_str(), filename.c_str()) == 0)
         {
         //  InitStat(stbuf);
-          struct Inode node;
-          if (!File_Get(it2.second, &node)) {
-              convertInodeToStat(&node, stbuf);
+          if (!convertInodeToStat(it2.second, stbuf)) {
+              printf("Copied inode %d data into stat\n", it2.second);
           } else { 
             printf("Error: Directory_Types - calling File_Get\n"); 
           }
-          stbuf->st_mode = S_IFREG | 0774;
-          stbuf->st_nlink = 1;
+          //stbuf->st_mode = S_IFREG | 0774;
+          //stbuf->st_nlink = 1;
           int numSize = it2.second; //first is filename, second is inum
           memcpy(num, &numSize, sizeof(int));
           return TYPE_FILE; // file
@@ -265,9 +265,8 @@ int Directory_getAllFiles(const char *path, struct stat *stbuf, int *size, char 
           memcpy(size, &arraySize, sizeof(int));
           strcat(allFilename[0], it1.first.c_str());
           //InitStat(&stbuf[0]);
-          struct Inode node;
-          if (!File_Get(it1.second, &node)) {
-              convertInodeToStat(&node, &stbuf[0]);
+          if (!convertInodeToStat(it1.second, &stbuf[0])) {
+              printf("Copied inode %d data into stat\n", it1.second);
           } else {
             printf("Error in directory: couldn't get file %d\n", it1.second);
           }
@@ -343,7 +342,8 @@ int Directory_EntyUpdate(const char *path, int type)
       currentinum++;
       tmp.push_back({".", currentinum}); // later use currentinum for num
       FileSystemMap.insert({path, tmp});
-      // File_Create(currentinum, TYPE_D);
+      File_Create(currentinum, TYPE_D);
+      File_Naming(currentinum,path, ".", &stbuf);
       // parent directoy
       auto it2 = FileSystemMap.find(path1);
       if (it2 != FileSystemMap.end())
@@ -404,7 +404,7 @@ int Directory_EntryRename(const char *from,const char *to , int type)
         // need to call File_Naming
         int num;
         Directory_Types(from, &stbuf, &num);
-    //    File_Naming(num, path1.c_str(), filename.c_str(), stbuf);
+        File_Naming(num, path1.c_str(), filename.c_str(), &stbuf);
         auto it2 = FileSystemMap.find(path1); // directory from parents
         filename = "#" + filename;
         if (it2 != FileSystemMap.end())
@@ -472,7 +472,8 @@ int Directory_EntryRename(const char *from,const char *to , int type)
 void Directory_Destroy()
 {
 
-  // File_Destroy();
+    File_Destroy();
+    FileSystemMap.clear();
 }
 
 int InitStat(struct stat *stbuf)
@@ -491,7 +492,7 @@ int Directory_createFile(const char *path, struct stat *stbuf)
   string path1,filename;
   SplitPath(path,path1,filename);
   currentinum++;
-  if (!File_Create(currentinum, 0))   // 0-file , 1-entry  directory
+  if (!File_Create(currentinum, TYPE_F))   // 0-file , 1-entry  directory
   {
     File_Naming(currentinum, path1.c_str(), filename.c_str(), stbuf);
 
@@ -502,7 +503,7 @@ int Directory_createFile(const char *path, struct stat *stbuf)
       tmp.push_back({filename, currentinum});
       FileSystemMap.erase(it);
       FileSystemMap.insert({path1, tmp});
-      cout<<" create a new file  inum="<<currentinum<<endl;
+      cout<<" create a new file  inum="<<currentinum<<"  filename="<<filename<<endl;
     }
     else
     {

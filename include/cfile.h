@@ -18,6 +18,12 @@ extern "C" {
 //#define BLOCK_SIZE 10 //10* sizeof('a') 50
 #define MAX_FILES 10
 
+#define GLOBAL_INUM 0
+#define IFILE_INUM 0
+#define TYPE_F 3 //3, was 0 //KATY possible issue but I think I checked all uses?
+#define TYPE_D 2 //2, was 1
+#define TYPE_L 4 //4, was 2
+
 
 struct Inode {
     
@@ -107,8 +113,8 @@ extern int Test_File_Write(int inum);
 extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
-//extern  int convertInodeToStat(int num, struct stat *s);
-extern  int convertInodeToStat(struct Inode* inode, struct stat *stbuf);
+extern  int convertInodeToStat(int num, struct stat *s);
+//extern  int convertInodeToStat(struct Inode* inode, struct stat *stbuf);
 
 extern int Change_Permissions(int inum, mode_t permissions);
 extern int Change_Owner(int inum, uid_t owner);

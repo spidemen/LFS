@@ -9,11 +9,6 @@ using namespace std;
 //00 is false (but means things ran normally)
 // 1 is true
 
-#define GLOBAL_INUM 0
-#define IFILE_INUM 0
-#define TYPE_F 3 //3, was 0 //KATY possible issue but I think I checked all uses?
-#define TYPE_D 2 //2, was 1
-#define TYPE_L 4 //4, was 2
 
 #define SIZEOF_INODE sizeof(struct Inode)
 #define SEGMENT_THRESHOLD 3
@@ -270,8 +265,16 @@ int File_Create(int inum, int type) {
 		struct Inode inode = initInode(inum);  // DONE-- FIXME: C++ can assign default vaule when define a data structure , take a look at log.cpp 
 		//inode.inum = inum;
 		inode.type = type;
-		if (type == TYPE_F) inode.nlink = 1;
-		if (type == TYPE_D) inode.nlink = 2;
+		if (type == TYPE_F) {
+			inode.nlink = 1;
+			inode.permissions = S_IFREG | 0774;
+			printf("F _-Permissions/mode %d\n", inode.permissions);
+		}
+		if (type == TYPE_D) {
+			inode.nlink = 2;
+			inode.permissions = S_IFDIR | 0700;
+			printf("D _-Permissions/mode %d\n", inode.permissions);
+		}
 	    // current date/time based on current system
 	   	time_t now = time(0);
 	   	inode.mtime = time(&now);
@@ -740,27 +743,43 @@ void File_Destroy(){
 
 
 
-int convertInodeToStat(struct Inode* inode, struct stat* s)
-{
-	s->st_ino = inode->inum;
-	s->st_mode = inode->permissions;
 
-	if (inode->type == TYPE_D) { 
+
+int convertInodeToStat(int inum, struct stat* s)
+{
+	int availInodes = IfileArray.data.size();
+	if (inum > availInodes) {
+		printf("Error: Inode %d does not exist (out of bounds, %d)\n", inum, availInodes);
+		return 3;
+	} else {
+		if (IfileArray.data[inum].in_use == 0) {
+			printf("Error: inode %d has been deleted\n");
+			return 2;
+		}
+		//memcpy(node,&IfileArray.data[inum],sizeof(struct Inode));
+	}
+	struct Inode inode = IfileArray.data[inum];
+	s->st_ino = inode.inum;
+	s->st_mode = inode.permissions;
+
+	if (inode.type == TYPE_D) { 
 		s->st_nlink = 2; //  directory
+		//s->st_mode = S_IFDIR | 0700;
 	} else {
 		s->st_nlink = 1; // file
+		//s->st_mode = S_IFREG | 0774;
 	}
-
-	s->st_uid = inode->owner;
-	s->st_gid = inode->group;
+	printf("INODE debug permissions %d -- %d \n", s->st_mode, inode.permissions);
+	s->st_uid = inode.owner;
+	s->st_gid = inode.group;
 	//s->st_rdev = 0; //If file is character or block special
-	s->st_size = inode->size;
-	printf("CONVERT inod size %d\n", inode->size);
-	s->st_atime = inode->atime;
-	s->st_mtime = inode->mtime;
-	s->st_ctime = inode->ctime;
+	s->st_size = inode.size;
+	s->st_atime = inode.atime;
+	s->st_mtime = inode.mtime;
+	s->st_ctime = inode.ctime;
 	s->st_blksize = BLOCK_SIZE;
-	s->st_blocks = (int) inode->numBlocks;
+	s->st_blocks = (int) inode.numBlocks;
+	return 0;
 }
 
 int Change_Permissions(int inum, mode_t permissions) {
@@ -824,7 +843,7 @@ int initFile(int size) {
     }
     Show_Ifile_Contents();
 
-	return IfileArray.data.size()-1;
+	return IfileArray.data.size();
 }
 
 
@@ -1177,7 +1196,7 @@ void test12(){
 	Print_Inode(1);
 	inode.permissions = S_IFREG | 0774;; 
 	struct stat s;
-	convertInodeToStat(&inode, &s);
+	convertInodeToStat(1, &s);
 	printf("Inode has been converted.\n");
 	Print_Inode(1);
 	return;
@@ -1197,26 +1216,31 @@ void simple2(){
 
 }
 
-// int main(){
-// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-// 	int size = 4;
-//   	initFile(size);
-//   	//simple1();
-//   //	simple2();
-//   	//Show_Ifile_Contents();
-//   	//test4F();
-//   	//test12(); //--convert i to s
-//   	//test3F();
-//    	// test9F();
-//    	//test7F(); //-- Dead segment
-//    	//test10F();
-//    	//test4Destroy();
+void readInIfile() {
+	int size = 4;
+	initFile(int size);
 
-//    	//test5Destroy();
-//    	//test6Destroy();
+}
+int main(){
+	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+	int size = 4;
+  	initFile(size);
+  	//simple1();
+  //	simple2();
+  	//Show_Ifile_Contents();
+  	//test4F();
+  	//test12(); //--convert i to s
+  	//test3F();
+   	// test9F();
+   	//test7F(); //-- Dead segment
+   	//test10F();
+   	//test4Destroy();
 
-//      test8F(); //-- recover ifile
-//   	 //test10();
-//     //	test11();
-// }
+   	//test5Destroy();
+   	//test6Destroy();
+
+     test8F(); //-- recover ifile
+  	 //test10();
+    //	test11();
+}
 

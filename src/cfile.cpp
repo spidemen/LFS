@@ -13,7 +13,7 @@ using namespace std;
 #define SIZEOF_INODE sizeof(struct Inode)
 #define SEGMENT_THRESHOLD 3
 #define ARRAY_SIZE 4
-#define MAX_SIZE 500
+#define MAX_SIZE 800
 
 struct Ifile {
     vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -721,14 +721,14 @@ int File_Free(int inum) {
 	dataAdd.blockNo = 0;
 	dataAdd.segmentNo = 0;
 
-	int numBlocks = 1 + ((inode.size - 1) / MAX_SIZE); 
-	for (int i=1; i<=numBlocks; i++){
-		if (i == 1) inode.Block1Ptr = dataAdd;
-		if (i == 2) inode.Block2Ptr = dataAdd;
-		if (i == 3) inode.Block3Ptr = dataAdd;
-		if (i == 4) inode.Block4Ptr = dataAdd;
-		else inode.OtherBlocksPtr = dataAdd;
-	}
+	// int numBlocks = 1 + ((inode.size - 1) / MAX_SIZE); 
+	// for (int i=1; i<=numBlocks; i++){
+	// 	if (i == 1) inode.Block1Ptr = dataAdd;
+	// 	if (i == 2) inode.Block2Ptr = dataAdd;
+	// 	if (i == 3) inode.Block3Ptr = dataAdd;
+	// 	if (i == 4) inode.Block4Ptr = dataAdd;
+	// 	else inode.OtherBlocksPtr = dataAdd;
+	// }
 	IfileArray.data[inum] = inode;
 
 }
@@ -843,7 +843,7 @@ int initFile(int size) {
     }
     Show_Ifile_Contents();
 
-	return IfileArray.data.size();
+	return IfileArray.data.size()-1;
 }
 
 
@@ -1218,29 +1218,29 @@ void simple2(){
 
 void readInIfile() {
 	int size = 4;
-	initFile(int size);
+//	initFile(int size);
 
 }
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-  	initFile(size);
-  	//simple1();
-  //	simple2();
-  	//Show_Ifile_Contents();
-  	//test4F();
-  	//test12(); //--convert i to s
-  	//test3F();
-   	// test9F();
-   	//test7F(); //-- Dead segment
-   	//test10F();
-   	//test4Destroy();
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//   	initFile(size);
+//   	//simple1();
+//   //	simple2();
+//   	//Show_Ifile_Contents();
+//   	//test4F();
+//   	//test12(); //--convert i to s
+//   	//test3F();
+//    	// test9F();
+//    	//test7F(); //-- Dead segment
+//    	//test10F();
+//    	//test4Destroy();
 
-   	//test5Destroy();
-   	//test6Destroy();
+//    	//test5Destroy();
+//    	//test6Destroy();
 
-     test8F(); //-- recover ifile
-  	 //test10();
-    //	test11();
-}
+//      test8F(); //-- recover ifile
+//   	 //test10();
+//     //	test11();
+// }
 

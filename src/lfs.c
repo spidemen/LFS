@@ -188,6 +188,7 @@ static int lfs_truncate(const char *path, off_t size)
 static int lfs_chown(const char *path, uid_t uid, gid_t gid)
 {
     printf("chown function was called \n");
+    
     return 0;
 }
 

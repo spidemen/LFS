@@ -776,6 +776,7 @@ int Change_Permissions(int inum, mode_t permissions) {
 	struct Inode inode = IfileArray.data[inum];
 	inode.permissions = permissions;
 	IfileArray.data[inum] = inode;
+
 	return 0;
 }
 

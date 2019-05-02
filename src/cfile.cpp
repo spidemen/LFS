@@ -13,7 +13,7 @@ using namespace std;
 #define SIZEOF_INODE sizeof(struct Inode)
 #define SEGMENT_THRESHOLD 3
 #define ARRAY_SIZE 4
-#define MAX_SIZE 500
+#define MAX_SIZE BLOCK_SIZE-100
 
 struct Ifile {
     vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -714,22 +714,29 @@ int File_Read(int inum, int offset, int length, void * buffer) {
 	return 0;
 } // end File_Read
 
+
 int File_Free(int inum) {
+	printf("Start file free: inum %d\n", inum);
 	struct Inode inode = IfileArray.data[inum];//Get_Inode(inum);
 	inode.in_use = 0; //Inode is no longer in use
-	struct logAddress dataAdd;
-	dataAdd.blockNo = 0;
-	dataAdd.segmentNo = 0;
+	printf("Marked out of use\n");
+	// struct logAddress dataAdd;
+	// dataAdd.blockNo = 0;
+	// dataAdd.segmentNo = 0;
 
-	int numBlocks = 1 + ((inode.size - 1) / MAX_SIZE); 
-	for (int i=1; i<=numBlocks; i++){
-		if (i == 1) inode.Block1Ptr = dataAdd;
-		if (i == 2) inode.Block2Ptr = dataAdd;
-		if (i == 3) inode.Block3Ptr = dataAdd;
-		if (i == 4) inode.Block4Ptr = dataAdd;
-		else inode.OtherBlocksPtr = dataAdd;
-	}
+	// int numBlocks = 1 + ((inode.size - 1) / MAX_SIZE); 
+	// for (int i=1; i<=numBlocks; i++){
+	// 	if (i == 1) {
+	// 		Log_writeDeadBlock(inum, inode.Block1Ptr, dataAdd);
+	// 		inode.Block1Ptr = dataAdd;
+	// 	}
+	// 	if (i == 2) inode.Block2Ptr = dataAdd;
+	// 	if (i == 3) inode.Block3Ptr = dataAdd;
+	// 	if (i == 4) inode.Block4Ptr = dataAdd;
+	// 	else inode.OtherBlocksPtr = dataAdd;
+	// }
 	IfileArray.data[inum] = inode;
+	printf("End file free: inum %d\n", inum);
 
 }
 
@@ -843,7 +850,7 @@ int initFile(int size) {
     }
     Show_Ifile_Contents();
 
-	return IfileArray.data.size();
+	return IfileArray.data.size()-1;
 }
 
 
@@ -1218,29 +1225,36 @@ void simple2(){
 
 void readInIfile() {
 	int size = 4;
-	initFile(int size);
-
+	int ifilesize = initFile(size);
+	printf("***** Recovered contents ifilesize=%d *******\n", ifilesize);
+	printf("inum  permis    type  path/filename \n");
+	for (int i=0; i<IfileArray.data.size(); i++) {
+		struct Inode in = IfileArray.data[i];
+		printf("%d=%d: %5d   %d | %-4s  %-4s \n", i, in.inum, in.permissions, in.type, in.path, in.filename);
+	}
 }
-int main(){
-	printf("Begin cfile layer, creating ifile (and its inode)...\n");
-	int size = 4;
-  	initFile(size);
-  	//simple1();
-  //	simple2();
-  	//Show_Ifile_Contents();
-  	//test4F();
-  	//test12(); //--convert i to s
-  	//test3F();
-   	// test9F();
-   	//test7F(); //-- Dead segment
-   	//test10F();
-   	//test4Destroy();
 
-   	//test5Destroy();
-   	//test6Destroy();
 
-     test8F(); //-- recover ifile
-  	 //test10();
-    //	test11();
-}
+
+// int main(){
+// 	printf("Begin cfile layer, creating ifile (and its inode)...\n");
+// 	int size = 4;
+//   	//initFile(size);
+//   	//TestFileFree();
+//   	readInIfile();
+//   	//test8F(); //-- recover ifile
+
+
+//   	//simple1();
+//   //	simple2();
+//   	//test12(); //--convert i to s
+//    	//test7F(); //-- Dead segment
+
+//    	//test5Destroy();
+//    	//test6Destroy();
+
+     
+//   	 //test10();
+//     //	test11();
+// }
 

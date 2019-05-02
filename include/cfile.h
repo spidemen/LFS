@@ -107,7 +107,6 @@ extern int Test_File_Write(int inum);
 extern void Show_Ifile_Contents();
 
 extern int File_Naming(int inum,const char *directory,const char *filename,struct stat *stbuf);   // pass the directory and filename and do update on inode
-
 //extern  int convertInodeToStat(int num, struct stat *s);
 extern  int convertInodeToStat(struct Inode* inode, struct stat *stbuf);
 

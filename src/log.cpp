@@ -894,13 +894,29 @@ void test6()
 	Log_read(address, 50, (void *)bufR);
 	cout << "after destory  content " << bufR << endl;
 }
+
+// checkpoint size test
+void test7(){
+	logAddress oldAdrress,newAdress;
+    Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+    logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*2);
+    Log_CheckPoint(&newAdress, newOne, 1, 2);
+    cout<<"before checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
+}
+void test8(){
+	logAddress oldAdrress,newAdress;
+	logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*3);
+	cout<<"checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
+	cout<<"size of segment ="<<sizeof(struct SegmentUsageTable)<<endl;
+
+}
 //  int main(int argc, char *argv[])
 //  {
 
 // 	 printf(" hello log layer \n");
 //       init("FuseFileSystem",4);
 //  //   test1("test hello world");
-// 	   test6();
+// 	   test8();
 
 //    //    test2(3);
 //   //    test4();

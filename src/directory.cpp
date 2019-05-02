@@ -459,6 +459,7 @@ int Directory_readFile(const char *path, int offset, int size, char *buf)
   int num;
   if (Directory_Types(path, &stbuf, &num) == TYPE_FILE)
   { // file
+    size=size>1024?800:size;
     cout << "debug  directory  read |" << buf << " num=" << num << " size =" << size << " offset=" << offset << endl;
     File_Read(num, offset, size, buf);
   }
@@ -603,25 +604,16 @@ void test2(){
    //  File_Write(currentinum,0,6,buf);
 }
 
-void test3D() {
-  Show_Ifile_Contents();
 
-  // Rename file after it has been recovered
-  // char* path = "/path"
-  // char* filename = "newname.txt";
-  // //stbuf
-  // File_Naming(currentinum, path1.c_str(), filename.c_str(), stbuf);
-}
 
 // int main(int argc, char *argv[])
 // {
-// 	 cout<<"-------- Directory Layer ----------"<<endl;
-//    	initDirectory(4);
-    
+// 	cout<<"hell World"<<endl;
+
+//    	printf("Passed test1\n");
+//    	// initDirectory(4);
+//     // test1();
 //     test2();
-//     //test1();
-//     //test2D();
-//     //test3D();
 //   //  	Test_File_Create(1);
 //   //  	//File_Write(1, 0, 5, (void *) "hello");
 //   //  	Show_Ifile_Contents();

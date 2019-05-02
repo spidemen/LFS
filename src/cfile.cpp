@@ -13,7 +13,8 @@ using namespace std;
 #define SIZEOF_INODE sizeof(struct Inode)
 #define SEGMENT_THRESHOLD 3
 #define ARRAY_SIZE 4
-#define MAX_SIZE BLOCK_SIZE-100
+
+#define MAX_SIZE 800
 
 struct Ifile {
     vector<struct Inode> data; //location of Inode == inum, should be vector<Inode>
@@ -719,7 +720,7 @@ int File_Free(int inum) {
 	printf("Start file free: inum %d\n", inum);
 	struct Inode inode = IfileArray.data[inum];//Get_Inode(inum);
 	inode.in_use = 0; //Inode is no longer in use
-	printf("Marked out of use\n");
+
 	// struct logAddress dataAdd;
 	// dataAdd.blockNo = 0;
 	// dataAdd.segmentNo = 0;
@@ -1233,6 +1234,7 @@ void readInIfile() {
 		printf("%d=%d: %5d   %d | %-4s  %-4s \n", i, in.inum, in.permissions, in.type, in.path, in.filename);
 	}
 }
+
 
 
 

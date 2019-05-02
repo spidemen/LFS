@@ -66,9 +66,17 @@ int initDirectory(int cachesize)
       cout<<" Path "<<b<<" filename "<<a<<endl;
     }
   }
-   currentinum++;
+  if(currentinum==0){    // emtpy , create a root entry
+      currentinum++;
+     vector<pair<string, int>> tmp;
+     tmp.push_back({".", currentinum});
+     FileSystemMap.insert({"/", tmp});
+     File_Create(currentinum, 2);  // add directory KATY
+     File_Naming(currentinum, "/", ".", &stbuf);
+  }
+ 
   // // code for test directory
-   vector<pair<string, int>> tmp;
+  // vector<pair<string, int>> tmp;
   // tmp.push_back({"a.txt", 11});
   // tmp.push_back({"b.txt", 4});
   // tmp.push_back({"-link", 9});
@@ -76,21 +84,21 @@ int initDirectory(int cachesize)
   // FileSystemMap.insert({"/next", tmp});
   // tmp.clear();
   // // root directory
-   tmp.push_back({".", currentinum});
-    tmp.push_back({"fuse.h", 2});
+  //  tmp.push_back({".", currentinum});
+  // tmp.push_back({"fuse.h", 2});
   // tmp.push_back({"log.cpp", 3});
   // // tmp.push_back({"hello",8});
   // tmp.push_back({"#next", 7});
-   FileSystemMap.insert({"/", tmp});
+  
 
-   File_Create(currentinum, 1);  // add directory
-   testD3();
-   File_Create(currentinum, 2);  // add directory KATY
+ //  File_Create(currentinum, 1);  // add directory
+  
+  
    // struct Inode rootinode;
    // struct stat rootstat;
    // File_Get(currentinum, &rootinode);
    // convertInodeToStat(&rootinode, &rootstat);
-   // File_Naming(currentinum, "/", ".", &stbuf);
+    // File_Naming(currentinum, "/", ".", &stbuf);
   // File_Create(3, 1);
 
   return 0;
@@ -131,20 +139,23 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
    
     // stbuf->st_mode = S_IFDIR | 0700;
     // stbuf->st_nlink = 2;
-    auto it1 = it->second.begin(); // alway make "." stay on the front of vector
-    if (it1->first == ".")
-    {
-      int numSize = it1->second;
-      memcpy(num, &numSize, sizeof(int));
 
-      
-      if (!convertInodeToStat(numSize, stbuf)) {
-          printf("Copied over inode %d data to stbuf\n", numSize);
-      } else { 
-        printf("Error: Directory_Types - calling File_Get\n"); 
+    for(auto it1:it->second){
+     
+      if (it1.first == ".")
+      {
+        int numSize = it1.second;
+        memcpy(num, &numSize, sizeof(int));
+        cout<<"debug   filename "<<it1.first<<endl;
+        if (!convertInodeToStat(it1.second, stbuf)) {
+              printf("Copied inode %d data into stat\n", it1.second);
+          } else { 
+            printf("Error: Directory_Types - calling File_Get\n"); 
+          }
+         return TYPE_DIRECTORY; // directory
       }
     }
-    return TYPE_DIRECTORY; // directory
+   
   }
   else
   {
@@ -306,11 +317,12 @@ int Directory_EntyUpdate(const char *path, int type)
     }
     else if (type == 2)
     {                          // delete directory
-      FileSystemMap.erase(it); // delete directory
+     
       // need to call File_Free
        int num;
       Directory_Types(path, &stbuf, &num);
-      //File_Free(num)
+      File_Free(num);
+      FileSystemMap.erase(it); // delete directory
       auto it2 = FileSystemMap.find(path1); // directory from parents
       filename = "#" + filename;
       if (it2 != FileSystemMap.end())
@@ -371,13 +383,14 @@ int Directory_EntyUpdate(const char *path, int type)
         {
           if (strcmp(it3->first.c_str(), filename.c_str()) == 0)
           {
+             int num;
+            Directory_Types(path, &stbuf, &num);
+            File_Free(num);
             tmp.erase(it3);
             FileSystemMap.erase(it2);
             FileSystemMap.insert({path1, tmp});
             //need to call File_Free
-             int num;
-            Directory_Types(path, &stbuf, &num);
-            //File_Free(num)
+            
             cout << "delete file  " << path << "   " << it3->first << endl;
             break;
           }
@@ -520,6 +533,7 @@ int Directory_createFile(const char *path, struct stat *stbuf)
 int Directory_deleteFile(const char *path, struct stat *stbuf)
 {
   // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
+
     return 0;
 }
 

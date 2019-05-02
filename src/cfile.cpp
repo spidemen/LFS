@@ -128,21 +128,10 @@ void Show_Ifile_Contents() {
     printf("############ end Show_Ifile_Contents ############\n");
 	return;
 }
-// buf must have at least 10 bytes
-void strmode(mode_t mode, char * buf) {
-  const char chars[] = "rwxrwxrwx";
-  for (size_t i = 0; i < 9; i++) {
-    buf[i] = (mode & (1 << (8-i))) ? chars[i] : '-';
-  }
-  buf[9] = '\0';
-}
 
 void Print_Inode(int inum) {
 	struct Inode in = IfileArray.data[inum];
-	char buffer[10];
-	mode_t k = strtoul(in.permissions, NULL, 8);
-	strmode(k, buffer);
-	printf("%s %d %c %c  %7d  %s %s\n", buffer, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
+	printf("%s %d %c %c  %7d  %s %s\n", in.permissions, in.nlink, in.owner, in.group, in.size, in.mtime, in.filename);
 }
 
 
@@ -238,13 +227,14 @@ int File_Create(int inum, int type) {
 		if (type == TYPE_D) dummyInode.nlink = 2;
 		// current date/time based on current system
 	   	time_t now = time(0);
-   
-	   	// convert now to string form
-	   	char* timestring = ctime(&now);
-	   	timestring[strlen(timestring)-1]= 0;
-	   	dummyInode.mtime = timestring;
-	   	dummyInode.atime = timestring;
-	   	dummyInode.ctime = timestring;
+	   	dummyInode.mtime = time(&now);
+	   	dummyInode.atime = time(&now);
+	   	dummyInode.ctime = time(&now);
+
+	   	dummyInode.owner = getuid();
+	   	dummyInode.group = getgid();
+	   	dummyInode.size = 0;
+
 		//Write the inode
 		int block = 0; //start of file
 		int length = sizeof(dummyInode);
@@ -252,14 +242,14 @@ int File_Create(int inum, int type) {
 		memcpy(contents, &dummyInode, sizeof( struct Inode));
 
 		struct logAddress logAdd;
-		printf("dummyInode ----%d, %d, %c, %lu\n", dummyInode.inum, dummyInode.in_use, dummyInode.owner, dummyInode.mtime);
+		printf("dummyInode ----%d\n", dummyInode.inum);
 		Log_Write(inum, block, length, (void *) contents, &logAdd);
 
 		struct Inode rinode; 
 		unsigned char *rcontents[sizeof(struct Inode)];
 		Log_read(logAdd, sizeof(struct Inode), rcontents);
 		memcpy(&rinode, rcontents, sizeof(struct Inode));
-		printf("Rinode (wrote and read inode)----%d, %d, %c, %s\n", rinode.inum, rinode.in_use, rinode.owner, rinode.atime);
+		printf("Rinode (wrote and read inode)----%d\n", rinode.inum);
 		
 		Put_Inode(inum, &dummyInode);
 
@@ -284,13 +274,13 @@ int File_Create(int inum, int type) {
 		if (type == TYPE_D) inode.nlink = 2;
 	    // current date/time based on current system
 	   	time_t now = time(0);
-   
-	   	// convert now to string form
-	   	char* timestring = ctime(&now);
-	   	timestring[strlen(timestring)-1]= 0;
-	   	inode.mtime = timestring;
-	   	inode.atime = timestring;
-	   	inode.ctime = timestring;
+	   	inode.mtime = time(&now);
+	   	inode.atime = time(&now);
+	   	inode.ctime = time(&now);
+
+	   	inode.owner = getuid();
+	   	inode.group = getgid();
+	   	inode.size = 0;
 
 
 		int block = 0; //start of file
@@ -299,14 +289,14 @@ int File_Create(int inum, int type) {
 		unsigned char *contents[sizeof(struct Inode)];
 		memcpy(contents, &inode, sizeof( struct Inode));
 		struct logAddress logAdd;
-		printf("Inode ----%d, %d, %c, %s\n", inode.inum, inode.in_use, inode.owner, inode.mtime);
+		printf("Inode ----%d   inode size: %d\n", inode.inum, sizeof(inode));
 		Log_Write(inum, block, length, (void *) contents, &logAdd);
 
 		struct Inode rinode; 
 		unsigned char *rcontents[sizeof(struct Inode)];
 		Log_read(logAdd, sizeof(struct Inode), rcontents);
 		memcpy(&rinode, rcontents, sizeof(inode));
-		printf("Rinode (wrote and read inode)----%d, %d, %c, %s\n", rinode.inum, rinode.in_use, rinode.owner, rinode.atime);
+		printf("Rinode (wrote and read inode)----%d\n", rinode.inum);
 	
 		Put_Inode(inum, &inode);
 		printf("    We put inode %d and so size of Ifile is %d\n", inum, IfileArray.data.size());
@@ -577,9 +567,8 @@ int File_Write(int inum, int offset, int length, void* buffer) {
 
 	// Update the inode time
 	time_t now = time(0);
-	char* timestring = ctime(&now);
-	fileinode.mtime = timestring;
-	fileinode.atime = timestring;
+	fileinode.mtime = time(&now);
+	fileinode.atime = time(&now);
 
 	// Write the inode data
 	Put_Inode(inum, &fileinode); //KATY the segment fault line
@@ -739,8 +728,6 @@ int File_Free(int inum) {
 	}
 	IfileArray.data[inum] = inode;
 
-
-
 }
 
 
@@ -756,13 +743,7 @@ void File_Destroy(){
 int convertInodeToStat(struct Inode* inode, struct stat* s)
 {
 	s->st_ino = inode->inum;
-	
-    //http://pubs.opengroup.org/onlinepubs/007908799/xsh/sysstat.h.html
-	unsigned long mode = strtoul(inode->permissions, NULL, 8);
-	s->st_mode = mode;
-	char buf[10];
-	strmode((mode_t) mode, buf); 
-	//printf("Stat permissions (%s): %s\n", inode->permissions, buf);
+	s->st_mode = inode->permissions;
 
 	if (inode->type == TYPE_D) { 
 		s->st_nlink = 2; //  directory
@@ -770,18 +751,19 @@ int convertInodeToStat(struct Inode* inode, struct stat* s)
 		s->st_nlink = 1; // file
 	}
 
-	s->st_uid = (uid_t) inode->owner;
-	s->st_gid = (gid_t)((u_int)inode->group);
+	s->st_uid = inode->owner;
+	s->st_gid = inode->group;
 	//s->st_rdev = 0; //If file is character or block special
 	s->st_size = inode->size;
-	s->st_atime = (time_t)inode->atime;
-	s->st_mtime = (time_t)inode->mtime;
-	s->st_ctime = (time_t)inode->ctime;
+	printf("CONVERT inod size %d\n", inode->size);
+	s->st_atime = inode->atime;
+	s->st_mtime = inode->mtime;
+	s->st_ctime = inode->ctime;
 	s->st_blksize = BLOCK_SIZE;
 	s->st_blocks = (int) inode->numBlocks;
 }
 
-int Change_Permissions(int inum, char* permissions) {
+int Change_Permissions(int inum, mode_t permissions) {
 
 	struct Inode inode = IfileArray.data[inum];
 	inode.permissions = permissions;
@@ -789,18 +771,18 @@ int Change_Permissions(int inum, char* permissions) {
 	return 0;
 }
 
-int Change_Owner(int inum, char owner) {
+int Change_Owner(int inum, uid_t owner) {
 
 	struct Inode inode = IfileArray.data[inum];
-	inode.owner = owner;
+	inode.owner = getuid();
 	IfileArray.data[inum] = inode;
 	return 0;
 }
 
-int Change_Group(int inum, char group, int groupLength) {
+int Change_Group(int inum, gid_t group) {
 
 	struct Inode inode = IfileArray.data[inum];
-	inode.group = group;
+	inode.group = getgid();
 	IfileArray.data[inum] = inode;
 	return 0;
 }
@@ -1012,7 +994,7 @@ void test8F() {
 	File_Create(num, TYPE_F);
 	char* buffer = "test checkpoint";
 	File_Write(num, 0, 16, (void*)buffer);
-	Change_Permissions(1, "771");
+	Change_Permissions(1, 0700);
 	char* directory = "dir/";
 	char* filename = "fname";
 	struct stat* stbuf;
@@ -1104,23 +1086,18 @@ void test6Destroy(){
 
 void TestPermissions() {
 	int inum = 3;
-	char* permissions = "771";
-	Change_Permissions(inum, permissions);
+	Change_Permissions(inum, 0700);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
 
 	struct Inode inode = IfileArray.data[inum];//Get_Inode(inum);
-	if (strcmp(inode.permissions, permissions)) {
-		printf("Fail: old permissions were not changed (old: %s, new: %s).\n ", inode.permissions, permissions);
-	} else {
-		printf("************* Success   TestPermissions pass (%s == %s) **********\n", inode.permissions, permissions);
-	}
+
 	return;
 }
 
 void TestOwner() {
 	int inum = 3;
-	char owner = 'k';
+	uid_t owner = getuid();
 	Change_Owner(inum, owner);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
@@ -1136,9 +1113,8 @@ void TestOwner() {
 
 void TestGroup() {
 	int inum = 3;
-	char group = 'c';
-	int groupLength = 1;
-	Change_Group(inum, group, groupLength);
+	gid_t group = getgid();
+	Change_Group(inum, group);
 	printf("per own grp sz  time \n");
 	Print_Inode(inum);
 
@@ -1199,14 +1175,8 @@ void test12(){
 	struct Inode inode = IfileArray.data[1];
 	printf("Got Inode %d \n", inode.inum);
 	Print_Inode(1);
-	inode.permissions = "000"; 
+	inode.permissions = S_IFREG | 0774;; 
 	struct stat s;
-	convertInodeToStat(&inode, &s);
-	inode.permissions = "666"; 
-	convertInodeToStat(&inode, &s);
-	inode.permissions = "777"; 
-	convertInodeToStat(&inode, &s);
-	inode.permissions = "5"; 
 	convertInodeToStat(&inode, &s);
 	printf("Inode has been converted.\n");
 	Print_Inode(1);

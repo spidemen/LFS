@@ -34,7 +34,7 @@ int initDirectory(int cachesize)
   char buf[BLOCK_SIZE];
   FileSystemMap.clear();
   
-  for (int i = 0; i <= currentinum; i++)
+  for (int i = 1; i <= currentinum; i++)
   {
     struct Inode node;
     if (!File_Get(i, &node) && node.in_use)
@@ -44,7 +44,7 @@ int initDirectory(int cachesize)
       string b = node.path;
       tmp.push_back({a, node.inum});
       FileSystemMap.insert({b, tmp});
-      cout<<" Path "<<a<<" filename "<<b<<endl;
+      cout<<" Path "<<b<<" filename "<<a<<endl;
     }
   }
    currentinum++;
@@ -63,7 +63,12 @@ int initDirectory(int cachesize)
   // // tmp.push_back({"hello",8});
   // tmp.push_back({"#next", 7});
    FileSystemMap.insert({"/", tmp});
-   File_Create(currentinum, 1);  // add directory KATY
+   File_Create(currentinum, TYPE_DIRECTORY);  // add directory KATY
+   // struct Inode rootinode;
+   // struct stat rootstat;
+   // File_Get(currentinum, &rootinode);
+   // convertInodeToStat(&rootinode, &rootstat);
+   // File_Naming(currentinum, "/", ".", &stbuf);
   // File_Create(3, 1);
 
   return 0;
@@ -79,15 +84,18 @@ int Directory_getOneFile(const char *path, const char *filename, struct stat *st
       if (strcmp(filename, file.first.c_str()) == 0)
       {
         struct Inode node;
-        struct stat t;
-        // if(!File_Get(file.second, &node)){
-        //    convertInodeToStat(node,t);
-        //    stbuf=&t;
-        //    strcat(filenameReturn,file.first.c_str());
-        //    return 0;
-        // }
-        //    strcat(filenameReturn,file.first.c_str());
-        memcpy(filenameReturn, file.first.c_str(), 10);
+        //struct stat t;
+        printf("----- Directory_getONefil File.second %d   file.first %s\n", file.second, file.first.c_str());
+        if(!File_Get(file.second, &node)){
+          printf("File got\n");
+           convertInodeToStat(&node,stbuf);
+           printf("Inode data convered into stat: %d \n", stbuf->st_uid);
+           //stbuf=&t;
+           strcat(filenameReturn, file.first.c_str());
+           return 0;
+        }
+        strcat(filenameReturn,file.first.c_str()); //KATY was here <<issue
+        //memcpy(&filenameReturn, file.first.c_str(), 10);
         return 0;
       }
     }
@@ -127,14 +135,21 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
   if (it != FileSystemMap.end())
   {
     InitStat(stbuf); // test code, later will use File_Get can covert inode into stat
+   
     stbuf->st_mode = S_IFDIR | 0700;
     stbuf->st_nlink = 2;
     auto it1 = it->second.begin(); // alway make "." stay on the front of vector
     if (it1->first == ".")
     {
       int numSize = it1->second;
-
       memcpy(num, &numSize, sizeof(int));
+
+      // struct Inode node; 
+      // if (!File_Get(numSize, &node)) {
+      //     convertInodeToStat(&node, stbuf);
+      // } else { 
+      //   printf("Error: Directory_Types - calling File_Get\n"); 
+      // }
     }
     return TYPE_DIRECTORY; // directory
   }
@@ -162,7 +177,13 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
         //    cout<<"iteration   &"<<path1<<"&   "<<it2.first<<endl;
         if (strcmp(it2.first.c_str(), filename.c_str()) == 0)
         {
-          InitStat(stbuf);
+        //  InitStat(stbuf);
+          struct Inode node;
+          if (!File_Get(it2.second, &node)) {
+              convertInodeToStat(&node, stbuf);
+          } else { 
+            printf("Error: Directory_Types - calling File_Get\n"); 
+          }
           stbuf->st_mode = S_IFREG | 0774;
           stbuf->st_nlink = 1;
           int numSize = it2.second; //first is filename, second is inum
@@ -176,6 +197,7 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
             tmp = it2.first.substr(1);
             if (strcmp(tmp.c_str(), filename.c_str()) == 0)
             {
+
               stbuf->st_mode = S_IFLNK | 0700;
               stbuf->st_nlink = 1;
               int numSize = it2.second;
@@ -201,14 +223,14 @@ int Directory_getAllFiles(const char *path, struct stat *stbuf, int *size, char 
     for (int i = 0; i < arraySize && file != it->second.end(); i++)
     {
       struct stat t;
-      struct Inode node;
-      if (!File_Get(file->second, &node)) {
-          convertInodeToStat(&node, &t);
-          stbuf[i] = t;
-      }
-      convertInodeToStat(&node, &t);
+      // struct Inode node;
+      // if (!File_Get(file->second, &node)) {
+      //     convertInodeToStat(&node, &t);
+      //     stbuf[i] = t;
+      // }
+      // convertInodeToStat(&node, &t);
 
-      //InitStat(&t);
+      InitStat(&t);
       if (file->first.find("#") != std::string::npos)
       {
         string tmp = file->first.substr(1);
@@ -250,7 +272,14 @@ int Directory_getAllFiles(const char *path, struct stat *stbuf, int *size, char 
           int arraySize = 1;
           memcpy(size, &arraySize, sizeof(int));
           strcat(allFilename[0], it1.first.c_str());
-          InitStat(&stbuf[0]);
+          //InitStat(&stbuf[0]);
+          struct Inode node;
+          if (!File_Get(it1.second, &node)) {
+              convertInodeToStat(&node, &stbuf[0]);
+          } else {
+            printf("Error in directory: couldn't get file %d\n", it1.second);
+          }
+
           return 0; // one entry found
         }
       }
@@ -452,6 +481,9 @@ int Directory_writeFile(const char *path, int offset, int size, char *buf)
   if (Directory_Types(path, &stbuf, &num) == TYPE_FILE)
   { // file
     cout << "debug  directory  write |" << buf << " num=" << num << " size =" << size << " offset=" << offset << endl;
+    //printf("Permissions: %lu \n", stbuf->st_mode);
+    // if (stbuf->st_mode)
+
     File_Write(num, offset, size, buf);
   }
   else
@@ -487,16 +519,16 @@ int Directory_writeFile(const char *path, int offset, int size, char *buf)
 // }
 int test2D()
 {
-  char *path = "test2/";
-  char *filename = "testfile2";
+  char *path = "/";
+  char *filename = "a.txt";
   struct stat *stbuf;
   char *filenameReturn;
   if (Directory_getOneFile(path, filename, stbuf, filenameReturn))
   {
-    printf("Error: Directoy_getOneFile\n");
+    printf("Error: Test 2D Directoy_getOneFile\n");
     return 1;
   }
-
+  printf("SUCCESS: filenameReturn=%s\n", filenameReturn);
   return 0;
 }
 
@@ -548,14 +580,17 @@ void test2(){
     struct stat *stbuf;
     Directory_createFile("/a.txt", stbuf);
     Directory_createFile("/j.txt", stbuf);
-    Show_Ifile_Contents();
-    //Directory_createFile("/z.txt", stbuf);
-    // Directory_writeFile("/a.txt", 0, 6, "hello");
-    // Directory_writeFile("/z.txt", 0, 6, "omega");
+    //Show_Ifile_Contents();
+
     struct stat dirbuf[10];
     int size = 0;
-    File_Destroy();
-  //  Directory_getAllFiles("/",dirbuf,&size,allFileName);
+    int inum;
+    Directory_Types("/",&dirbuf[0],&inum);
+    // Directory_getAllFiles("/",dirbuf,&size,allFileName);
+    // Directory_writeFile("/a.txt", 0, 6, "hello");
+    //Directory_writeFile("/j.txt", 0, 6, "omega");
+
+ //   File_Destroy();
     // int inum = 1;
     // Change_Permissions(inum, "666");
     // Inode in;
@@ -568,17 +603,29 @@ void test2(){
    //  File_Write(currentinum,0,6,buf);
 }
 
-int main(int argc, char *argv[])
-{
-	 cout<<"-------- Directory Layer ----------"<<endl;
-   	initDirectory(4);
-    //test1();
-    
-    test2();
-  //  	Test_File_Create(1);
-  //  	//File_Write(1, 0, 5, (void *) "hello");
-  //  	Show_Ifile_Contents();
+void test3D() {
+  Show_Ifile_Contents();
 
-	//  delete segmentCache;
-    return 1;
+  // Rename file after it has been recovered
+  // char* path = "/path"
+  // char* filename = "newname.txt";
+  // //stbuf
+  // File_Naming(currentinum, path1.c_str(), filename.c_str(), stbuf);
 }
+
+// int main(int argc, char *argv[])
+// {
+// 	 cout<<"-------- Directory Layer ----------"<<endl;
+//    	initDirectory(4);
+    
+//     test2();
+//     //test1();
+//     //test2D();
+//     //test3D();
+//   //  	Test_File_Create(1);
+//   //  	//File_Write(1, 0, 5, (void *) "hello");
+//   //  	Show_Ifile_Contents();
+
+// 	//  delete segmentCache;
+//     return 1;
+// }

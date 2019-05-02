@@ -43,7 +43,7 @@ static int lfs_getattr(const char *path, struct stat *stbuf)
     }
     else if (types == 3)
     { // file
-        stbuf->st_size = 300;
+        //stbuf->st_size = 300;
         stbuf->st_ino = 17;
     }
     else if (types == 4)

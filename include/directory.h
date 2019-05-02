@@ -44,7 +44,7 @@ extern int Directory_EntyUpdate(const char *path,int type);				// 1- add entry, 
 
 extern int Directory_Open(const char *path);  // 0 success, -1 fail	
 
-extern int Directory_createFile(const char *path, char *filename, struct stat *stbuf);
+extern int Directory_createFile(const char *path, struct stat *stbuf);
 
 extern int Directory_deleteFile(const char *path,struct stat *stbuf);  // mark inode user=-1, then mark block point to be default value--call Log_writeDeadBlock
 

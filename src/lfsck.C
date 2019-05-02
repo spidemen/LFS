@@ -14,33 +14,6 @@
 
 int totalsectors = 2;
 
-/*
-int callPythonJson(PyObject *pDict, PyObject *pFunc, PyObject *pArgs, PyObject *pValue) {
-
-	//Get the add method from the dictionary
- 	pFunc = PyDict_GetItemString(pDict, "parseJsonFile");
- 	if (pFunc == NULL) {
- 		printf("couldn't get parseJSON function\n");
- 	}
- 	//Create tuple for the args for add()
- 	pArgs = PyTuple_New(2); 
- 	pValue = PyInt_FromLong(2);
- 	PyTuple_SetItem(pArgs,0,pValue);
- 	PyTuple_SetItem(pArgs,1,pValue);
-
- 	PyObject *pResult = PyObject_CallObject(pFunc, pArgs);
- 	 if (pResult==NULL){
- 		printf("Calling the parseJSON method failed.\n");
- 		return 1;
- 	}
-
- 	char* result = PyString_AsString(pResult);
-  	
-  	printf("Outcome of parseJSON: %s.\n", result);
-
-}
-
-*/
 /* Convert LFS data structures into JSON */
 int convertToJSON( Block *b, FILE* jsonfile) {
 
@@ -99,28 +72,6 @@ int main(int argc, char *argv[])
      		jsonfile = fopen("memory.json", "w");
      		fputs("[", jsonfile);
 
- 			// * Flash_Read reads "count" sectors from "flash" into "buffer" 
- 			// * starting at sector "sector".
- 			/*blocks = 5;
-        	for (int i=0; i<blocks; i++) {
-        		sector = i * FLASH_SECTORS_PER_BLOCK;
-        		void* buffer;
-        		char buf[FLASH_SECTOR_SIZE];
-        		if (Flash_Read(f, sector, count, buf)) 
-	            {
-	            	printf("Error with Flash_Read\n");
-	            	return 1;
-	            } 
-	            else 
-	            {
-	    			Block *d = (Block *)buf;
-	    			printf("Block no %d\n", d->blockNo) ;//"<<d->blockNo << "| " <<d->aLive<< "| " << d->blockUse << "| "<<d->offset <<endl;
-	            	convertToJSON( d , jsonfile);
-                    if (i<blocks-1) {
-                        fputs(",", jsonfile);
-                    }
-	            }
-        	}*/
             int nodes = 3;
             for (int i=1; i<=nodes; i++) {
                 struct Inode inode;
@@ -149,22 +100,4 @@ int main(int argc, char *argv[])
 } 
 
 
-/*
-        	logAddress logAddress1;
-        	logAddress1.segmentNo = 1;
-        	logAddress1.blockNo = 3;
-        	u_int length = 50;
-        	char buffer[50];
-        	int flag;
-        	flag = Log_read(logAddress1, length, (void *)buffer);
-        	if (flag) {
-        		cout << "Error: log_read" <<endl;
-        	}
-        	cout <<"read from flash: "<<buffer<<endl;
-        	flag = Log_read(logAddress1, length, (void *)buffer);
-        	if (flag) {
-        		cout << "Error: 2 log_read" <<endl;
-        	}
-        	cout <<"2 read from flash: "<<buffer<<endl;
-*/
 	

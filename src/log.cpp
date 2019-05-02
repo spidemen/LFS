@@ -568,8 +568,7 @@ int Log_Write(inum num, u_int block, u_int length, void *buffer, struct logAddre
 		tables.insert(pair<inum, int>(num, generateBlockNo));
 		blocksByte.insert(pair<int, int>(generateBlockNo, length));
 		blocksStatus.insert(pair<int, bool>(generateBlockNo, true));
-		//		cout<<"segmentNo="<<segmentCache->summary->segmentNo<<  "block No="<<generateBlockNo<<"  content="<<segmentCache->dataB[blockIndex].data<<">"<<endl;
-		//	    printf("blockNumber=%d  index=%d  currentindex=%d\n", segmentCache->dataB[blockIndex].blockNo,blockIndex,segmentCache->currenIndex);
+		
 		segmentCache->currenIndex++;
 	}
 	logAddress1->segmentNo = segmentCache->summary->segmentNo;
@@ -778,74 +777,7 @@ int Log_free(struct logAddress logAddress1, u_int length)
 	}
 }
 
-void test1(char *cat)
-{
-	//	printf("*******************Log layer test 1 simple small write and read ****************************** \n");
-	char buf[50] = "Hello LFS, welcome to CSC 545 OS class";
-	strcat(buf, cat);
-	//	char  *buf="Hello LFS, welcome to CSC 545 OS class";
-	inum num = 1;
-	struct logAddress address;
-	if (!Log_Write(num, 1, 50, (void *)buf, &address))
-	{
-		//	cout<<"buf ="<<buf<<">"<<endl;
-		char bufR[50];
-		if (!Log_read(address, 50, (void *)bufR))
-		{
-			printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
-			if (strcmp(buf, bufR) != 0)
-			{
-				printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
-			}
-			else
-			{
-				//		printf("**************Success    test 1 pass*******************************\n ");
-			}
-		}
-	}
 
-	// Log_writeDeadBlock(num,address,address);
-}
-void test2(int b, struct logAddress address, char *buf)
-{
-	char buf1[1];
-	for (int i = 0; i <= b * BLOCK_NUMBER; i++)
-	{
-		buf1[0] = 'a' + (i % 26);
-		test1(buf1);
-	}
-	// struct logAddress address;
-	// address.segmentNo=2;
-	// address.blockNo=32;
-	// char *buf="Hello LFS, welcome to CSC 545 OS classf";
-	char bufR[50];
-	if (!Log_read(address, 50, (void *)bufR))
-	{
-		printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
-		if (strcmp(buf, bufR) != 0)
-		{
-			printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
-		}
-		else
-		{
-			printf("**************Success    test 1 pass*******************************\n ");
-		}
-	}
-}
-
-int test3()
-{
-
-	logAddress oldAdrress, newAdress;
-	logAddress address;
-	address.segmentNo = 2;
-	address.blockNo = 32;
-	char buf[50] = "Hello LFS, welcome to CSC 545 OS classf";
-	test2(1, address, buf);
-	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
-	// pmetadata->currentsector=128;
-	cout << " rewrite metadata " << endl;
-}
 
 // cleanning and recovery test
 void test4()
@@ -855,7 +787,7 @@ void test4()
 	address.segmentNo = 2;
 	address.blockNo = 32;
 	char buf[50] = "Hello LFS, welcome to CSC 545 OS classf";
-	test2(10, address, buf);
+//	test2(10, address, buf);
 	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
 	// cleaning test
 	int num = 1;
@@ -885,44 +817,9 @@ void test4()
 	//    address.segmentNo=2;
 	// address.blockNo=32;
 	char buf1[50] = "Hello LFS, welcome to CSC 545 OS classa";
-	test2(1, address, buf1);
+//	test2(1, address, buf1);
 	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
 }
-
-void test5()
-{
-
-	char buf[50] = "Destory test";
-	logAddress address;
-	Log_Write(1, 1, 50, (void *)buf, &address);
-	Log_destroy();
-}
-void test6()
-{
-	logAddress address;
-	address.segmentNo = 1;
-	address.blockNo = 1;
-	char bufR[50];
-	Log_read(address, 50, (void *)bufR);
-	cout << "after destory  content " << bufR << endl;
-}
-
-// checkpoint size test
-void test7(){
-	logAddress oldAdrress,newAdress;
-    Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
-    logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*2);
-    Log_CheckPoint(&newAdress, newOne, 1, 2);
-    cout<<"before checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
-}
-void test8(){
-	logAddress oldAdrress,newAdress;
-	logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*3);
-	cout<<"checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
-	cout<<"size of segment ="<<sizeof(struct SegmentUsageTable)<<endl;
-
-}
-
 
 //  int main(int argc, char *argv[])
 //  {

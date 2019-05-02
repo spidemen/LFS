@@ -74,32 +74,6 @@ int initDirectory(int cachesize)
      File_Create(currentinum, 2);  // add directory KATY
      File_Naming(currentinum, "/", ".", &stbuf);
   }
- 
-  // // code for test directory
-  // vector<pair<string, int>> tmp;
-  // tmp.push_back({"a.txt", 11});
-  // tmp.push_back({"b.txt", 4});
-  // tmp.push_back({"-link", 9});
-  // tmp.push_back({".", 9});
-  // FileSystemMap.insert({"/next", tmp});
-  // tmp.clear();
-  // // root directory
-  //  tmp.push_back({".", currentinum});
-  // tmp.push_back({"fuse.h", 2});
-  // tmp.push_back({"log.cpp", 3});
-  // // tmp.push_back({"hello",8});
-  // tmp.push_back({"#next", 7});
-  
-
- //  File_Create(currentinum, 1);  // add directory
-  
-  
-   // struct Inode rootinode;
-   // struct stat rootstat;
-   // File_Get(currentinum, &rootinode);
-   // convertInodeToStat(&rootinode, &rootstat);
-    // File_Naming(currentinum, "/", ".", &stbuf);
-  // File_Create(3, 1);
 
   return 0;
 }
@@ -135,10 +109,6 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
   auto it = FileSystemMap.find(path);
   if (it != FileSystemMap.end())
   {
-    // InitStat(stbuf); // test code, later will use File_Get can covert inode into stat
-   
-    // stbuf->st_mode = S_IFDIR | 0700;
-    // stbuf->st_nlink = 2;
 
     for(auto it1:it->second){
      
@@ -178,17 +148,14 @@ int Directory_Types(const char *path, struct stat *stbuf, int *num)
     {
       for (auto it2 : it->second)
       {
-           cout<<"iteration   &"<<path1<<"&   "<<it2.first<<endl;
+        //   cout<<"iteration   &"<<path1<<"&   "<<it2.first<<endl;
         if (strcmp(it2.first.c_str(), filename.c_str()) == 0)
         {
-        //  InitStat(stbuf);
           if (!convertInodeToStat(it2.second, stbuf)) {
               printf("Copied inode %d data into stat\n", it2.second);
           } else { 
             printf("Error: Directory_Types - calling File_Get\n"); 
           }
-          //stbuf->st_mode = S_IFREG | 0774;
-          //stbuf->st_nlink = 1;
           int numSize = it2.second; //first is filename, second is inum
           memcpy(num, &numSize, sizeof(int));
           return TYPE_FILE; // file
@@ -226,13 +193,6 @@ int Directory_getAllFiles(const char *path, struct stat *stbuf, int *size, char 
     for (int i = 0; i < arraySize && file != it->second.end(); i++)
     {
       struct stat t;
-      // struct Inode node;
-      // if (!File_Get(file->second, &node)) {
-      //     convertInodeToStat(&node, &t);
-      //     stbuf[i] = t;
-      // }
-      // convertInodeToStat(&node, &t);
-
       InitStat(&t);
       if (file->first.find("#") != std::string::npos)
       {
@@ -585,136 +545,6 @@ int Directory_writeFile(const char *path, int offset, int size, char *buf)
 
   return 0;
 }
-
-// int test1D()
-// {
-//   printf("************* Begin Test1D: create a new file ****************\n");
-//   char *path = "test1/";
-//   char *fname = "testfile1";
-//   struct stat *stbuf;
-//   printf("Creating file %s %s (inum: %d)\n", path, fname, currentinum);
-//   if (Directory_createFile(path, fname, stbuf))
-//   {
-//     printf("***Error: Directory_createFile -- test1D creating testfile1****\n");
-//     return 1;
-//   }
-//   Show_Ifile_Contents();
-//   printf("************* End Test1D: create a new file ****************\n");
-//   return 0;
-// }
-
-
-void test1()
-{
-  //  char *path="/root/foo/bar";
-  char *filename = "test.txt";
-  struct stat stbuf[10];
-  int size = 0;
-  Directory_getAllFiles("/",stbuf,&size,allFileName);
-  printf("Done Directory_getAllFiles\n");
- 
-  // printf("Done Directory_createFile\n");
-  // char* path;
-  // int offset = 0;
-  // int size = 10;
-  // char *buf = "dir write";
-  // Directory_writeFile(const char *path, int offset, int size, char *buf);
-  
-  //  for(int i=0;i<size;i++){
-  //   cout<<"size of file ="<<size<<"  filename= "<<allFileName[i]<<endl;
-  //  }
-  // char fileNameReturn[10];
-  // if(Directory_getOneFile("/next/","a.txt",stbuf,fileNameReturn)){
-  //    cout<<"No file found "<<endl;
-  // } else{
-  //  cout<<"filename ="<<fileNameReturn<<endl;
-  // }
-  // cout<<Directory_Types("/",stbuf,&size)<<"  num="<<size<<endl;
-
-  // File_Create(2, 1);
-  // char buf[40]="hello word test fuse";
-  // File_Write(2, 0, 40,buf);
-  // memset(buf,0,40);
-  // File_Read(2, 0,40,buf);
-  // cout<<"read from file "<<buf<<endl;
-  //  createFile(path, filename,stbuf);
-  //  createFile(path, filename,stbuf);
-  Directory_EntyUpdate("/test", 1);
-  int filetype = Directory_Types("/next/s", stbuf, &size);
-  cout << filetype << "  inum=" << size << endl;
-  // Directory_EntryRename("/test", "/update.h",TYPE_DIRECTORY);
-  // // vector<pair<string, int>> tmp;
-  // // tmp.push_back({"update...", 2});
-  // // char *test="/";
-  // // FileSystemMap[test]=tmp;
-  
-  // filetype = Directory_Types("/updatej", stbuf, &size);
-  // cout << filetype << "  inum=" << size << endl;
-}
-// init test
-void testD3(){
-
-vector<pair<string,string> > pathtest={{"/next","."},{"/next","c.txt"},{"/next/next","."},{"/next/next","d.txt"}};
-    int count=0;
-    for(int i=0;i<pathtest.size();i++){
-      vector<pair<string, int>> tmp;
-      string a = pathtest[i].first;
-      string b = pathtest[i].second;
-      auto it=FileSystemMap.find(a);
-      if(it!=FileSystemMap.end()){
-        tmp=it->second;
-      }
-      // parent directory
-      string path1,filename;
-      SplitPath(a.c_str(),path1,filename);
-
-      if(b=="."){
-        cout<<"debug Directory "<<a<<"    "<<b<<endl;
-          vector<pair<string, int>> tmpParent;
-          auto it2=FileSystemMap.find(path1);
-          if(it2!=FileSystemMap.end()){  // parent directory exit
-               tmpParent=it2->second;
-               filename="#"+filename;
-               tmpParent.push_back({filename,count++});
-                FileSystemMap[path1]=tmpParent;
-          }
-      }
-      tmp.push_back({b, count++});
-      FileSystemMap[a]=tmp;
-    }
-}
-
-
-
-void test2(){
-
-    struct stat *stbuf;
-    Directory_createFile("/a.txt", stbuf);
-    Directory_createFile("/j.txt", stbuf);
-    //Show_Ifile_Contents();
-
-    struct stat dirbuf[10];
-    int size = 0;
-    int inum;
-    Directory_Types("/",&dirbuf[0],&inum);
-    // Directory_getAllFiles("/",dirbuf,&size,allFileName);
-    // Directory_writeFile("/a.txt", 0, 6, "hello");
-    //Directory_writeFile("/j.txt", 0, 6, "omega");
-
- //   File_Destroy();
-    // int inum = 1;
-    // Change_Permissions(inum, "666");
-    // Inode in;
-    // File_Get(inum, &in);
-    // struct stat s;
-    // convertInodeToStat(&in, &s);
-   //  currentinum++;
-   //  char buf[40]="hello";
-   // File_Create(currentinum, 0);  // add directory
-   //  File_Write(currentinum,0,6,buf);
-}
-
-
 
 // int main(int argc, char *argv[])
 // {

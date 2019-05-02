@@ -160,6 +160,223 @@ void test8(){
 	    }
 	}
 }
+
+
+
+
+
+// void test1(char *cat)
+// {
+// 	//	printf("*******************Log layer test 1 simple small write and read ****************************** \n");
+// 	char buf[50] = "Hello LFS, welcome to CSC 545 OS class";
+// 	strcat(buf, cat);
+// 	//	char  *buf="Hello LFS, welcome to CSC 545 OS class";
+// 	inum num = 1;
+// 	struct logAddress address;
+// 	if (!Log_Write(num, 1, 50, (void *)buf, &address))
+// 	{
+// 		//	cout<<"buf ="<<buf<<">"<<endl;
+// 		char bufR[50];
+// 		if (!Log_read(address, 50, (void *)bufR))
+// 		{
+// 			printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
+// 			if (strcmp(buf, bufR) != 0)
+// 			{
+// 				printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
+// 			}
+// 			else
+// 			{
+// 				//		printf("**************Success    test 1 pass*******************************\n ");
+// 			}
+// 		}
+// 	}
+
+// 	// Log_writeDeadBlock(num,address,address);
+// }
+// void test2(int b, struct logAddress address, char *buf)
+// {
+// 	char buf1[1];
+// 	for (int i = 0; i <= b * BLOCK_NUMBER; i++)
+// 	{
+// 		buf1[0] = 'a' + (i % 26);
+// 		test1(buf1);
+// 	}
+// 	// struct logAddress address;
+// 	// address.segmentNo=2;
+// 	// address.blockNo=32;
+// 	// char *buf="Hello LFS, welcome to CSC 545 OS classf";
+// 	char bufR[50];
+// 	if (!Log_read(address, 50, (void *)bufR))
+// 	{
+// 		printf("return logadress segmentNo= %d  blockNo=%d \n", address.segmentNo, address.blockNo);
+// 		if (strcmp(buf, bufR) != 0)
+// 		{
+// 			printf("Fail:  write string  %s does not match read string %s \n", buf, bufR);
+// 		}
+// 		else
+// 		{
+// 			printf("**************Success    test 1 pass*******************************\n ");
+// 		}
+// 	}
+// }
+
+// int test3()
+// {
+
+// 	logAddress oldAdrress, newAdress;
+// 	logAddress address;
+// 	address.segmentNo = 2;
+// 	address.blockNo = 32;
+// 	char buf[50] = "Hello LFS, welcome to CSC 545 OS classf";
+// 	test2(1, address, buf);
+// 	Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+// 	// pmetadata->currentsector=128;
+// 	cout << " rewrite metadata " << endl;
+// }
+// void test5()
+// {
+
+// 	char buf[50] = "Destory test";
+// 	logAddress address;
+// 	Log_Write(1, 1, 50, (void *)buf, &address);
+// 	Log_destroy();
+// }
+// void test6()
+// {
+// 	logAddress address;
+// 	address.segmentNo = 1;
+// 	address.blockNo = 1;
+// 	char bufR[50];
+// 	Log_read(address, 50, (void *)bufR);
+// 	cout << "after destory  content " << bufR << endl;
+// }
+
+// // checkpoint size test
+// void test7(){
+// 	logAddress oldAdrress,newAdress;
+//     Log_CheckPoint(&oldAdrress, &newAdress, 1, 1);
+//     logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*2);
+//     Log_CheckPoint(&newAdress, newOne, 1, 2);
+//     cout<<"before checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
+// }
+// void test8(){
+// 	logAddress oldAdrress,newAdress;
+// 	logAddress *newOne=(struct logAddress *) malloc(sizeof(logAddress)*3);
+// 	cout<<"checkpoint size "<<Log_GetIfleAddress(newOne, 1)<<endl;
+// 	cout<<"size of segment ="<<sizeof(struct SegmentUsageTable)<<endl;
+
+// }
+// void test1()
+// {
+//   //  char *path="/root/foo/bar";
+//   char *filename = "test.txt";
+//   struct stat stbuf[10];
+//   int size = 0;
+//   Directory_getAllFiles("/",stbuf,&size,allFileName);
+//   printf("Done Directory_getAllFiles\n");
+ 
+//   // printf("Done Directory_createFile\n");
+//   // char* path;
+//   // int offset = 0;
+//   // int size = 10;
+//   // char *buf = "dir write";
+//   // Directory_writeFile(const char *path, int offset, int size, char *buf);
+  
+//   //  for(int i=0;i<size;i++){
+//   //   cout<<"size of file ="<<size<<"  filename= "<<allFileName[i]<<endl;
+//   //  }
+//   // char fileNameReturn[10];
+//   // if(Directory_getOneFile("/next/","a.txt",stbuf,fileNameReturn)){
+//   //    cout<<"No file found "<<endl;
+//   // } else{
+//   //  cout<<"filename ="<<fileNameReturn<<endl;
+//   // }
+//   // cout<<Directory_Types("/",stbuf,&size)<<"  num="<<size<<endl;
+
+//   // File_Create(2, 1);
+//   // char buf[40]="hello word test fuse";
+//   // File_Write(2, 0, 40,buf);
+//   // memset(buf,0,40);
+//   // File_Read(2, 0,40,buf);
+//   // cout<<"read from file "<<buf<<endl;
+//   //  createFile(path, filename,stbuf);
+//   //  createFile(path, filename,stbuf);
+//   Directory_EntyUpdate("/test", 1);
+//   int filetype = Directory_Types("/next/s", stbuf, &size);
+//   cout << filetype << "  inum=" << size << endl;
+//   // Directory_EntryRename("/test", "/update.h",TYPE_DIRECTORY);
+//   // // vector<pair<string, int>> tmp;
+//   // // tmp.push_back({"update...", 2});
+//   // // char *test="/";
+//   // // FileSystemMap[test]=tmp;
+  
+//   // filetype = Directory_Types("/updatej", stbuf, &size);
+//   // cout << filetype << "  inum=" << size << endl;
+// }
+// // init test
+// void testD3(){
+
+// vector<pair<string,string> > pathtest={{"/next","."},{"/next","c.txt"},{"/next/next","."},{"/next/next","d.txt"}};
+//     int count=0;
+//     for(int i=0;i<pathtest.size();i++){
+//       vector<pair<string, int>> tmp;
+//       string a = pathtest[i].first;
+//       string b = pathtest[i].second;
+//       auto it=FileSystemMap.find(a);
+//       if(it!=FileSystemMap.end()){
+//         tmp=it->second;
+//       }
+//       // parent directory
+//       string path1,filename;
+//       SplitPath(a.c_str(),path1,filename);
+
+//       if(b=="."){
+//         cout<<"debug Directory "<<a<<"    "<<b<<endl;
+//           vector<pair<string, int>> tmpParent;
+//           auto it2=FileSystemMap.find(path1);
+//           if(it2!=FileSystemMap.end()){  // parent directory exit
+//                tmpParent=it2->second;
+//                filename="#"+filename;
+//                tmpParent.push_back({filename,count++});
+//                 FileSystemMap[path1]=tmpParent;
+//           }
+//       }
+//       tmp.push_back({b, count++});
+//       FileSystemMap[a]=tmp;
+//     }
+// }
+
+
+
+// void test2(){
+
+//     struct stat *stbuf;
+//     Directory_createFile("/a.txt", stbuf);
+//     Directory_createFile("/j.txt", stbuf);
+//     //Show_Ifile_Contents();
+
+//     struct stat dirbuf[10];
+//     int size = 0;
+//     int inum;
+//     Directory_Types("/",&dirbuf[0],&inum);
+//     // Directory_getAllFiles("/",dirbuf,&size,allFileName);
+//     // Directory_writeFile("/a.txt", 0, 6, "hello");
+//     //Directory_writeFile("/j.txt", 0, 6, "omega");
+
+//  //   File_Destroy();
+//     // int inum = 1;
+//     // Change_Permissions(inum, "666");
+//     // Inode in;
+//     // File_Get(inum, &in);
+//     // struct stat s;
+//     // convertInodeToStat(&in, &s);
+//    //  currentinum++;
+//    //  char buf[40]="hello";
+//    // File_Create(currentinum, 0);  // add directory
+//    //  File_Write(currentinum,0,6,buf);
+// }
+
+
 int main(int argc, char *argv[]){
 	init("FuseFileSystem");   
 	// log layer test cases
